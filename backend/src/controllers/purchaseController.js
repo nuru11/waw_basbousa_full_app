@@ -1,0 +1,84 @@
+const path = require('path');
+const purchaseService = require('../services/purchaseService');
+const { UPLOAD_DIR } = require('../middleware/upload');
+const AppError = require('../utils/AppError');
+
+async function list(req, res, next) {
+  try {
+    const { status } = req.query;
+    const purchaserId =
+      req.user.role === 'purchaser' ? req.user.id : req.query.purchaser_id;
+
+    const purchases = await purchaseService.listPurchases({
+      purchaserId: purchaserId || undefined,
+      status: status || undefined,
+    });
+    res.json({ success: true, data: purchases });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function inventory(req, res, next) {
+  try {
+    const data = await purchaseService.getPurchaserInventory(req.user.id);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function create(req, res, next) {
+  try {
+    const { ingredient_id, quantity, unit_price } = req.body;
+
+    if (!ingredient_id) throw new AppError('Ingredient is required', 400);
+    if (!quantity || parseFloat(quantity) <= 0) throw new AppError('Quantity must be positive', 400);
+    if (!unit_price || parseFloat(unit_price) <= 0) {
+      throw new AppError('Unit price must be positive', 400);
+    }
+
+    const purchase = await purchaseService.createPurchase(req.user.id, {
+      ingredient_id: parseInt(ingredient_id, 10),
+      quantity: parseFloat(quantity),
+      unit_price: parseFloat(unit_price),
+      screenshot_path: req.file.filename,
+    });
+    res.status(201).json({ success: true, data: purchase });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function screenshot(req, res, next) {
+  try {
+    const purchase = await purchaseService.getPurchaseForScreenshot(req.params.id, req.user);
+    const filePath = path.join(UPLOAD_DIR, purchase.screenshot_path);
+    res.sendFile(filePath);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function handToChief(req, res, next) {
+  try {
+    const purchase = await purchaseService.handPurchaseToChief(
+      req.params.id,
+      req.user.id
+    );
+    res.json({ success: true, data: purchase });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function receive(req, res, next) {
+  try {
+    const purchase = await purchaseService.receivePurchase(req.params.id, req.user.id);
+    res.json({ success: true, data: purchase });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { list, inventory, create, screenshot, handToChief, receive };
