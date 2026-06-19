@@ -29,7 +29,7 @@ async function create(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    const admin = await adminService.updateAdmin(req.params.id, req.body);
+    const admin = await adminService.updateAdmin(req.params.id, req.body, req.user.id);
     res.json({ success: true, data: admin });
   } catch (err) {
     next(err);

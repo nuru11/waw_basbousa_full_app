@@ -1,6 +1,9 @@
 import type { User } from '../services/api';
 
-export function getRoleHome(role: User['role']): string {
+export function getRoleHome(role: User['role'], cashierMode = false): string {
+  if (cashierMode && (role === 'employee' || role === 'chief')) {
+    return '/cashier/pos';
+  }
   switch (role) {
     case 'superAdmin':
       return '/admin/dashboard';
@@ -21,3 +24,7 @@ export const ROLE_LABELS: Record<User['role'], string> = {
   chief: 'Chief',
   employee: 'Employee',
 };
+
+export function isCashierEligible(role: User['role']): boolean {
+  return role === 'employee' || role === 'chief';
+}

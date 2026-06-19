@@ -3,14 +3,23 @@ const transferService = require('../services/transferService');
 async function list(req, res, next) {
   try {
     const purchaserId = req.user.role === 'purchaser' ? req.user.id : undefined;
+    const requestedPeriod = ['today', 'week', 'history'].includes(req.query.period)
+      ? req.query.period
+      : undefined;
     const period =
-      req.user.role === 'superAdmin' && ['week', 'history'].includes(req.query.period)
-        ? req.query.period
+      requestedPeriod === 'today' ||
+      (req.user.role === 'superAdmin' && ['week', 'history'].includes(requestedPeriod))
+        ? requestedPeriod
         : undefined;
     const status =
       ['pending', 'accepted'].includes(req.query.status) ? req.query.status : undefined;
 
-    const transfers = await transferService.listTransfers({ purchaserId, period, status });
+    const transfers = await transferService.listTransfers({
+      purchaserId,
+      period,
+      status,
+      dateField: req.query.date_field || undefined,
+    });
     res.json({ success: true, data: transfers });
   } catch (err) {
     next(err);

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { api, type Ingredient } from "../../services/api";
+import { formatNumber } from "../../utils/formatNumber";
 
 export default function InventoryPage() {
   const [stock, setStock] = useState<Ingredient[]>([]);
@@ -32,7 +33,7 @@ export default function InventoryPage() {
                 {item.name}
               </h3>
               <p className="mt-2 text-3xl font-bold text-brand-500">
-                {item.current_stock}{" "}
+                {formatNumber(item.current_stock)}{" "}
                 <span className="text-base font-normal text-gray-500">{item.unit}</span>
               </p>
               {low && (

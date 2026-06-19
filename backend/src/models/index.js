@@ -57,7 +57,8 @@ ProductionLog.belongsTo(Admin, { foreignKey: 'chief_id', as: 'chief' });
 
 Dish.hasMany(Sale, { foreignKey: 'dish_id', as: 'sales' });
 Sale.belongsTo(Dish, { foreignKey: 'dish_id', as: 'dish' });
-Sale.belongsTo(Admin, { foreignKey: 'employee_id', as: 'employee' });
+Sale.belongsTo(Admin, { foreignKey: 'seller_id', as: 'seller' });
+Admin.hasMany(Sale, { foreignKey: 'seller_id', as: 'sales' });
 
 Ingredient.hasMany(StockMovement, { foreignKey: 'ingredient_id', as: 'movements' });
 StockMovement.belongsTo(Ingredient, { foreignKey: 'ingredient_id', as: 'ingredient' });

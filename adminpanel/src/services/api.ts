@@ -39,6 +39,10 @@ async function request<T>(
       setToken(null);
       window.location.href = '/signin';
     }
+    if (res.status === 403 && String(json.message || '').toLowerCase().includes('inactive')) {
+      setToken(null);
+      window.location.href = '/signin';
+    }
     throw new ApiError(json.message || 'Request failed', res.status);
   }
 
@@ -77,6 +81,7 @@ export interface User {
   phone: string | null;
   role: 'superAdmin' | 'purchaser' | 'chief' | 'employee';
   short_id: string;
+  status: 'active' | 'inactive';
 }
 
 export interface LoginResponse {
@@ -117,8 +122,11 @@ export interface Purchase {
   quantity: string | number;
   unit_price: string | number;
   total_price: string | number;
-  status: 'in_inventory' | 'handed' | 'received';
+  status: 'pending' | 'in_inventory' | 'handed' | 'received';
   screenshot_path: string | null;
+  created_at?: string;
+  createdAt?: string;
+  approved_at: string | null;
   handed_at: string | null;
   received_at: string | null;
   ingredient?: Ingredient;
@@ -141,15 +149,64 @@ export interface PurchaserInventory {
 export interface Sale {
   id: number;
   dish_id: number;
+  seller_id: number;
   weight_type: 'quarter' | 'half' | 'kilo' | 'slice';
   slice_count: number | null;
   quantity: number;
   unit_price: string | number;
   total_price: string | number;
+  kilo_consumed: string | number;
   payment_method: string;
   sold_at: string;
   dish?: Dish;
-  employee?: { id: number; name: string; short_id: string };
+  seller?: { id: number; name: string; short_id: string; role?: User['role'] };
+}
+
+export interface PlateAvailability {
+  produced_kg: number;
+  produced_plates: number;
+  sold_kg: number;
+  available_kg: number;
+}
+
+export interface DailySalesPayments {
+  cash: number;
+  cbe: number;
+  telebirr: number;
+  other: number;
+}
+
+export interface DailySalesDishRow {
+  dish_id: number;
+  dish_name: string;
+  produced_kg: number;
+  produced_plates: number;
+  sold_kg: number;
+  remaining_kg: number;
+  revenue: number;
+  sale_count: number;
+}
+
+export interface DailySalesSellerRow {
+  seller_id: number;
+  seller_name: string;
+  role: User['role'] | null;
+  revenue: number;
+  sale_count: number;
+  kilo_sold: number;
+}
+
+export interface DailySalesOverview {
+  date: string;
+  summary: {
+    total_revenue: number;
+    sale_count: number;
+    kilo_sold: number;
+    payments: DailySalesPayments;
+  };
+  by_dish: DailySalesDishRow[];
+  by_seller: DailySalesSellerRow[];
+  sales: Sale[];
 }
 
 export interface ReportSummary {
@@ -172,6 +229,7 @@ export interface ProductionLog {
   id: number;
   dish_id: number;
   plates_count: number;
+  plate_weight_grams?: string | number | null;
   notes: string | null;
   logged_at: string;
   dish?: Dish;

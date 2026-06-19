@@ -6,7 +6,8 @@ module.exports = (sequelize) => {
     {
       id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       dish_id: { type: DataTypes.INTEGER, allowNull: false },
-      employee_id: { type: DataTypes.INTEGER, allowNull: false },
+      seller_id: { type: DataTypes.INTEGER, allowNull: false },
+      kilo_consumed: { type: DataTypes.DECIMAL(10, 4), allowNull: false, defaultValue: 0 },
       weight_type: {
         type: DataTypes.ENUM('quarter', 'half', 'kilo', 'slice'),
         allowNull: false,

@@ -1,28 +1,19 @@
 import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import Button from "../../components/ui/button/Button";
 import { api, type Purchase } from "../../services/api";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
-import { purchaseStatusLabel } from "../../utils/purchaseStatus";
-
-function statusClass(status: Purchase["status"]) {
-  switch (status) {
-    case "received":
-      return "text-success-500";
-    case "handed":
-      return "text-brand-500";
-    default:
-      return "text-warning-500";
-  }
-}
+import { formatNumber } from "../../utils/formatNumber";
 
 export default function PendingPurchasesPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const load = () =>
     api
-      .get<Purchase[]>("/purchases")
+      .get<Purchase[]>("/purchases?status=pending")
       .then(setPurchases)
       .catch((e) => setError(e.message));
 
@@ -30,15 +21,28 @@ export default function PendingPurchasesPage() {
     load();
   }, []);
 
+  async function handleApprove(id: number) {
+    setLoading(id);
+    setError("");
+    try {
+      await api.post(`/purchases/${id}/approve`, {});
+      load();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to approve");
+    } finally {
+      setLoading(null);
+    }
+  }
+
   return (
     <div>
-      <PageMeta title="Purchase Oversight | Restaurant" description="View all purchases" />
-      <PageBreadcrumb pageTitle="Purchase Oversight" />
+      <PageMeta title="Pending Purchases | Restaurant" description="Approve purchases" />
+      <PageBreadcrumb pageTitle="Pending Purchases" />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
       <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-        <h3 className="mb-4 font-semibold">All Purchases</h3>
+        <h3 className="mb-4 font-semibold">Pending Purchases</h3>
         {purchases.length === 0 ? (
-          <p className="text-gray-500">No purchases recorded</p>
+          <p className="text-gray-500">No pending purchases</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -49,8 +53,8 @@ export default function PendingPurchasesPage() {
                 <th className="pb-3 pr-4">Qty</th>
                 <th className="pb-3 pr-4">Unit Price</th>
                 <th className="pb-3 pr-4">Total</th>
-                <th className="pb-3 pr-4">Status</th>
                 <th className="pb-3 pr-4">Screenshot</th>
+                <th className="pb-3">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -65,14 +69,11 @@ export default function PendingPurchasesPage() {
                   <td className="py-4 pr-4">{p.purchaser?.name}</td>
                   <td className="py-4 pr-4">{p.ingredient?.name}</td>
                   <td className="py-4 pr-4 whitespace-nowrap">
-                    {p.quantity} {p.ingredient?.unit}
+                    {formatNumber(p.quantity)} {p.ingredient?.unit}
                   </td>
                   <td className="py-4 pr-4 whitespace-nowrap">ETB {p.unit_price}</td>
                   <td className="py-4 pr-4 font-medium whitespace-nowrap">
                     ETB {p.total_price}
-                  </td>
-                  <td className={`py-4 pr-4 ${statusClass(p.status)}`}>
-                    {purchaseStatusLabel(p.status)}
                   </td>
                   <td className="py-4 pr-4">
                     <PurchaseScreenshot
@@ -81,6 +82,15 @@ export default function PendingPurchasesPage() {
                       width={72}
                       height={72}
                     />
+                  </td>
+                  <td className="py-4">
+                    <Button
+                      size="sm"
+                      onClick={() => handleApprove(p.id)}
+                      disabled={loading === p.id}
+                    >
+                      {loading === p.id ? "Accepting..." : "Accept"}
+                    </Button>
                   </td>
                 </tr>
               ))}

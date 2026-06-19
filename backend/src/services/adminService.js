@@ -4,6 +4,7 @@ const { generateShortId } = require('../utils/shortId');
 const AppError = require('../utils/AppError');
 
 const ROLES = ['superAdmin', 'purchaser', 'chief', 'employee'];
+const STATUSES = ['active', 'inactive'];
 
 async function listAdmins() {
   return Admin.findAll({ order: [['created_at', 'DESC']] });
@@ -33,10 +34,11 @@ async function createAdmin(data) {
     phone: data.phone || null,
     role: data.role,
     short_id: shortId,
+    status: 'active',
   });
 }
 
-async function updateAdmin(id, data) {
+async function updateAdmin(id, data, currentUserId) {
   const admin = await getAdmin(id);
 
   if (data.username && data.username !== admin.username) {
@@ -48,11 +50,20 @@ async function updateAdmin(id, data) {
     throw new AppError('Invalid role', 422);
   }
 
+  if (data.status && !STATUSES.includes(data.status)) {
+    throw new AppError('Invalid status', 422);
+  }
+
+  if (data.status === 'inactive' && Number(id) === Number(currentUserId)) {
+    throw new AppError('Cannot deactivate your own account', 400);
+  }
+
   const updates = {};
   if (data.name) updates.name = data.name;
   if (data.username) updates.username = data.username;
   if (data.phone !== undefined) updates.phone = data.phone;
   if (data.role) updates.role = data.role;
+  if (data.status) updates.status = data.status;
   if (data.password) updates.password_hash = await hashPassword(data.password);
 
   await admin.update(updates);

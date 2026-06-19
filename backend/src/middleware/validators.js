@@ -58,12 +58,14 @@ const createSaleValidation = [
     .if((value, { req }) => req.body.weight_type === 'slice')
     .isInt({ gt: 0 })
     .withMessage('Slice count is required for slice sales'),
+  body('seller_id').optional().isInt().withMessage('Invalid seller'),
   validate,
 ];
 
 const productionValidation = [
   body('dish_id').isInt().withMessage('Dish is required'),
   body('plates_count').isInt({ gt: 0 }).withMessage('Plates count must be positive'),
+  body('plate_weight_grams').isFloat({ gt: 0 }).withMessage('Plate weight is required'),
   validate,
 ];
 

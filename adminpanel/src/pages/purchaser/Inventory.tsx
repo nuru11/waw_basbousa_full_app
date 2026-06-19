@@ -4,6 +4,7 @@ import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import { api, type PurchaserInventory } from "../../services/api";
+import { formatNumber } from "../../utils/formatNumber";
 
 export default function PurchaserInventoryPage() {
   const [inventory, setInventory] = useState<PurchaserInventory | null>(null);
@@ -53,7 +54,7 @@ export default function PurchaserInventoryPage() {
                 {item.ingredient?.name}
               </h3>
               <p className="mt-2 text-3xl font-bold text-brand-500">
-                {item.total_quantity}{" "}
+                {formatNumber(item.total_quantity)}{" "}
                 <span className="text-base font-normal text-gray-500">
                   {item.ingredient?.unit}
                 </span>
@@ -88,7 +89,7 @@ export default function PurchaserInventoryPage() {
                   <td className="py-4 pr-4 font-medium">#{p.id}</td>
                   <td className="py-4 pr-4">{p.ingredient?.name}</td>
                   <td className="py-4 pr-4 whitespace-nowrap">
-                    {p.quantity} {p.ingredient?.unit}
+                    {formatNumber(p.quantity)} {p.ingredient?.unit}
                   </td>
                   <td className="py-4 pr-4 whitespace-nowrap">
                     ETB {parseFloat(String(p.total_price)).toFixed(2)}

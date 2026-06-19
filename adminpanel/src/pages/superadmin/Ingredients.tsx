@@ -6,6 +6,7 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Ingredient } from "../../services/api";
+import { formatNumber } from "../../utils/formatNumber";
 
 export default function IngredientsPage() {
   const [items, setItems] = useState<Ingredient[]>([]);
@@ -100,8 +101,8 @@ export default function IngredientsPage() {
                 <tr key={item.id} className="border-b border-gray-100 dark:border-gray-800">
                   <td className="py-3">{item.name}</td>
                   <td className="py-3">{item.unit}</td>
-                  <td className="py-3">{item.current_stock}</td>
-                  <td className="py-3">{item.min_stock}</td>
+                  <td className="py-3">{formatNumber(item.current_stock)}</td>
+                  <td className="py-3">{formatNumber(item.min_stock)}</td>
                   <td className="py-3">
                     <button onClick={() => handleDelete(item.id)} className="text-error-500">
                       Delete

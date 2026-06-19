@@ -27,4 +27,13 @@ async function mine(req, res, next) {
   }
 }
 
-module.exports = { create, list, mine };
+async function sellers(req, res, next) {
+  try {
+    const sellers = await saleService.listSellers();
+    res.json({ success: true, data: sellers });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, list, mine, sellers };

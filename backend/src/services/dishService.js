@@ -91,15 +91,11 @@ async function updateDish(id, data) {
   }
 }
 
-async function updateRecipe(id, { plate_weight_grams, recipe }) {
+async function updateRecipe(id, { recipe }) {
   const dish = await getDish(id);
   const transaction = await sequelize.transaction();
 
   try {
-    if (plate_weight_grams !== undefined) {
-      await dish.update({ plate_weight_grams }, { transaction });
-    }
-
     if (recipe !== undefined) {
       await DishIngredient.destroy({ where: { dish_id: id }, transaction });
       if (recipe.length > 0) {

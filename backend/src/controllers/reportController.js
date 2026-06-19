@@ -36,4 +36,13 @@ async function stockMovements(req, res, next) {
   }
 }
 
-module.exports = { summary, purchases, sales, stockMovements };
+async function dailySales(req, res, next) {
+  try {
+    const data = await reportService.getDailySalesOverview(req.query.date);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { summary, purchases, sales, stockMovements, dailySales };

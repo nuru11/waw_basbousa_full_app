@@ -6,8 +6,12 @@ const {
   DishIngredient,
   StockMovement,
   Admin,
+  Sale,
 } = require('../models');
+const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
+const { getTodayRange, getDateRange } = require('../utils/dateUtils');
+const { plateWeightToKg } = require('../utils/plateWeight');
 
 async function listStock() {
   return Ingredient.findAll({
@@ -52,7 +56,62 @@ async function adjustStock(ingredientId, { quantity_delta, notes }, userId) {
   }
 }
 
-async function logProduction(chiefId, { dish_id, plates_count, notes }) {
+function sumProducedKg(logs) {
+  return logs.reduce((sum, log) => {
+    const stored =
+      log.plate_weight_grams ?? log.dish?.plate_weight_grams ?? 0;
+    const kgPerPlate = plateWeightToKg(stored);
+    return sum + log.plates_count * kgPerPlate;
+  }, 0);
+}
+
+function sumProducedPlates(logs) {
+  return logs.reduce((sum, log) => sum + log.plates_count, 0);
+}
+
+async function getPlateAvailabilityForDate(dishId, dateInput, { transaction } = {}) {
+  const { start, end } = getDateRange(dateInput);
+
+  const logs = await ProductionLog.findAll({
+    where: {
+      dish_id: dishId,
+      logged_at: { [Op.between]: [start, end] },
+    },
+    include: [{ model: Dish, as: 'dish', attributes: ['id', 'name', 'plate_weight_grams'] }],
+    transaction,
+  });
+
+  const producedKg = sumProducedKg(logs);
+  const producedPlates = sumProducedPlates(logs);
+
+  const soldKg = parseFloat(
+    (await Sale.sum('kilo_consumed', {
+      where: {
+        dish_id: dishId,
+        sold_at: { [Op.between]: [start, end] },
+      },
+      transaction,
+    })) || 0
+  );
+
+  const availableKg = producedKg - soldKg;
+
+  return {
+    dish_id: dishId,
+    dish_name: logs[0]?.dish?.name ?? null,
+    produced_kg: producedKg,
+    produced_plates: producedPlates,
+    sold_kg: soldKg,
+    remaining_kg: availableKg,
+    available_kg: availableKg,
+  };
+}
+
+async function getTodayPlateAvailability(dishId, options = {}) {
+  return getPlateAvailabilityForDate(dishId, undefined, options);
+}
+
+async function logProduction(chiefId, { dish_id, plates_count, plate_weight_grams, notes }) {
   const transaction = await sequelize.transaction();
 
   try {
@@ -97,10 +156,18 @@ async function logProduction(chiefId, { dish_id, plates_count, notes }) {
       );
     }
 
+    const weightGrams =
+      plate_weight_grams != null ? plate_weight_grams : dish.plate_weight_grams;
+
+    if (plate_weight_grams != null) {
+      await dish.update({ plate_weight_grams }, { transaction });
+    }
+
     const log = await ProductionLog.create(
       {
         dish_id,
         plates_count,
+        plate_weight_grams: weightGrams,
         chief_id: chiefId,
         notes: notes || null,
         logged_at: new Date(),
@@ -122,8 +189,15 @@ async function logProduction(chiefId, { dish_id, plates_count, notes }) {
   }
 }
 
-async function listProductionLogs() {
+async function listProductionLogs({ period } = {}) {
+  const where = {};
+  if (period === 'today') {
+    const { start, end } = getTodayRange();
+    where.logged_at = { [Op.between]: [start, end] };
+  }
+
   return ProductionLog.findAll({
+    where,
     include: [
       { model: Dish, as: 'dish' },
       { model: Admin, as: 'chief', attributes: ['id', 'name', 'short_id'] },
@@ -137,4 +211,6 @@ module.exports = {
   adjustStock,
   logProduction,
   listProductionLogs,
+  getPlateAvailabilityForDate,
+  getTodayPlateAvailability,
 };

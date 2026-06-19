@@ -12,6 +12,8 @@ async function list(req, res, next) {
     const purchases = await purchaseService.listPurchases({
       purchaserId: purchaserId || undefined,
       status: status || undefined,
+      period: req.query.period || undefined,
+      dateField: req.query.date_field || undefined,
     });
     res.json({ success: true, data: purchases });
   } catch (err) {
@@ -60,6 +62,15 @@ async function screenshot(req, res, next) {
   }
 }
 
+async function approve(req, res, next) {
+  try {
+    const purchase = await purchaseService.approvePurchase(req.params.id, req.user.id);
+    res.json({ success: true, data: purchase });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function handToChief(req, res, next) {
   try {
     const purchase = await purchaseService.handPurchaseToChief(
@@ -81,4 +92,4 @@ async function receive(req, res, next) {
   }
 }
 
-module.exports = { list, inventory, create, screenshot, handToChief, receive };
+module.exports = { list, inventory, create, screenshot, approve, handToChief, receive };

@@ -1,6 +1,9 @@
 const { Op } = require('sequelize');
 const { Transfer, Admin } = require('../models');
 const AppError = require('../utils/AppError');
+const { getTodayRange } = require('../utils/dateUtils');
+
+const TRANSFER_DATE_FIELDS = ['created_at', 'accepted_at'];
 
 function getStartOfWeek() {
   const now = new Date();
@@ -12,7 +15,7 @@ function getStartOfWeek() {
   return start;
 }
 
-async function listTransfers({ purchaserId, period, status } = {}) {
+async function listTransfers({ purchaserId, period, status, dateField } = {}) {
   const where = {};
   if (purchaserId) where.purchaser_id = purchaserId;
   if (status) where.status = status;
@@ -21,6 +24,10 @@ async function listTransfers({ purchaserId, period, status } = {}) {
     where.created_at = { [Op.gte]: getStartOfWeek() };
   } else if (period === 'history') {
     where.created_at = { [Op.lt]: getStartOfWeek() };
+  } else if (period === 'today') {
+    const field = TRANSFER_DATE_FIELDS.includes(dateField) ? dateField : 'created_at';
+    const { start, end } = getTodayRange();
+    where[field] = { [Op.between]: [start, end] };
   }
 
   return Transfer.findAll({

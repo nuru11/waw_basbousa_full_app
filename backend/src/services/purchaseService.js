@@ -5,9 +5,12 @@ const {
   Admin,
   StockMovement,
 } = require('../models');
-const { fn, col } = require('sequelize');
+const { fn, col, Op } = require('sequelize');
 const AppError = require('../utils/AppError');
+const { getTodayRange } = require('../utils/dateUtils');
 const { deductFromTransfers } = require('./transferService');
+
+const PURCHASE_DATE_FIELDS = ['created_at', 'handed_at', 'received_at', 'approved_at'];
 
 const purchaseIncludes = [
   { model: Ingredient, as: 'ingredient' },
@@ -16,10 +19,16 @@ const purchaseIncludes = [
   { model: Admin, as: 'chief', attributes: ['id', 'name', 'short_id'] },
 ];
 
-async function listPurchases({ purchaserId, status } = {}) {
+async function listPurchases({ purchaserId, status, period, dateField } = {}) {
   const where = {};
   if (purchaserId) where.purchaser_id = purchaserId;
   if (status) where.status = status;
+
+  if (period === 'today') {
+    const field = PURCHASE_DATE_FIELDS.includes(dateField) ? dateField : 'created_at';
+    const { start, end } = getTodayRange();
+    where[field] = { [Op.between]: [start, end] };
+  }
 
   return Purchase.findAll({
     where,
@@ -47,7 +56,7 @@ async function createPurchase(purchaserId, data) {
         total_price: totalPrice,
         purchaser_id: purchaserId,
         screenshot_path: data.screenshot_path,
-        status: 'in_inventory',
+        status: 'pending',
       },
       { transaction }
     );
@@ -60,6 +69,22 @@ async function createPurchase(purchaserId, data) {
     await transaction.rollback();
     throw err;
   }
+}
+
+async function approvePurchase(purchaseId, approverId) {
+  const purchase = await Purchase.findByPk(purchaseId);
+  if (!purchase) throw new AppError('Purchase not found', 404);
+  if (purchase.status !== 'pending') {
+    throw new AppError('Only pending purchases can be approved', 400);
+  }
+
+  await purchase.update({
+    status: 'in_inventory',
+    approved_by: approverId,
+    approved_at: new Date(),
+  });
+
+  return Purchase.findByPk(purchaseId, { include: purchaseIncludes });
 }
 
 async function handPurchaseToChief(purchaseId, purchaserId) {
@@ -196,6 +221,7 @@ async function getPurchaseForScreenshot(purchaseId, user) {
 module.exports = {
   listPurchases,
   createPurchase,
+  approvePurchase,
   handPurchaseToChief,
   receivePurchase,
   getPurchaserInventory,

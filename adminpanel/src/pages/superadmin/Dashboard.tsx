@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { api, type ReportSummary } from "../../services/api";
+import { formatNumber } from "../../utils/formatNumber";
 
 function StatCard({
   title,
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
               subtitle={summary.net_profit >= 0 ? "Profitable" : "Loss"}
             />
             <StatCard
-              title="Awaiting Chief Receipt"
+              title="Pending Purchases"
               value={String(summary.pending_purchases)}
             />
           </div>
@@ -79,7 +80,7 @@ export default function AdminDashboard() {
                     >
                       <span>{item.name}</span>
                       <span className="text-error-500">
-                        {item.current_stock} {item.unit}
+                        {formatNumber(item.current_stock)} {item.unit}
                       </span>
                     </li>
                   ))}

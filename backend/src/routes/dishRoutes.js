@@ -22,7 +22,7 @@ router.get(
 router.put(
   '/:id/recipe',
   authMiddleware,
-  requireRole('superAdmin', 'chief'),
+  requireRole('superAdmin'),
   dishController.updateRecipe
 );
 

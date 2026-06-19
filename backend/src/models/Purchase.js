@@ -11,9 +11,9 @@ module.exports = (sequelize) => {
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
       purchaser_id: { type: DataTypes.INTEGER, allowNull: false },
       status: {
-        type: DataTypes.ENUM('in_inventory', 'handed', 'received'),
+        type: DataTypes.ENUM('pending', 'in_inventory', 'handed', 'received'),
         allowNull: false,
-        defaultValue: 'in_inventory',
+        defaultValue: 'pending',
       },
       approved_by: { type: DataTypes.INTEGER, allowNull: true },
       approved_at: { type: DataTypes.DATE, allowNull: true },

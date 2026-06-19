@@ -33,6 +33,12 @@ router.get(
 );
 
 router.post(
+  '/:id/approve',
+  requireRole('superAdmin'),
+  purchaseController.approve
+);
+
+router.post(
   '/:id/hand-to-chief',
   requireRole('purchaser'),
   purchaseController.handToChief

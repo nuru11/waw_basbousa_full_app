@@ -29,4 +29,10 @@ router.get(
   stockController.listProduction
 );
 
+router.get(
+  '/plate-availability/today',
+  requireRole('employee', 'chief'),
+  stockController.plateAvailabilityToday
+);
+
 module.exports = router;

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { api, type Purchase, type Sale } from "../../services/api";
+import { formatNumber } from "../../utils/formatNumber";
 
 export default function ReportsPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -40,7 +41,7 @@ export default function ReportsPage() {
                 <tr key={p.id} className="border-b border-gray-100 dark:border-gray-800">
                   <td className="py-2">#{p.id}</td>
                   <td className="py-2">{p.ingredient?.name}</td>
-                  <td className="py-2">{p.quantity}</td>
+                  <td className="py-2">{formatNumber(p.quantity)}</td>
                   <td className="py-2">{fmt(p.unit_price)}</td>
                   <td className="py-2">{fmt(p.total_price)}</td>
                   <td className="py-2 capitalize">{p.status}</td>
@@ -64,7 +65,7 @@ export default function ReportsPage() {
               {sales.map((s) => (
                 <tr key={s.id} className="border-b border-gray-100 dark:border-gray-800">
                   <td className="py-2">{s.dish?.name}</td>
-                  <td className="py-2">{s.employee?.name}</td>
+                  <td className="py-2">{s.seller?.name}</td>
                   <td className="py-2 capitalize">{s.weight_type}</td>
                   <td className="py-2">{fmt(s.total_price)}</td>
                 </tr>

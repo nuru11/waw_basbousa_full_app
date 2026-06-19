@@ -33,11 +33,26 @@ async function logProduction(req, res, next) {
 
 async function listProduction(req, res, next) {
   try {
-    const logs = await stockService.listProductionLogs();
+    const logs = await stockService.listProductionLogs({
+      period: req.query.period === 'today' ? 'today' : undefined,
+    });
     res.json({ success: true, data: logs });
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { list, adjust, logProduction, listProduction };
+async function plateAvailabilityToday(req, res, next) {
+  try {
+    const dishId = parseInt(req.query.dish_id, 10);
+    if (!dishId) {
+      return res.status(400).json({ success: false, message: 'dish_id is required' });
+    }
+    const data = await stockService.getTodayPlateAvailability(dishId);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { list, adjust, logProduction, listProduction, plateAvailabilityToday };

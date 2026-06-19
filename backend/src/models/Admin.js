@@ -14,6 +14,11 @@ module.exports = (sequelize) => {
         allowNull: false,
       },
       short_id: { type: DataTypes.STRING(4), allowNull: false, unique: true },
+      status: {
+        type: DataTypes.ENUM('active', 'inactive'),
+        allowNull: false,
+        defaultValue: 'active',
+      },
     },
     { tableName: 'admins', underscored: true }
   );

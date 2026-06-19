@@ -21,6 +21,10 @@ async function authMiddleware(req, _res, next) {
       throw new AppError('User not found', 401);
     }
 
+    if (admin.status !== 'active') {
+      throw new AppError('Account is inactive. Contact your administrator.', 403);
+    }
+
     req.user = admin;
     next();
   } catch (err) {

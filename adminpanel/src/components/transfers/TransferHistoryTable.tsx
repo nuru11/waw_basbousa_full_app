@@ -13,12 +13,14 @@ type Props = {
   transfers: Transfer[];
   emptyMessage?: string;
   showPurchaser?: boolean;
+  showCreator?: boolean;
 };
 
 export default function TransferHistoryTable({
   transfers,
   emptyMessage = "No transfers found",
   showPurchaser = true,
+  showCreator = false,
 }: Props) {
   if (transfers.length === 0) {
     return <p className="text-gray-500">{emptyMessage}</p>;
@@ -31,6 +33,7 @@ export default function TransferHistoryTable({
           <th className="pb-3">When</th>
           <th className="pb-3">Date</th>
           {showPurchaser && <th className="pb-3">Purchaser</th>}
+          {showCreator && <th className="pb-3">From</th>}
           <th className="pb-3">Amount</th>
           <th className="pb-3">Status</th>
           <th className="pb-3">Spent</th>
@@ -49,6 +52,9 @@ export default function TransferHistoryTable({
               <td className="py-3">{formatRelativeDate(dateStr)}</td>
               <td className="py-3">{formatShortDate(dateStr)}</td>
               {showPurchaser && <td className="py-3">{t.purchaser?.name}</td>}
+              {showCreator && (
+                <td className="py-3">{t.creator?.name ?? "SuperAdmin"}</td>
+              )}
               <td className="py-3">ETB {formatEtb(amount)}</td>
               <td className="py-3">
                 <span

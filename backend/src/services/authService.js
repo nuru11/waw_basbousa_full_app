@@ -21,6 +21,10 @@ async function login(username, password) {
     throw new AppError('Invalid username or password', 401);
   }
 
+  if (admin.status !== 'active') {
+    throw new AppError('Account is inactive. Contact your administrator.', 403);
+  }
+
   const token = signToken(admin);
   return { token, user: admin.toJSON() };
 }

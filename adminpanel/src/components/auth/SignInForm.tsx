@@ -5,9 +5,11 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import { Modal } from "../ui/modal";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { useAuth } from "../../context/AuthContext";
-import { ApiError } from "../../services/api";
+import { ApiError, type User } from "../../services/api";
+import { getRoleHome, isCashierEligible } from "../../utils/roleRoutes";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,8 +17,9 @@ export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
   const { submitting, run } = useSubmitLock();
-  const { login } = useAuth();
+  const { login, setCashierMode } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
@@ -24,12 +27,23 @@ export default function SignInForm() {
     await run(async () => {
       setError("");
       try {
-        const redirect = await login(username, password);
-        navigate(redirect);
+        const user = await login(username, password);
+        if (isCashierEligible(user.role)) {
+          setPendingUser(user);
+        } else {
+          navigate(getRoleHome(user.role));
+        }
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "Login failed");
       }
     });
+  }
+
+  function handleCashierChoice(asCashier: boolean) {
+    if (!pendingUser) return;
+    setCashierMode(asCashier);
+    setPendingUser(null);
+    navigate(getRoleHome(pendingUser.role, asCashier));
   }
 
   return (
@@ -112,6 +126,29 @@ export default function SignInForm() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={!!pendingUser}
+        onClose={() => handleCashierChoice(false)}
+        showCloseButton={false}
+        className="max-w-md p-6 m-4"
+      >
+        <h2 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+          Login as cashier?
+        </h2>
+        <p className="mb-6 text-sm text-gray-500">
+          Choose cashier mode to open only the sales screen. Otherwise you will see your full
+          workspace.
+        </p>
+        <div className="flex gap-3">
+          <Button size="sm" className="flex-1" onClick={() => handleCashierChoice(true)}>
+            Yes, cashier only
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => handleCashierChoice(false)}>
+            No, full access
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

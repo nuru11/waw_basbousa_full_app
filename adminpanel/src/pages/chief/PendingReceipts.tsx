@@ -5,6 +5,7 @@ import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import Button from "../../components/ui/button/Button";
 import { api, type Purchase } from "../../services/api";
 import { formatRelativeDate, formatShortDate } from "../../utils/formatDate";
+import { formatNumber } from "../../utils/formatNumber";
 
 function formatEtb(value: number | string) {
   return parseFloat(String(value)).toFixed(2);
@@ -76,7 +77,7 @@ export default function PendingReceiptsPage() {
                   <td className="py-4 pr-4">{p.purchaser?.name ?? "—"}</td>
                   <td className="py-4 pr-4">{p.ingredient?.name ?? "—"}</td>
                   <td className="py-4 pr-4 whitespace-nowrap">
-                    {p.quantity} {p.ingredient?.unit}
+                    {formatNumber(p.quantity)} {p.ingredient?.unit}
                   </td>
                   <td className="py-4 pr-4 font-medium whitespace-nowrap">
                     ETB {formatEtb(p.total_price)}
