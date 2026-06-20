@@ -20,5 +20,10 @@
     "noRecipesHint": "No plates with recipes defined. Ask superadmin to set up recipes.",
     "logProductionBtn": "Log Production (deducts stock)",
     "recentProduction": "Recent Production"
+  },
+  "todaysPlates": {
+    "metaTitle": "Today's Plates | Restaurant",
+    "metaDescription": "Today's cooked plate stock and remaining amounts",
+    "title": "Today's Plates"
   }
 }

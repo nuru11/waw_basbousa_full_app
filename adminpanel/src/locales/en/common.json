@@ -17,6 +17,15 @@
   "daysAgo": "{{count}} days ago",
   "lastWeek": "Last week",
   "todayCount": "{{count}} today",
+  "periodFilters": {
+    "all": "All",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "week": "This Week",
+    "month": "Month",
+    "quarter": "Quarter",
+    "entryCount": "{{count}} entries"
+  },
   "totalPlatesToday": "Total plates today",
   "loadingTodayActivity": "Loading today's activity...",
   "loadingTodaySales": "Loading today's sales...",

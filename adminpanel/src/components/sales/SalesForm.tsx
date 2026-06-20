@@ -167,11 +167,11 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
             <p className="font-semibold text-brand-600">
               {t("units.kgAvailable", { amount: formatNumber(availability.available_kg) })}
             </p>
-            <p className="text-xs text-gray-400">
+            {/* <p className="text-xs text-gray-400">
               {t("units.platesCookedToday", { count: availability.produced_plates })}{" "}
               · {t("units.producedKg", { amount: formatNumber(availability.produced_kg) })}{" "}
               · {t("units.soldKg", { amount: formatNumber(availability.sold_kg) })}
-            </p>
+            </p> */}
             {form.weight_type === "slice" && (
               <p className="mt-1 text-xs text-gray-400">{t("units.sliceStockRule")}</p>
             )}

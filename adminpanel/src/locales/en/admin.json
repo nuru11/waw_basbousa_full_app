@@ -65,14 +65,20 @@
   },
   "transferHistory": {
     "metaTitle": "Transfer History | Restaurant",
-    "metaDescription": "Past transfers",
-    "noBeforeWeek": "No transfers before this week"
+    "metaDescription": "View and filter transfer history",
+    "empty": "No transfers for this period"
   },
   "pendingPurchases": {
     "metaTitle": "Pending Purchases | Restaurant",
     "metaDescription": "Approve purchases",
     "empty": "No pending purchases",
     "failedToApprove": "Failed to approve"
+  },
+  "allPurchases": {
+    "metaTitle": "All Purchases | Restaurant",
+    "metaDescription": "View and filter all purchases",
+    "title": "All Purchases",
+    "empty": "No purchases for this period"
   },
   "purchaserToday": {
     "metaTitle": "Purchaser Today | Restaurant",
@@ -87,16 +93,12 @@
     "noHandedToChief": "No items handed to chief today"
   },
   "productionHistory": {
-    "metaTitle": "Production History | Restaurant",
-    "metaDescription": "Chief production logs",
-    "totalPlatesMade": "Total Plates Made",
-    "productionEntries": "Production Entries",
-    "byChief": "By Chief",
-    "noLogsYet": "No logs yet",
-    "byPlate": "By Plate",
-    "noProductionLogged": "No production logged yet",
-    "productionLog": "Production Log",
-    "noPlatesLogged": "No plates logged by chief yet"
+    "metaTitle": "Chief Overview | Restaurant",
+    "metaDescription": "Chief inventory and plate production history",
+    "chiefInventory": "Chief Inventory",
+    "allPlatesMade": "All Plates Made",
+    "plateRowCount": "{{count}} entries",
+    "noPlatesLogged": "No plates logged yet"
   },
   "chiefToday": {
     "metaTitle": "Chief Today | Restaurant",

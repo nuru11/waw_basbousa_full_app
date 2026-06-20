@@ -55,4 +55,30 @@ async function plateAvailabilityToday(req, res, next) {
   }
 }
 
-module.exports = { list, adjust, logProduction, listProduction, plateAvailabilityToday };
+async function listTodayPlates(req, res, next) {
+  try {
+    const data = await stockService.listTodayPlatesOverview(req.query.date);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function listPlatesHistory(req, res, next) {
+  try {
+    const data = await stockService.listAllPlatesOverview();
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  list,
+  adjust,
+  logProduction,
+  listProduction,
+  plateAvailabilityToday,
+  listTodayPlates,
+  listPlatesHistory,
+};

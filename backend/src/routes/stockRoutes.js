@@ -35,4 +35,16 @@ router.get(
   stockController.plateAvailabilityToday
 );
 
+router.get(
+  '/plates/today',
+  requireRole('chief', 'superAdmin'),
+  stockController.listTodayPlates
+);
+
+router.get(
+  '/plates/history',
+  requireRole('superAdmin'),
+  stockController.listPlatesHistory
+);
+
 module.exports = router;

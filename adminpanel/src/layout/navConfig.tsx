@@ -31,6 +31,7 @@ export function getNavForRole(role: User["role"]): NavItem[] {
             { nameKey: "transfer", path: "/admin/transfers" },
             { nameKey: "transferHistory", path: "/admin/transfers/history" },
             { nameKey: "pendingPurchases", path: "/admin/purchases" },
+            { nameKey: "allPurchases", path: "/admin/purchases/history" },
             { nameKey: "purchaserTodayActivity", path: "/admin/purchaser/today" },
           ],
         },
@@ -70,6 +71,7 @@ export function getNavForRole(role: User["role"]): NavItem[] {
       return [
         { icon: <BoxCubeIcon />, nameKey: "pendingReceipts", path: "/chief/receipts" },
         { icon: <TableIcon />, nameKey: "inventory", path: "/chief/inventory" },
+        { icon: <TableIcon />, nameKey: "todaysPlates", path: "/chief/plates/today" },
         { icon: <PieChartIcon />, nameKey: "production", path: "/chief/production" },
       ];
     case "employee":

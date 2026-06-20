@@ -8,7 +8,13 @@ const {
 const { fn, col, Op } = require('sequelize');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
-const { getTodayRange } = require('../utils/dateUtils');
+const {
+  getTodayRange,
+  getYesterdayRange,
+  getStartOfWeek,
+  getStartOfMonth,
+  getStartOfQuarter,
+} = require('../utils/dateUtils');
 const { deductFromTransfers } = require('./transferService');
 
 const PURCHASE_DATE_FIELDS = ['created_at', 'handed_at', 'received_at', 'approved_at'];
@@ -29,6 +35,15 @@ async function listPurchases({ purchaserId, status, period, dateField } = {}) {
     const field = PURCHASE_DATE_FIELDS.includes(dateField) ? dateField : 'created_at';
     const { start, end } = getTodayRange();
     where[field] = { [Op.between]: [start, end] };
+  } else if (period === 'yesterday') {
+    const { start, end } = getYesterdayRange();
+    where.created_at = { [Op.between]: [start, end] };
+  } else if (period === 'week') {
+    where.created_at = { [Op.gte]: getStartOfWeek() };
+  } else if (period === 'month') {
+    where.created_at = { [Op.gte]: getStartOfMonth() };
+  } else if (period === 'quarter') {
+    where.created_at = { [Op.gte]: getStartOfQuarter() };
   }
 
   return Purchase.findAll({

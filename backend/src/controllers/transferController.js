@@ -1,16 +1,31 @@
 const transferService = require('../services/transferService');
 
+const SUPER_ADMIN_PERIODS = [
+  'today',
+  'yesterday',
+  'week',
+  'month',
+  'quarter',
+  'all',
+  'history',
+];
+
 async function list(req, res, next) {
   try {
     const purchaserId = req.user.role === 'purchaser' ? req.user.id : undefined;
-    const requestedPeriod = ['today', 'week', 'history'].includes(req.query.period)
-      ? req.query.period
-      : undefined;
-    const period =
-      requestedPeriod === 'today' ||
-      (req.user.role === 'superAdmin' && ['week', 'history'].includes(requestedPeriod))
-        ? requestedPeriod
+    const requestedPeriod = req.query.period;
+    let period;
+
+    if (req.user.role === 'superAdmin') {
+      period = SUPER_ADMIN_PERIODS.includes(requestedPeriod)
+        ? requestedPeriod === 'all'
+          ? undefined
+          : requestedPeriod
         : undefined;
+    } else if (requestedPeriod === 'today') {
+      period = 'today';
+    }
+
     const status =
       ['pending', 'accepted'].includes(req.query.status) ? req.query.status : undefined;
 

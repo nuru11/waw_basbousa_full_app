@@ -65,14 +65,20 @@
   },
   "transferHistory": {
     "metaTitle": "سجل التحويلات | المطعم",
-    "metaDescription": "التحويلات السابقة",
-    "noBeforeWeek": "لا تحويلات قبل هذا الأسبوع"
+    "metaDescription": "عرض وتصفية سجل التحويلات",
+    "empty": "لا تحويلات لهذه الفترة"
   },
   "pendingPurchases": {
     "metaTitle": "المشتريات المعلقة | المطعم",
     "metaDescription": "الموافقة على المشتريات",
     "empty": "لا مشتريات معلقة",
     "failedToApprove": "فشلت الموافقة"
+  },
+  "allPurchases": {
+    "metaTitle": "جميع المشتريات | المطعم",
+    "metaDescription": "عرض وتصفية جميع المشتريات",
+    "title": "جميع المشتريات",
+    "empty": "لا مشتريات لهذه الفترة"
   },
   "purchaserToday": {
     "metaTitle": "المشتري اليوم | المطعم",
@@ -87,16 +93,12 @@
     "noHandedToChief": "لا عناصر مُسلّمة للطباخ اليوم"
   },
   "productionHistory": {
-    "metaTitle": "سجل الإنتاج | المطعم",
-    "metaDescription": "سجلات إنتاج الطباخ",
-    "totalPlatesMade": "إجمالي الأطباق المُعدّة",
-    "productionEntries": "سجلات الإنتاج",
-    "byChief": "حسب الطباخ",
-    "noLogsYet": "لا سجلات بعد",
-    "byPlate": "حسب الطبق",
-    "noProductionLogged": "لم يُسجَّل إنتاج بعد",
-    "productionLog": "سجل الإنتاج",
-    "noPlatesLogged": "لم يُسجَّل أطباق من الطباخ بعد"
+    "metaTitle": "نظرة عامة على الطباخ | المطعم",
+    "metaDescription": "مخزون الطباخ وسجل إنتاج الأطباق",
+    "chiefInventory": "مخزون الطباخ",
+    "allPlatesMade": "جميع الأطباق المُعدّة",
+    "plateRowCount": "{{count}} سجل",
+    "noPlatesLogged": "لم يُسجَّل أطباق بعد"
   },
   "chiefToday": {
     "metaTitle": "الطباخ اليوم | المطعم",

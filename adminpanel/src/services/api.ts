@@ -188,6 +188,25 @@ export interface PlateAvailability {
   available_kg: number;
 }
 
+export interface TodayPlateRow {
+  dish_id: number;
+  dish_name: string;
+  date: string;
+  produced_kg: number;
+  produced_plates: number;
+  sold_kg: number;
+  remaining_kg: number;
+}
+
+export interface TodayPlatesOverview {
+  date: string;
+  plates: TodayPlateRow[];
+}
+
+export interface PlatesHistoryOverview {
+  plates: TodayPlateRow[];
+}
+
 export interface DailySalesPayments {
   cash: number;
   cbe: number;

@@ -11,7 +11,7 @@ const {
 const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
-const { getTodayRange, getDateRange } = require('../utils/dateUtils');
+const { getTodayRange, getDateRange, formatDateYmd } = require('../utils/dateUtils');
 const { plateWeightToKg } = require('../utils/plateWeight');
 
 async function listStock() {
@@ -213,6 +213,87 @@ async function listProductionLogs({ period } = {}) {
   });
 }
 
+async function listTodayPlatesOverview(dateInput) {
+  const { start, end, date } = getDateRange(dateInput);
+
+  const [productionLogs, sales] = await Promise.all([
+    ProductionLog.findAll({
+      where: { logged_at: { [Op.between]: [start, end] } },
+      attributes: ['dish_id'],
+      group: ['dish_id'],
+      raw: true,
+    }),
+    Sale.findAll({
+      where: { sold_at: { [Op.between]: [start, end] } },
+      attributes: ['dish_id'],
+      group: ['dish_id'],
+      raw: true,
+    }),
+  ]);
+
+  const dishIds = new Set([
+    ...productionLogs.map((l) => l.dish_id),
+    ...sales.map((s) => s.dish_id),
+  ]);
+
+  const plates = [];
+  for (const dishId of dishIds) {
+    const stock = await getPlateAvailabilityForDate(dishId, date);
+    const dish = await Dish.findByPk(dishId, { attributes: ['id', 'name'] });
+
+    plates.push({
+      dish_id: dishId,
+      dish_name: dish?.name ?? stock.dish_name ?? `Plate #${dishId}`,
+      date,
+      produced_kg: stock.produced_kg,
+      produced_plates: stock.produced_plates,
+      sold_kg: stock.sold_kg,
+      remaining_kg: stock.remaining_kg,
+    });
+  }
+
+  plates.sort((a, b) => a.dish_name.localeCompare(b.dish_name));
+
+  return { date, plates };
+}
+
+function normalizeDateKey(day) {
+  if (!day) return null;
+  if (day instanceof Date) return formatDateYmd(day);
+  return String(day).slice(0, 10);
+}
+
+async function listAllPlatesOverview() {
+  const [prodDates, saleDates] = await Promise.all([
+    ProductionLog.findAll({
+      attributes: [[sequelize.fn('DATE', sequelize.col('logged_at')), 'day']],
+      group: ['day'],
+      raw: true,
+    }),
+    Sale.findAll({
+      attributes: [[sequelize.fn('DATE', sequelize.col('sold_at')), 'day']],
+      group: ['day'],
+      raw: true,
+    }),
+  ]);
+
+  const dateSet = new Set();
+  for (const row of [...prodDates, ...saleDates]) {
+    const date = normalizeDateKey(row.day);
+    if (date) dateSet.add(date);
+  }
+
+  const dates = [...dateSet].sort((a, b) => b.localeCompare(a));
+
+  const plates = [];
+  for (const date of dates) {
+    const { plates: dayPlates } = await listTodayPlatesOverview(date);
+    plates.push(...dayPlates);
+  }
+
+  return { plates };
+}
+
 module.exports = {
   listStock,
   adjustStock,
@@ -220,4 +301,6 @@ module.exports = {
   listProductionLogs,
   getPlateAvailabilityForDate,
   getTodayPlateAvailability,
+  listTodayPlatesOverview,
+  listAllPlatesOverview,
 };

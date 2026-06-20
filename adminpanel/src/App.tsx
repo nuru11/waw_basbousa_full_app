@@ -17,6 +17,7 @@ import ReportsPage from "./pages/superadmin/Reports";
 import TransfersPage from "./pages/superadmin/Transfers";
 import TransferHistoryPage from "./pages/superadmin/TransferHistoryPage";
 import PendingPurchasesPage from "./pages/superadmin/PendingPurchases";
+import AllPurchasesPage from "./pages/superadmin/AllPurchases";
 import ProductionHistoryPage from "./pages/superadmin/ProductionHistory";
 import PurchaserTodayPage from "./pages/superadmin/PurchaserToday";
 import ChiefTodayPage from "./pages/superadmin/ChiefToday";
@@ -32,6 +33,7 @@ import PurchaserTransferHistoryPage from "./pages/purchaser/TransferHistory";
 import PendingReceiptsPage from "./pages/chief/PendingReceipts";
 import InventoryPage from "./pages/chief/Inventory";
 import ProductionPage from "./pages/chief/Production";
+import TodaysPlatesPage from "./pages/chief/TodaysPlates";
 
 import PosPage from "./pages/employee/Pos";
 import MySalesPage from "./pages/employee/MySales";
@@ -68,6 +70,7 @@ export default function App() {
                 <Route path="/admin/transfers" element={<TransfersPage />} />
                 <Route path="/admin/transfers/history" element={<TransferHistoryPage />} />
                 <Route path="/admin/purchases" element={<PendingPurchasesPage />} />
+                <Route path="/admin/purchases/history" element={<AllPurchasesPage />} />
                 <Route path="/admin/purchaser/today" element={<PurchaserTodayPage />} />
                 <Route path="/admin/production" element={<ProductionHistoryPage />} />
                 <Route path="/admin/chief/today" element={<ChiefTodayPage />} />
@@ -86,6 +89,7 @@ export default function App() {
               <Route element={<ProtectedRoute allowedRoles={["chief"]} />}>
                 <Route path="/chief/receipts" element={<PendingReceiptsPage />} />
                 <Route path="/chief/inventory" element={<InventoryPage />} />
+                <Route path="/chief/plates/today" element={<TodaysPlatesPage />} />
                 <Route path="/chief/production" element={<ProductionPage />} />
               </Route>
 

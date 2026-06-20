@@ -2,33 +2,36 @@ const { Op } = require('sequelize');
 const { Transfer, Admin } = require('../models');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
-const { getTodayRange } = require('../utils/dateUtils');
+const {
+  getTodayRange,
+  getYesterdayRange,
+  getStartOfWeek,
+  getStartOfMonth,
+  getStartOfQuarter,
+} = require('../utils/dateUtils');
 
 const TRANSFER_DATE_FIELDS = ['created_at', 'accepted_at'];
-
-function getStartOfWeek() {
-  const now = new Date();
-  const day = now.getDay();
-  const diffToMonday = day === 0 ? 6 : day - 1;
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - diffToMonday);
-  return start;
-}
 
 async function listTransfers({ purchaserId, period, status, dateField } = {}) {
   const where = {};
   if (purchaserId) where.purchaser_id = purchaserId;
   if (status) where.status = status;
 
-  if (period === 'week') {
-    where.created_at = { [Op.gte]: getStartOfWeek() };
-  } else if (period === 'history') {
-    where.created_at = { [Op.lt]: getStartOfWeek() };
-  } else if (period === 'today') {
+  if (period === 'today') {
     const field = TRANSFER_DATE_FIELDS.includes(dateField) ? dateField : 'created_at';
     const { start, end } = getTodayRange();
     where[field] = { [Op.between]: [start, end] };
+  } else if (period === 'yesterday') {
+    const { start, end } = getYesterdayRange();
+    where.created_at = { [Op.between]: [start, end] };
+  } else if (period === 'week') {
+    where.created_at = { [Op.gte]: getStartOfWeek() };
+  } else if (period === 'month') {
+    where.created_at = { [Op.gte]: getStartOfMonth() };
+  } else if (period === 'quarter') {
+    where.created_at = { [Op.gte]: getStartOfQuarter() };
+  } else if (period === 'history') {
+    where.created_at = { [Op.lt]: getStartOfWeek() };
   }
 
   return Transfer.findAll({

@@ -29,4 +29,39 @@ function getTodayRange() {
   return getDateRange();
 }
 
-module.exports = { getTodayRange, getDateRange, formatDateYmd };
+function getYesterdayRange() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return getDateRange(formatDateYmd(yesterday));
+}
+
+function getStartOfWeek() {
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMonday = day === 0 ? 6 : day - 1;
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - diffToMonday);
+  return start;
+}
+
+function getStartOfMonth() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+}
+
+function getStartOfQuarter() {
+  const now = new Date();
+  const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
+  return new Date(now.getFullYear(), quarterMonth, 1, 0, 0, 0, 0);
+}
+
+module.exports = {
+  getTodayRange,
+  getYesterdayRange,
+  getDateRange,
+  formatDateYmd,
+  getStartOfWeek,
+  getStartOfMonth,
+  getStartOfQuarter,
+};

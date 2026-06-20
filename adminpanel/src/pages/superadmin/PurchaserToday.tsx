@@ -1,119 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
+import PurchasesTable from "../../components/purchases/PurchasesTable";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
-import {
-  DataTable,
-  purchaseStatusVariant,
-  SectionCard,
-  StatCard,
-  StatusBadge,
-} from "../../components/ui";
-import type { DataTableColumn } from "../../components/ui";
+import { SectionCard, StatCard } from "../../components/ui";
 import { getIntlLocale } from "../../i18n";
 import { api, type Purchase, type Transfer } from "../../services/api";
-import { formatShortDate } from "../../utils/formatDate";
-import { formatCurrency } from "../../utils/formatCurrency";
-import { purchaseStatusLabel } from "../../utils/purchaseStatus";
-import { formatNumber } from "../../utils/formatNumber";
 import { translateApiError } from "../../utils/translateApiError";
-
-function getPurchaseDate(p: Purchase) {
-  return p.created_at ?? p.createdAt;
-}
-
-function PurchasesTable({
-  purchases,
-  emptyMessage,
-  dateField,
-}: {
-  purchases: Purchase[];
-  emptyMessage: string;
-  dateField: "created_at" | "handed_at";
-}) {
-  const { t: tCommon } = useTranslation("common");
-
-  const getDate = (p: Purchase) => {
-    if (dateField === "handed_at") return p.handed_at ?? undefined;
-    return getPurchaseDate(p);
-  };
-
-  const columns: DataTableColumn<Purchase>[] = useMemo(
-    () => [
-      {
-        key: "time",
-        header: tCommon("fields.time"),
-        cellClassName: "whitespace-nowrap",
-        render: (p) => formatShortDate(getDate(p)),
-      },
-      {
-        key: "id",
-        header: tCommon("fields.id"),
-        render: (p) => (
-          <span className="font-medium text-gray-800 dark:text-white/90">
-            {tCommon("idShort", { id: p.id })}
-          </span>
-        ),
-      },
-      {
-        key: "purchaser",
-        header: tCommon("fields.purchaser"),
-        render: (p) => p.purchaser?.name ?? tCommon("emDash"),
-      },
-      {
-        key: "ingredient",
-        header: tCommon("fields.ingredient"),
-        render: (p) => p.ingredient?.name ?? tCommon("emDash"),
-      },
-      {
-        key: "qty",
-        header: tCommon("fields.qty"),
-        cellClassName: "whitespace-nowrap",
-        render: (p) => `${formatNumber(p.quantity)} ${p.ingredient?.unit ?? ""}`,
-      },
-      {
-        key: "total",
-        header: tCommon("fields.total"),
-        cellClassName: "whitespace-nowrap font-medium",
-        render: (p) => formatCurrency(parseFloat(String(p.total_price))),
-      },
-      {
-        key: "status",
-        header: tCommon("fields.status"),
-        render: (p) => (
-          <StatusBadge variant={purchaseStatusVariant(p.status)}>
-            {purchaseStatusLabel(p.status)}
-          </StatusBadge>
-        ),
-      },
-      {
-        key: "screenshot",
-        header: tCommon("fields.screenshot"),
-        render: (p) => (
-          <PurchaseScreenshot
-            purchaseId={p.id}
-            hasScreenshot={!!p.screenshot_path}
-            width={56}
-            height={56}
-          />
-        ),
-      },
-    ],
-    [dateField, tCommon]
-  );
-
-  return (
-    <DataTable
-      columns={columns}
-      data={purchases}
-      keyExtractor={(p) => p.id}
-      emptyMessage={emptyMessage}
-      hoverRows
-    />
-  );
-}
 
 export default function PurchaserTodayPage() {
   const { t } = useTranslation("admin");
