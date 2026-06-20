@@ -1,9 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
+import {
+  DataTable,
+  purchaseStatusVariant,
+  SectionCard,
+  StatCard,
+  StatusBadge,
+} from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { getIntlLocale } from "../../i18n";
 import { api, type Purchase, type Transfer } from "../../services/api";
 import { formatShortDate } from "../../utils/formatDate";
@@ -14,40 +22,6 @@ import { translateApiError } from "../../utils/translateApiError";
 
 function getPurchaseDate(p: Purchase) {
   return p.created_at ?? p.createdAt;
-}
-
-function statusClass(status: Purchase["status"]) {
-  switch (status) {
-    case "received":
-      return "text-success-500";
-    case "handed":
-    case "in_inventory":
-      return "text-brand-500";
-    default:
-      return "text-warning-500";
-  }
-}
-
-function SectionCard({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count: number;
-  children: React.ReactNode;
-}) {
-  const { t: tCommon } = useTranslation("common");
-
-  return (
-    <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <h3 className="font-semibold">{title}</h3>
-        <span className="text-sm text-gray-500">{tCommon("todayCount", { count })}</span>
-      </div>
-      {children}
-    </div>
-  );
 }
 
 function PurchasesTable({
@@ -61,60 +35,83 @@ function PurchasesTable({
 }) {
   const { t: tCommon } = useTranslation("common");
 
-  if (purchases.length === 0) {
-    return <p className="text-gray-500">{emptyMessage}</p>;
-  }
-
   const getDate = (p: Purchase) => {
     if (dateField === "handed_at") return p.handed_at ?? undefined;
     return getPurchaseDate(p);
   };
 
+  const columns: DataTableColumn<Purchase>[] = useMemo(
+    () => [
+      {
+        key: "time",
+        header: tCommon("fields.time"),
+        cellClassName: "whitespace-nowrap",
+        render: (p) => formatShortDate(getDate(p)),
+      },
+      {
+        key: "id",
+        header: tCommon("fields.id"),
+        render: (p) => (
+          <span className="font-medium text-gray-800 dark:text-white/90">
+            {tCommon("idShort", { id: p.id })}
+          </span>
+        ),
+      },
+      {
+        key: "purchaser",
+        header: tCommon("fields.purchaser"),
+        render: (p) => p.purchaser?.name ?? tCommon("emDash"),
+      },
+      {
+        key: "ingredient",
+        header: tCommon("fields.ingredient"),
+        render: (p) => p.ingredient?.name ?? tCommon("emDash"),
+      },
+      {
+        key: "qty",
+        header: tCommon("fields.qty"),
+        cellClassName: "whitespace-nowrap",
+        render: (p) => `${formatNumber(p.quantity)} ${p.ingredient?.unit ?? ""}`,
+      },
+      {
+        key: "total",
+        header: tCommon("fields.total"),
+        cellClassName: "whitespace-nowrap font-medium",
+        render: (p) => formatCurrency(parseFloat(String(p.total_price))),
+      },
+      {
+        key: "status",
+        header: tCommon("fields.status"),
+        render: (p) => (
+          <StatusBadge variant={purchaseStatusVariant(p.status)}>
+            {purchaseStatusLabel(p.status)}
+          </StatusBadge>
+        ),
+      },
+      {
+        key: "screenshot",
+        header: tCommon("fields.screenshot"),
+        render: (p) => (
+          <PurchaseScreenshot
+            purchaseId={p.id}
+            hasScreenshot={!!p.screenshot_path}
+            width={56}
+            height={56}
+          />
+        ),
+      },
+    ],
+    [dateField, tCommon]
+  );
+
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-          <th className="pb-3 pe-4">{tCommon("fields.time")}</th>
-          <th className="pb-3 pe-4">{tCommon("fields.id")}</th>
-          <th className="pb-3 pe-4">{tCommon("fields.purchaser")}</th>
-          <th className="pb-3 pe-4">{tCommon("fields.ingredient")}</th>
-          <th className="pb-3 pe-4">{tCommon("fields.qty")}</th>
-          <th className="pb-3 pe-4">{tCommon("fields.total")}</th>
-          <th className="pb-3 pe-4">{tCommon("fields.status")}</th>
-          <th className="pb-3">{tCommon("fields.screenshot")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {purchases.map((p) => (
-          <tr
-            key={p.id}
-            className="border-b border-gray-100 dark:border-gray-800 align-middle"
-          >
-            <td className="py-4 pe-4 whitespace-nowrap">{formatShortDate(getDate(p))}</td>
-            <td className="py-4 pe-4 font-medium">{tCommon("idShort", { id: p.id })}</td>
-            <td className="py-4 pe-4">{p.purchaser?.name ?? tCommon("emDash")}</td>
-            <td className="py-4 pe-4">{p.ingredient?.name}</td>
-            <td className="py-4 pe-4 whitespace-nowrap">
-              {formatNumber(p.quantity)} {p.ingredient?.unit}
-            </td>
-            <td className="py-4 pe-4 font-medium whitespace-nowrap">
-              {formatCurrency(parseFloat(String(p.total_price)))}
-            </td>
-            <td className={`py-4 pe-4 ${statusClass(p.status)}`}>
-              {purchaseStatusLabel(p.status)}
-            </td>
-            <td className="py-4">
-              <PurchaseScreenshot
-                purchaseId={p.id}
-                hasScreenshot={!!p.screenshot_path}
-                width={56}
-                height={56}
-              />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <DataTable
+      columns={columns}
+      data={purchases}
+      keyExtractor={(p) => p.id}
+      emptyMessage={emptyMessage}
+      hoverRows
+    />
   );
 }
 
@@ -166,19 +163,22 @@ export default function PurchaserTodayPage() {
         title={t("purchaserToday.metaTitle")}
         description={t("purchaserToday.metaDescription")}
       />
-      <PageBreadcrumb pageTitle={tNav("purchaserTodayTitle")} />
-      <p className="mb-4 text-sm text-gray-500">{todayLabel}</p>
+      <PageBreadcrumb pageTitle={tNav("purchaserTodayTitle")} subtitle={todayLabel} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
       {loading ? (
-        <p className="text-gray-500">{tCommon("loadingTodayActivity")}</p>
+        <p className="text-gray-500 dark:text-gray-400">{tCommon("loadingTodayActivity")}</p>
       ) : (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-            <p className="text-sm text-gray-500">{tCommon("totalEventsToday")}</p>
-            <p className="mt-1 text-3xl font-bold text-brand-500">{totalCount}</p>
-          </div>
+          <StatCard
+            title={tCommon("totalPlatesToday")}
+            value={String(totalCount)}
+            accent="brand"
+          />
 
-          <SectionCard title={t("purchaserToday.purchasesSubmitted")} count={submitted.length}>
+          <SectionCard
+            title={t("purchaserToday.purchasesSubmitted")}
+            count={tCommon("todayCount", { count: submitted.length })}
+          >
             <PurchasesTable
               purchases={submitted}
               dateField="created_at"
@@ -186,7 +186,10 @@ export default function PurchaserTodayPage() {
             />
           </SectionCard>
 
-          <SectionCard title={t("purchaserToday.transfersSent")} count={transfersSent.length}>
+          <SectionCard
+            title={t("purchaserToday.transfersSent")}
+            count={tCommon("todayCount", { count: transfersSent.length })}
+          >
             <TransferHistoryTable
               transfers={transfersSent}
               showPurchaser
@@ -195,7 +198,10 @@ export default function PurchaserTodayPage() {
             />
           </SectionCard>
 
-          <SectionCard title={t("purchaserToday.transfersAccepted")} count={transfersAccepted.length}>
+          <SectionCard
+            title={t("purchaserToday.transfersAccepted")}
+            count={tCommon("todayCount", { count: transfersAccepted.length })}
+          >
             <TransferHistoryTable
               transfers={transfersAccepted}
               showPurchaser
@@ -204,7 +210,10 @@ export default function PurchaserTodayPage() {
             />
           </SectionCard>
 
-          <SectionCard title={t("purchaserToday.handedToChief")} count={handed.length}>
+          <SectionCard
+            title={t("purchaserToday.handedToChief")}
+            count={tCommon("todayCount", { count: handed.length })}
+          >
             <PurchasesTable
               purchases={handed}
               dateField="handed_at"

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
+import { SectionCard } from "../../components/ui";
 import { api, type Transfer } from "../../services/api";
 import { translateApiError } from "../../utils/translateApiError";
 
@@ -28,13 +29,12 @@ export default function TransferHistoryPage() {
       />
       <PageBreadcrumb pageTitle={tNav("transferHistory")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
-      <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-        <h3 className="mb-4 font-semibold">{tCommon("transfers.transferHistory")}</h3>
+      <SectionCard title={tCommon("transfers.transferHistory")}>
         <TransferHistoryTable
           transfers={transfers}
           emptyMessage={t("transferHistory.noBeforeWeek")}
         />
-      </div>
+      </SectionCard>
     </div>
   );
 }

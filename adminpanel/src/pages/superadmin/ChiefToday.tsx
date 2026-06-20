@@ -1,8 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
+import {
+  DataTable,
+  SectionCard,
+  StatCard,
+} from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { getIntlLocale } from "../../i18n";
 import { api, type ProductionLog, type Purchase } from "../../services/api";
 import { formatShortDate, formatTime } from "../../utils/formatDate";
@@ -10,28 +16,6 @@ import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
 import { plateWeightToKg } from "../../utils/plateWeight";
 import { translateApiError } from "../../utils/translateApiError";
-
-function SectionCard({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count: number;
-  children: React.ReactNode;
-}) {
-  const { t: tCommon } = useTranslation("common");
-
-  return (
-    <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <h3 className="font-semibold">{title}</h3>
-        <span className="text-sm text-gray-500">{tCommon("todayCount", { count })}</span>
-      </div>
-      {children}
-    </div>
-  );
-}
 
 export default function ChiefTodayPage() {
   const { t } = useTranslation("admin");
@@ -48,6 +32,117 @@ export default function ChiefTodayPage() {
     month: "long",
     day: "numeric",
   });
+
+  const productionColumns: DataTableColumn<ProductionLog>[] = useMemo(
+    () => [
+      {
+        key: "time",
+        header: tCommon("fields.time"),
+        cellClassName: "whitespace-nowrap",
+        render: (log) => (
+          <>
+            {formatShortDate(log.logged_at)}
+            <span className="block text-xs text-gray-400">
+              {formatTime(log.logged_at)}
+            </span>
+          </>
+        ),
+      },
+      {
+        key: "chief",
+        header: tCommon("fields.chief"),
+        render: (log) => (
+          <>
+            {log.chief?.name ?? tCommon("emDash")}
+            {log.chief?.short_id && (
+              <span className="block text-xs text-gray-400">
+                {tCommon("idShort", { id: log.chief.short_id })}
+              </span>
+            )}
+          </>
+        ),
+      },
+      {
+        key: "plate",
+        header: tCommon("fields.plate"),
+        render: (log) => log.dish?.name ?? tCommon("emDash"),
+      },
+      {
+        key: "weight",
+        header: tCommon("fields.weightKg"),
+        render: (log) =>
+          formatNumber(
+            plateWeightToKg(log.plate_weight_grams ?? log.dish?.plate_weight_grams)
+          ),
+      },
+      {
+        key: "notes",
+        header: tCommon("fields.notes"),
+        render: (log) => log.notes || tCommon("emDash"),
+      },
+    ],
+    [tCommon]
+  );
+
+  const receiptColumns: DataTableColumn<Purchase>[] = useMemo(
+    () => [
+      {
+        key: "time",
+        header: tCommon("fields.time"),
+        cellClassName: "whitespace-nowrap",
+        render: (p) => formatShortDate(p.received_at ?? undefined),
+      },
+      {
+        key: "id",
+        header: tCommon("fields.id"),
+        render: (p) => (
+          <span className="font-medium text-gray-800 dark:text-white/90">
+            {tCommon("idShort", { id: p.id })}
+          </span>
+        ),
+      },
+      {
+        key: "chief",
+        header: tCommon("fields.chief"),
+        render: (p) => p.chief?.name ?? tCommon("emDash"),
+      },
+      {
+        key: "from",
+        header: tCommon("fields.from"),
+        render: (p) => p.purchaser?.name ?? tCommon("emDash"),
+      },
+      {
+        key: "ingredient",
+        header: tCommon("fields.ingredient"),
+        render: (p) => p.ingredient?.name ?? tCommon("emDash"),
+      },
+      {
+        key: "qty",
+        header: tCommon("fields.qty"),
+        cellClassName: "whitespace-nowrap",
+        render: (p) => `${formatNumber(p.quantity)} ${p.ingredient?.unit ?? ""}`,
+      },
+      {
+        key: "total",
+        header: tCommon("fields.total"),
+        cellClassName: "whitespace-nowrap font-medium",
+        render: (p) => formatCurrency(parseFloat(String(p.total_price))),
+      },
+      {
+        key: "screenshot",
+        header: tCommon("fields.screenshot"),
+        render: (p) => (
+          <PurchaseScreenshot
+            purchaseId={p.id}
+            hasScreenshot={!!p.screenshot_path}
+            width={56}
+            height={56}
+          />
+        ),
+      },
+    ],
+    [tCommon]
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -67,116 +162,42 @@ export default function ChiefTodayPage() {
   return (
     <div>
       <PageMeta title={t("chiefToday.metaTitle")} description={t("chiefToday.metaDescription")} />
-      <PageBreadcrumb pageTitle={tNav("chiefTodayTitle")} />
-      <p className="mb-4 text-sm text-gray-500">{todayLabel}</p>
+      <PageBreadcrumb pageTitle={tNav("chiefTodayTitle")} subtitle={todayLabel} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
       {loading ? (
-        <p className="text-gray-500">{tCommon("loadingTodayActivity")}</p>
+        <p className="text-gray-500 dark:text-gray-400">{tCommon("loadingTodayActivity")}</p>
       ) : (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-            <p className="text-sm text-gray-500">{tCommon("totalEventsToday")}</p>
-            <p className="mt-1 text-3xl font-bold text-brand-500">
-              {production.length + receipts.length}
-            </p>
-          </div>
+          <StatCard
+            title={tCommon("totalPlatesToday")}
+            value={String(production.length + receipts.length)}
+            accent="success"
+          />
 
-          <SectionCard title={t("chiefToday.platesCooked")} count={production.length}>
-            {production.length === 0 ? (
-              <p className="text-gray-500">{t("chiefToday.noPlatesCooked")}</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                    <th className="pb-3 pe-4">{tCommon("fields.time")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.chief")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.plate")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.weightKg")}</th>
-                    <th className="pb-3">{tCommon("fields.notes")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {production.map((log) => (
-                    <tr key={log.id} className="border-b border-gray-100 dark:border-gray-800">
-                      <td className="py-3 pe-4 whitespace-nowrap">
-                        {formatShortDate(log.logged_at)}
-                        <span className="block text-xs text-gray-400">
-                          {formatTime(log.logged_at)}
-                        </span>
-                      </td>
-                      <td className="py-3 pe-4">
-                        {log.chief?.name ?? tCommon("emDash")}
-                        {log.chief?.short_id && (
-                          <span className="block text-xs text-gray-400">
-                            {tCommon("idShort", { id: log.chief.short_id })}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 pe-4">{log.dish?.name ?? tCommon("emDash")}</td>
-                      <td className="py-3 pe-4">
-                        {formatNumber(
-                          plateWeightToKg(
-                            log.plate_weight_grams ?? log.dish?.plate_weight_grams
-                          )
-                        )}
-                      </td>
-                      <td className="py-3 text-gray-500">{log.notes || tCommon("emDash")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <SectionCard
+            title={t("chiefToday.platesCooked")}
+            count={tCommon("todayCount", { count: production.length })}
+          >
+            <DataTable
+              columns={productionColumns}
+              data={production}
+              keyExtractor={(log) => log.id}
+              emptyMessage={t("chiefToday.noPlatesCooked")}
+              hoverRows
+            />
           </SectionCard>
 
-          <SectionCard title={t("chiefToday.receiptsConfirmed")} count={receipts.length}>
-            {receipts.length === 0 ? (
-              <p className="text-gray-500">{t("chiefToday.noReceiptsConfirmed")}</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                    <th className="pb-3 pe-4">{tCommon("fields.time")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.id")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.chief")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.from")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.ingredient")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.qty")}</th>
-                    <th className="pb-3 pe-4">{tCommon("fields.total")}</th>
-                    <th className="pb-3">{tCommon("fields.screenshot")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {receipts.map((p) => (
-                    <tr
-                      key={p.id}
-                      className="border-b border-gray-100 dark:border-gray-800 align-middle"
-                    >
-                      <td className="py-4 pe-4 whitespace-nowrap">
-                        {formatShortDate(p.received_at ?? undefined)}
-                      </td>
-                      <td className="py-4 pe-4 font-medium">{tCommon("idShort", { id: p.id })}</td>
-                      <td className="py-4 pe-4">{p.chief?.name ?? tCommon("emDash")}</td>
-                      <td className="py-4 pe-4">{p.purchaser?.name ?? tCommon("emDash")}</td>
-                      <td className="py-4 pe-4">{p.ingredient?.name}</td>
-                      <td className="py-4 pe-4 whitespace-nowrap">
-                        {formatNumber(p.quantity)} {p.ingredient?.unit}
-                      </td>
-                      <td className="py-4 pe-4 font-medium whitespace-nowrap">
-                        {formatCurrency(parseFloat(String(p.total_price)))}
-                      </td>
-                      <td className="py-4">
-                        <PurchaseScreenshot
-                          purchaseId={p.id}
-                          hasScreenshot={!!p.screenshot_path}
-                          width={56}
-                          height={56}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          <SectionCard
+            title={t("chiefToday.receiptsConfirmed")}
+            count={tCommon("todayCount", { count: receipts.length })}
+          >
+            <DataTable
+              columns={receiptColumns}
+              data={receipts}
+              keyExtractor={(p) => p.id}
+              emptyMessage={t("chiefToday.noReceiptsConfirmed")}
+              hoverRows
+            />
           </SectionCard>
         </div>
       )}

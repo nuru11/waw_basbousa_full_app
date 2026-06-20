@@ -226,28 +226,20 @@ const AppSidebar: React.FC = () => {
       >
         <Link to={user ? getRoleHome(user.role) : "/"}>
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt={tc("logoAlt")}
-                width={150}
-                height={40}
-              />
-              <img
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt={tc("logoAlt")}
-                width={150}
-                height={40}
-              />
-            </>
+            <img
+              src="/logo/logo.png"
+              alt={tc("logoAlt")}
+              width={48}
+              height={48}
+              className="object-contain"
+            />
           ) : (
             <img
-              src="/images/logo/logo-icon.svg"
+              src="/logo/logo.png"
               alt={tc("logoAlt")}
               width={32}
               height={32}
+              className="object-contain"
             />
           )}
         </Link>

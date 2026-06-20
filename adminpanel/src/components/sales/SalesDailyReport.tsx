@@ -1,50 +1,21 @@
-import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  DataTable,
+  paymentMethodVariant,
+  SectionCard,
+  StatCard,
+  StatusBadge,
+} from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import type { DailySalesOverview } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatTime } from "../../utils/formatDate";
-import { paymentMethodLabel, weightTypeLabel } from "../../utils/purchaseStatus";
-
-function StatCard({
-  title,
-  value,
-  subtitle,
-}: {
-  title: string;
-  value: string;
-  subtitle?: string;
-}) {
-  return (
-    <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="mt-1 text-2xl font-bold text-brand-500">{value}</p>
-      {subtitle && <p className="mt-1 text-xs text-gray-400">{subtitle}</p>}
-    </div>
-  );
-}
-
-function SectionCard({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: string | number;
-  children: ReactNode;
-}) {
-  return (
-    <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <h3 className="font-semibold">{title}</h3>
-        {count !== undefined && (
-          <span className="text-sm text-gray-500">{count}</span>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-}
+import {
+  paymentMethodLabel,
+  weightTypeLabel,
+} from "../../utils/purchaseStatus";
 
 interface SalesDailyReportProps {
   data: DailySalesOverview;
@@ -69,18 +40,141 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
     return label;
   }
 
+  const dishColumns: DataTableColumn<DailySalesOverview["by_dish"][number]>[] =
+    useMemo(
+      () => [
+        {
+          key: "plate",
+          header: t("fields.plate"),
+          render: (row) => (
+            <span className="font-medium text-gray-800 dark:text-white/90">
+              {row.dish_name}
+            </span>
+          ),
+        },
+        {
+          key: "producedKg",
+          header: t("sales.producedKg"),
+          render: (row) => formatNumber(row.produced_kg),
+        },
+        {
+          key: "platesCooked",
+          header: t("sales.platesCooked"),
+          render: (row) => row.produced_plates,
+        },
+        {
+          key: "soldKg",
+          header: t("sales.soldKgCol"),
+          render: (row) => formatNumber(row.sold_kg),
+        },
+        {
+          key: "remainingKg",
+          header: t("sales.remainingKg"),
+          render: (row) => (
+            <span className="font-medium text-brand-600 dark:text-brand-400">
+              {formatNumber(row.remaining_kg)}
+            </span>
+          ),
+        },
+        {
+          key: "revenue",
+          header: t("sales.revenue"),
+          render: (row) => formatCurrency(row.revenue),
+        },
+        {
+          key: "sales",
+          header: t("sales.sales"),
+          render: (row) => row.sale_count,
+        },
+      ],
+      [t]
+    );
+
+  const salesColumns: DataTableColumn<DailySalesOverview["sales"][number]>[] =
+    useMemo(
+      () => [
+        {
+          key: "time",
+          header: t("fields.time"),
+          cellClassName: "whitespace-nowrap",
+          render: (sale) => formatTime(sale.sold_at),
+        },
+        {
+          key: "seller",
+          header: t("fields.seller"),
+          render: (sale) => sale.seller?.name ?? t("emDash"),
+        },
+        {
+          key: "plate",
+          header: t("fields.plate"),
+          render: (sale) => sale.dish?.name ?? t("emDash"),
+        },
+        {
+          key: "portion",
+          header: t("sales.portion"),
+          render: (sale) =>
+            formatPortion(sale.weight_type, sale.slice_count, sale.quantity),
+        },
+        {
+          key: "kgUsed",
+          header: t("sales.kgUsed"),
+          render: (sale) => formatNumber(sale.kilo_consumed),
+        },
+        {
+          key: "payment",
+          header: t("fields.payment"),
+          render: (sale) => (
+            <StatusBadge variant={paymentMethodVariant(sale.payment_method)}>
+              {paymentMethodLabel(sale.payment_method)}
+            </StatusBadge>
+          ),
+        },
+        {
+          key: "total",
+          header: t("fields.total"),
+          render: (sale) => (
+            <span className="font-medium text-gray-800 dark:text-white/90">
+              {formatCurrency(parseFloat(String(sale.total_price)))}
+            </span>
+          ),
+        },
+      ],
+      [t]
+    );
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard title={t("sales.totalRevenue")} value={formatCurrency(summary.total_revenue)} />
-        <StatCard title={t("paymentMethods.cash")} value={formatCurrency(summary.payments.cash)} />
-        <StatCard title={t("paymentMethods.cbe")} value={formatCurrency(summary.payments.cbe)} />
-        <StatCard title={t("paymentMethods.telebirr")} value={formatCurrency(summary.payments.telebirr)} />
-        <StatCard title={t("paymentMethods.other")} value={formatCurrency(summary.payments.other)} />
+        <StatCard
+          title={t("sales.totalRevenue")}
+          value={formatCurrency(summary.total_revenue)}
+          accent="brand"
+        />
+        <StatCard
+          title={t("paymentMethods.cash")}
+          value={formatCurrency(summary.payments.cash)}
+          accent="success"
+        />
+        <StatCard
+          title={t("paymentMethods.cbe")}
+          value={formatCurrency(summary.payments.cbe)}
+          accent="brand"
+        />
+        <StatCard
+          title={t("paymentMethods.telebirr")}
+          value={formatCurrency(summary.payments.telebirr)}
+          accent="info"
+        />
+        <StatCard
+          title={t("paymentMethods.other")}
+          value={formatCurrency(summary.payments.other)}
+          accent="neutral"
+        />
         <StatCard
           title={t("sales.salesCount")}
           value={String(summary.sale_count)}
           subtitle={t("units.kgSold", { amount: formatNumber(summary.kilo_sold) })}
+          accent="orange"
         />
       </div>
 
@@ -88,120 +182,25 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
         title={t("sales.plateStock")}
         count={t("units.plates", { count: data.by_dish.length })}
       >
-        {data.by_dish.length === 0 ? (
-          <p className="text-gray-500">{t("sales.noProductionOrSales")}</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pe-4">{t("fields.plate")}</th>
-                <th className="pb-3 pe-4">{t("sales.producedKg")}</th>
-                <th className="pb-3 pe-4">{t("sales.platesCooked")}</th>
-                <th className="pb-3 pe-4">{t("sales.soldKgCol")}</th>
-                <th className="pb-3 pe-4">{t("sales.remainingKg")}</th>
-                <th className="pb-3 pe-4">{t("sales.revenue")}</th>
-                <th className="pb-3">{t("sales.sales")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.by_dish.map((row) => (
-                <tr
-                  key={row.dish_id}
-                  className="border-b border-gray-100 dark:border-gray-800"
-                >
-                  <td className="py-3 pe-4 font-medium">{row.dish_name}</td>
-                  <td className="py-3 pe-4">{formatNumber(row.produced_kg)}</td>
-                  <td className="py-3 pe-4">{row.produced_plates}</td>
-                  <td className="py-3 pe-4">{formatNumber(row.sold_kg)}</td>
-                  <td className="py-3 pe-4 font-medium text-brand-600">
-                    {formatNumber(row.remaining_kg)}
-                  </td>
-                  <td className="py-3 pe-4">{formatCurrency(row.revenue)}</td>
-                  <td className="py-3">{row.sale_count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <DataTable
+          columns={dishColumns}
+          data={data.by_dish}
+          keyExtractor={(row) => row.dish_id}
+          emptyMessage={t("sales.noProductionOrSales")}
+        />
       </SectionCard>
-
-      {/* {data.by_seller.length > 0 && (
-        <SectionCard title={t("sales.bySeller")} count={`${data.by_seller.length} sellers`}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pe-4">{t("fields.seller")}</th>
-                <th className="pb-3 pe-4">{t("fields.role")}</th>
-                <th className="pb-3 pe-4">{t("sales.sales")}</th>
-                <th className="pb-3 pe-4">{t("units.kgAbbr")}</th>
-                <th className="pb-3">{t("sales.revenue")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.by_seller.map((row) => (
-                <tr
-                  key={row.seller_id}
-                  className="border-b border-gray-100 dark:border-gray-800"
-                >
-                  <td className="py-3 pe-4">{row.seller_name}</td>
-                  <td className="py-3 pe-4">
-                    {row.role ? getRoleLabel(row.role) : t("emDash")}
-                  </td>
-                  <td className="py-3 pe-4">{row.sale_count}</td>
-                  <td className="py-3 pe-4">{formatNumber(row.kilo_sold)}</td>
-                  <td className="py-3">{formatCurrency(row.revenue)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </SectionCard>
-      )} */}
 
       <SectionCard
         title={t("sales.allSales")}
         count={t("sales.transactions", { count: data.sales.length })}
       >
-        {data.sales.length === 0 ? (
-          <p className="text-gray-500">{t("sales.noSalesRecorded")}</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pe-4">{t("fields.time")}</th>
-                <th className="pb-3 pe-4">{t("fields.seller")}</th>
-                <th className="pb-3 pe-4">{t("fields.plate")}</th>
-                <th className="pb-3 pe-4">{t("sales.portion")}</th>
-                <th className="pb-3 pe-4">{t("sales.kgUsed")}</th>
-                <th className="pb-3 pe-4">{t("fields.payment")}</th>
-                <th className="pb-3">{t("fields.total")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.sales.map((sale) => (
-                <tr
-                  key={sale.id}
-                  className="border-b border-gray-100 dark:border-gray-800"
-                >
-                  <td className="py-3 pe-4 whitespace-nowrap">
-                    {formatTime(sale.sold_at)}
-                  </td>
-                  <td className="py-3 pe-4">{sale.seller?.name ?? t("emDash")}</td>
-                  <td className="py-3 pe-4">{sale.dish?.name ?? t("emDash")}</td>
-                  <td className="py-3 pe-4">
-                    {formatPortion(sale.weight_type, sale.slice_count, sale.quantity)}
-                  </td>
-                  <td className="py-3 pe-4">{formatNumber(sale.kilo_consumed)}</td>
-                  <td className="py-3 pe-4">
-                    {paymentMethodLabel(sale.payment_method)}
-                  </td>
-                  <td className="py-3 font-medium">
-                    {formatCurrency(parseFloat(String(sale.total_price)))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <DataTable
+          columns={salesColumns}
+          data={data.sales}
+          keyExtractor={(sale) => sale.id}
+          emptyMessage={t("sales.noSalesRecorded")}
+          hoverRows
+        />
       </SectionCard>
     </div>
   );

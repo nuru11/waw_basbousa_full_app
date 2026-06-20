@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
+import { SectionCard, StatCard } from "../../components/ui";
 import { api, type Transfer, type TransferSummary, type User } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { translateApiError } from "../../utils/translateApiError";
@@ -64,47 +66,38 @@ export default function TransfersPage() {
       <PageBreadcrumb pageTitle={tNav("transfer")} />
 
       {summary && (
-        <div className="p-5 mb-6 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <h3 className="mb-3 font-semibold">{tCommon("transfers.transferSummary")}</h3>
-          <div className="flex flex-wrap gap-6 text-sm">
-            <p>
-              <span className="text-gray-500">{tCommon("transfers.totalSent")}</span>{" "}
-              <span className="font-medium">{formatCurrency(parseFloat(String(summary.total_sent)))}</span>
-            </p>
-            <p>
-              <span className="text-gray-500">{tCommon("transfers.pendingAcceptance")}</span>{" "}
-              <span className="font-medium text-warning-500">
-                {formatCurrency(parseFloat(String(summary.total_pending)))}
-              </span>
-            </p>
-            <p>
-              <span className="text-gray-500">{tCommon("transfers.accepted")}</span>{" "}
-              <span className="font-medium">{formatCurrency(parseFloat(String(summary.total_transferred)))}</span>
-            </p>
-            <p>
-              <span className="text-gray-500">{tCommon("transfers.totalSpent")}</span>{" "}
-              <span className="font-medium">{formatCurrency(parseFloat(String(summary.total_spent)))}</span>
-            </p>
-            <p>
-              <span className="text-gray-500">{tCommon("transfers.totalRemaining")}</span>{" "}
-              <span
-                className={`font-medium ${
-                  summary.total_remaining < 0 ? "text-error-500" : "text-success-500"
-                }`}
-              >
-                {formatCurrency(parseFloat(String(summary.total_remaining)))}
-              </span>
-            </p>
-          </div>
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <StatCard
+            title={tCommon("transfers.totalSent")}
+            value={formatCurrency(parseFloat(String(summary.total_sent)))}
+            accent="brand"
+          />
+          <StatCard
+            title={tCommon("transfers.pendingAcceptance")}
+            value={formatCurrency(parseFloat(String(summary.total_pending)))}
+            accent="warning"
+          />
+          <StatCard
+            title={tCommon("transfers.accepted")}
+            value={formatCurrency(parseFloat(String(summary.total_transferred)))}
+            accent="success"
+          />
+          <StatCard
+            title={tCommon("transfers.totalSpent")}
+            value={formatCurrency(parseFloat(String(summary.total_spent)))}
+            accent="orange"
+          />
+          <StatCard
+            title={tCommon("transfers.totalRemaining")}
+            value={formatCurrency(parseFloat(String(summary.total_remaining)))}
+            accent={summary.total_remaining < 0 ? "error" : "success"}
+          />
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <form
-          onSubmit={handleSubmit}
-          className="p-5 space-y-4 rounded-2xl border border-gray-200 dark:border-gray-800"
-        >
-          <h3 className="font-semibold">{t("transfers.newTransfer")}</h3>
+        <SectionCard title={t("transfers.newTransfer")}>
+          <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-error-500">{error}</p>}
           {success && <p className="text-sm text-success-500">{success}</p>}
           <div>
@@ -118,30 +111,27 @@ export default function TransfersPage() {
           </div>
           <div>
             <Label>{t("transfers.toPurchaser")}</Label>
-            <select
-              className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
+            <Select
               value={form.purchaser_id}
-              onChange={(e) => setForm({ ...form, purchaser_id: e.target.value })}
-            >
-              <option value="">{tCommon("fields.selectPurchaser")}</option>
-              {purchasers.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              onChange={(purchaser_id) => setForm({ ...form, purchaser_id })}
+              placeholder={tCommon("fields.selectPurchaser")}
+              options={purchasers.map((p) => ({
+                value: String(p.id),
+                label: p.name,
+              }))}
+            />
           </div>
           <Button type="submit" size="sm" disabled={submitting}>
             {submitting ? tCommon("actions.transferring") : tCommon("actions.transfer")}
           </Button>
-        </form>
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-2 overflow-x-auto">
-          <h3 className="mb-4 font-semibold">{t("transfers.thisWeek")}</h3>
+          </form>
+        </SectionCard>
+        <SectionCard title={t("transfers.thisWeek")} className="lg:col-span-2">
           <TransferHistoryTable
             transfers={transfers}
             emptyMessage={t("transfers.noTransfersThisWeek")}
           />
-        </div>
+        </SectionCard>
       </div>
     </div>
   );

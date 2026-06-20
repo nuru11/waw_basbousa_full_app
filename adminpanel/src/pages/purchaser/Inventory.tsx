@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
+import {
+  DataTable,
+  SectionCard,
+  StatCard,
+} from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
-import { api, type PurchaserInventory } from "../../services/api";
+import { api, type Purchase, type PurchaserInventory } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
 import { translateApiError } from "../../utils/translateApiError";
@@ -41,6 +47,65 @@ export default function PurchaserInventoryPage() {
   const summary = inventory?.summary ?? [];
   const purchases = inventory?.purchases ?? [];
 
+  const columns: DataTableColumn<Purchase>[] = useMemo(
+    () => [
+      {
+        key: "id",
+        header: t("common:fields.id"),
+        render: (p) => (
+          <span className="font-medium">
+            {t("common:idShort", { id: p.id })}
+          </span>
+        ),
+      },
+      {
+        key: "ingredient",
+        header: t("common:fields.ingredient"),
+        render: (p) => p.ingredient?.name ?? t("common:emDash"),
+      },
+      {
+        key: "qty",
+        header: t("common:fields.qty"),
+        cellClassName: "whitespace-nowrap",
+        render: (p) => `${formatNumber(p.quantity)} ${p.ingredient?.unit ?? ""}`,
+      },
+      {
+        key: "total",
+        header: t("common:fields.total"),
+        cellClassName: "whitespace-nowrap",
+        render: (p) => formatCurrency(parseFloat(String(p.total_price))),
+      },
+      {
+        key: "screenshot",
+        header: t("common:fields.screenshot"),
+        render: (p) => (
+          <PurchaseScreenshot
+            purchaseId={p.id}
+            hasScreenshot={!!p.screenshot_path}
+            width={56}
+            height={56}
+          />
+        ),
+      },
+      {
+        key: "action",
+        header: t("common:fields.action"),
+        render: (p) => (
+          <Button
+            size="sm"
+            disabled={loading === p.id}
+            onClick={() => handleHandToChief(p.id)}
+          >
+            {loading === p.id
+              ? t("common:actions.handing")
+              : t("common:actions.handToChief")}
+          </Button>
+        ),
+      },
+    ],
+    [loading, t]
+  );
+
   return (
     <div>
       <PageMeta
@@ -51,83 +116,27 @@ export default function PurchaserInventoryPage() {
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
 
       {summary.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {summary.map((item) => (
-            <div
+            <StatCard
               key={item.ingredient_id}
-              className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800"
-            >
-              <h3 className="font-semibold text-gray-800 dark:text-white/90">
-                {item.ingredient?.name}
-              </h3>
-              <p className="mt-2 text-3xl font-bold text-brand-500">
-                {formatNumber(item.total_quantity)}{" "}
-                <span className="text-base font-normal text-gray-500">
-                  {item.ingredient?.unit}
-                </span>
-              </p>
-            </div>
+              title={item.ingredient?.name ?? ""}
+              value={`${formatNumber(item.total_quantity)} ${item.ingredient?.unit ?? ""}`}
+              accent="brand"
+            />
           ))}
         </div>
       )}
 
-      <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-        <h3 className="mb-4 font-semibold">{t("inventory.itemsToHand")}</h3>
-        {purchases.length === 0 ? (
-          <p className="text-gray-500">{t("inventory.empty")}</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pe-4">{t("common:fields.id")}</th>
-                <th className="pb-3 pe-4">{t("common:fields.ingredient")}</th>
-                <th className="pb-3 pe-4">{t("common:fields.qty")}</th>
-                <th className="pb-3 pe-4">{t("common:fields.total")}</th>
-                <th className="pb-3 pe-4">{t("common:fields.screenshot")}</th>
-                <th className="pb-3">{t("common:fields.action")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {purchases.map((p) => (
-                <tr
-                  key={p.id}
-                  className="border-b border-gray-100 dark:border-gray-800 align-middle"
-                >
-                  <td className="py-4 pe-4 font-medium">
-                    {t("common:idShort", { id: p.id })}
-                  </td>
-                  <td className="py-4 pe-4">{p.ingredient?.name}</td>
-                  <td className="py-4 pe-4 whitespace-nowrap">
-                    {formatNumber(p.quantity)} {p.ingredient?.unit}
-                  </td>
-                  <td className="py-4 pe-4 whitespace-nowrap">
-                    {formatCurrency(parseFloat(String(p.total_price)))}
-                  </td>
-                  <td className="py-4 pe-4">
-                    <PurchaseScreenshot
-                      purchaseId={p.id}
-                      hasScreenshot={!!p.screenshot_path}
-                      width={56}
-                      height={56}
-                    />
-                  </td>
-                  <td className="py-4">
-                    <Button
-                      size="sm"
-                      disabled={loading === p.id}
-                      onClick={() => handleHandToChief(p.id)}
-                    >
-                      {loading === p.id
-                        ? t("common:actions.handing")
-                        : t("common:actions.handToChief")}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <SectionCard title={t("inventory.itemsToHand")}>
+        <DataTable
+          columns={columns}
+          data={purchases}
+          keyExtractor={(p) => p.id}
+          emptyMessage={t("inventory.empty")}
+          hoverRows
+        />
+      </SectionCard>
     </div>
   );
 }

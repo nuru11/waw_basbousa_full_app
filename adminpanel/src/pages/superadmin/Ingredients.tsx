@@ -1,10 +1,13 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import { DataTable, SectionCard } from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Ingredient } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
@@ -53,6 +56,44 @@ export default function IngredientsPage() {
     load();
   }
 
+  const columns: DataTableColumn<Ingredient>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: tCommon("fields.name"),
+        render: (item) => item.name,
+      },
+      {
+        key: "unit",
+        header: tCommon("fields.unit"),
+        render: (item) => unitLabel(item.unit),
+      },
+      {
+        key: "stock",
+        header: tCommon("fields.stock"),
+        render: (item) => formatNumber(item.current_stock),
+      },
+      {
+        key: "min",
+        header: tCommon("fields.min"),
+        render: (item) => formatNumber(item.min_stock),
+      },
+      {
+        key: "actions",
+        header: "",
+        render: (item) => (
+          <button
+            onClick={() => handleDelete(item.id)}
+            className="text-error-500 hover:underline"
+          >
+            {tCommon("actions.delete")}
+          </button>
+        ),
+      },
+    ],
+    [tCommon]
+  );
+
   return (
     <div>
       <PageMeta
@@ -62,28 +103,22 @@ export default function IngredientsPage() {
       <PageBreadcrumb pageTitle={tNav("ingredients")} />
       {error && <p className="mb-4 text-error-500">{error}</p>}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <form
-          onSubmit={handleSubmit}
-          className="p-5 space-y-4 rounded-2xl border border-gray-200 dark:border-gray-800"
-        >
-          <h3 className="font-semibold">{t("ingredients.addIngredient")}</h3>
+        <SectionCard title={t("ingredients.addIngredient")}>
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>{tCommon("fields.name")}</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
             <Label>{tCommon("fields.unit")}</Label>
-            <select
-              className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
+            <Select
               value={form.unit}
-              onChange={(e) => setForm({ ...form, unit: e.target.value })}
-            >
-              {UNITS.map((unit) => (
-                <option key={unit} value={unit}>
-                  {unitLabel(unit)}
-                </option>
-              ))}
-            </select>
+              onChange={(unit) => setForm({ ...form, unit })}
+              options={UNITS.map((unit) => ({
+                value: unit,
+                label: unitLabel(unit),
+              }))}
+            />
           </div>
           <div>
             <Label>{t("ingredients.minStockAlert")}</Label>
@@ -96,35 +131,16 @@ export default function IngredientsPage() {
           <Button type="submit" size="sm" disabled={submitting}>
             {submitting ? tCommon("actions.adding") : tCommon("actions.add")}
           </Button>
-        </form>
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-2 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3">{tCommon("fields.name")}</th>
-                <th className="pb-3">{tCommon("fields.unit")}</th>
-                <th className="pb-3">{tCommon("fields.stock")}</th>
-                <th className="pb-3">{tCommon("fields.min")}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100 dark:border-gray-800">
-                  <td className="py-3">{item.name}</td>
-                  <td className="py-3">{unitLabel(item.unit)}</td>
-                  <td className="py-3">{formatNumber(item.current_stock)}</td>
-                  <td className="py-3">{formatNumber(item.min_stock)}</td>
-                  <td className="py-3">
-                    <button onClick={() => handleDelete(item.id)} className="text-error-500">
-                      {tCommon("actions.delete")}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          </form>
+        </SectionCard>
+        <SectionCard title={tCommon("fields.ingredients")} className="lg:col-span-2">
+          <DataTable
+            columns={columns}
+            data={items}
+            keyExtractor={(item) => item.id}
+            hoverRows
+          />
+        </SectionCard>
       </div>
     </div>
   );

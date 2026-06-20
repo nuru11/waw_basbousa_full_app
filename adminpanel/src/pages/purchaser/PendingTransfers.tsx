@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
+import { DataTable, SectionCard } from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { api, type Transfer } from "../../services/api";
 import { formatRelativeDate, formatShortDate } from "../../utils/formatDate";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -41,6 +43,48 @@ export default function PendingTransfersPage() {
     }
   }
 
+  const columns: DataTableColumn<Transfer>[] = useMemo(
+    () => [
+      {
+        key: "when",
+        header: t("common:fields.when"),
+        render: (tr) => formatRelativeDate(getTransferDateStr(tr)),
+      },
+      {
+        key: "date",
+        header: t("common:fields.date"),
+        render: (tr) => formatShortDate(getTransferDateStr(tr)),
+      },
+      {
+        key: "from",
+        header: t("common:fields.from"),
+        render: (tr) => tr.creator?.name ?? t("common:superAdmin"),
+      },
+      {
+        key: "amount",
+        header: t("common:fields.amount"),
+        cellClassName: "font-medium whitespace-nowrap",
+        render: (tr) => formatCurrency(parseFloat(String(tr.amount))),
+      },
+      {
+        key: "action",
+        header: t("common:fields.action"),
+        render: (tr) => (
+          <Button
+            size="sm"
+            disabled={loading === tr.id}
+            onClick={() => handleAccept(tr.id)}
+          >
+            {loading === tr.id
+              ? t("common:actions.accepting")
+              : t("common:actions.accept")}
+          </Button>
+        ),
+      },
+    ],
+    [loading, t]
+  );
+
   return (
     <div>
       <PageMeta
@@ -49,54 +93,15 @@ export default function PendingTransfersPage() {
       />
       <PageBreadcrumb pageTitle={t("nav:pendingTransfers")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
-      <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-        <h3 className="mb-4 font-semibold">{t("pendingTransfers.awaitingAcceptance")}</h3>
-
-        {transfers.length === 0 ? (
-          <p className="text-gray-500">{t("pendingTransfers.empty")}</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pe-4">{t("common:fields.when")}</th>
-                <th className="pb-3 pe-4">{t("common:fields.date")}</th>
-                <th className="pb-3 pe-4">{t("common:fields.from")}</th>
-                <th className="pb-3 pe-4">{t("common:fields.amount")}</th>
-                <th className="pb-3">{t("common:fields.action")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transfers.map((tr) => {
-                const dateStr = getTransferDateStr(tr);
-                return (
-                  <tr
-                    key={tr.id}
-                    className="border-b border-gray-100 dark:border-gray-800 align-middle"
-                  >
-                    <td className="py-4 pe-4">{formatRelativeDate(dateStr)}</td>
-                    <td className="py-4 pe-4">{formatShortDate(dateStr)}</td>
-                    <td className="py-4 pe-4">{tr.creator?.name ?? t("common:superAdmin")}</td>
-                    <td className="py-4 pe-4 font-medium whitespace-nowrap">
-                      {formatCurrency(parseFloat(String(tr.amount)))}
-                    </td>
-                    <td className="py-4">
-                      <Button
-                        size="sm"
-                        disabled={loading === tr.id}
-                        onClick={() => handleAccept(tr.id)}
-                      >
-                        {loading === tr.id
-                          ? t("common:actions.accepting")
-                          : t("common:actions.accept")}
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <SectionCard title={t("pendingTransfers.awaitingAcceptance")}>
+        <DataTable
+          columns={columns}
+          data={transfers}
+          keyExtractor={(tr) => tr.id}
+          emptyMessage={t("pendingTransfers.empty")}
+          hoverRows
+        />
+      </SectionCard>
     </div>
   );
 }

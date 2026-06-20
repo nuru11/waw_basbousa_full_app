@@ -17,7 +17,7 @@
   "daysAgo": "{{count}} days ago",
   "lastWeek": "Last week",
   "todayCount": "{{count}} today",
-  "totalEventsToday": "Total events today",
+  "totalPlatesToday": "Total plates today",
   "loadingTodayActivity": "Loading today's activity...",
   "loadingTodaySales": "Loading today's sales...",
   "superAdmin": "SuperAdmin",

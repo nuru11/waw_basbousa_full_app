@@ -1,10 +1,17 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import {
+  DataTable,
+  SectionCard,
+  StatusBadge,
+} from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { useAuth } from "../../context/AuthContext";
 import { api, type User } from "../../services/api";
@@ -93,13 +100,92 @@ export default function StaffPage() {
     }
   }
 
+  const columns: DataTableColumn<User>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: tCommon("fields.name"),
+        render: (a) => a.name,
+      },
+      {
+        key: "username",
+        header: tCommon("fields.username"),
+        render: (a) => a.username,
+      },
+      {
+        key: "role",
+        header: tCommon("fields.role"),
+        render: (a) => getRoleLabel(a.role),
+      },
+      {
+        key: "status",
+        header: tCommon("fields.status"),
+        render: (a) => {
+          const isActive = (a.status ?? "active") === "active";
+          return (
+            <StatusBadge variant={isActive ? "active" : "rejected"}>
+              {isActive ? tCommon("status.active") : tCommon("status.inactive")}
+            </StatusBadge>
+          );
+        },
+      },
+      {
+        key: "shortId",
+        header: tCommon("fields.shortId"),
+        render: (a) => <span className="font-mono">{a.short_id}</span>,
+      },
+      {
+        key: "phone",
+        header: tCommon("fields.phone"),
+        render: (a) => a.phone || tCommon("emDash"),
+      },
+      {
+        key: "actions",
+        header: "",
+        cellClassName: "whitespace-nowrap",
+        render: (a) => {
+          const isSelf = currentUser?.id === a.id;
+          const isActive = (a.status ?? "active") === "active";
+          if (isSelf) return null;
+          return (
+            <span className="space-x-3">
+              <button
+                type="button"
+                onClick={() => handleToggleStatus(a)}
+                disabled={statusLoading === a.id}
+                className={
+                  isActive
+                    ? "text-warning-500 hover:underline"
+                    : "text-success-500 hover:underline"
+                }
+              >
+                {statusLoading === a.id
+                  ? tCommon("ellipsis")
+                  : isActive
+                    ? tCommon("actions.deactivate")
+                    : tCommon("actions.activate")}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(a.id)}
+                className="text-error-500 hover:underline"
+              >
+                {tCommon("actions.delete")}
+              </button>
+            </span>
+          );
+        },
+      },
+    ],
+    [currentUser?.id, statusLoading, tCommon]
+  );
+
   return (
     <div>
       <PageMeta title={t("staff.metaTitle")} description={t("staff.metaDescription")} />
       <PageBreadcrumb pageTitle={tNav("staffManagement")} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-1">
-          <h3 className="mb-4 font-semibold">{t("staff.addStaff")}</h3>
+        <SectionCard title={t("staff.addStaff")} className="lg:col-span-1">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-sm text-error-500">{error}</p>}
             {success && <p className="text-sm text-success-500">{success}</p>}
@@ -134,94 +220,30 @@ export default function StaffPage() {
             </div>
             <div>
               <Label>{tCommon("fields.role")}</Label>
-              <select
-                className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
+              <Select
                 value={form.role}
-                onChange={(e) =>
-                  setForm({ ...form, role: e.target.value as User["role"] })
+                onChange={(role) =>
+                  setForm({ ...form, role: role as User["role"] })
                 }
-              >
-                {STAFF_ROLES.map((value) => (
-                  <option key={value} value={value}>
-                    {getRoleLabel(value)}
-                  </option>
-                ))}
-              </select>
+                options={STAFF_ROLES.map((value) => ({
+                  value,
+                  label: getRoleLabel(value),
+                }))}
+              />
             </div>
             <Button type="submit" size="sm" disabled={submitting}>
               {submitting ? tCommon("actions.creating") : tCommon("actions.create")}
             </Button>
           </form>
-        </div>
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-2 overflow-x-auto">
-          <h3 className="mb-4 font-semibold">{t("staff.allStaff")}</h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b border-gray-200 dark:border-gray-700">
-                <th className="pb-3">{tCommon("fields.name")}</th>
-                <th className="pb-3">{tCommon("fields.username")}</th>
-                <th className="pb-3">{tCommon("fields.role")}</th>
-                <th className="pb-3">{tCommon("fields.status")}</th>
-                <th className="pb-3">{tCommon("fields.shortId")}</th>
-                <th className="pb-3">{tCommon("fields.phone")}</th>
-                <th className="pb-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {admins.map((a) => {
-                const isSelf = currentUser?.id === a.id;
-                const isActive = (a.status ?? "active") === "active";
-                return (
-                  <tr key={a.id} className="border-b border-gray-100 dark:border-gray-800">
-                    <td className="py-3">{a.name}</td>
-                    <td className="py-3">{a.username}</td>
-                    <td className="py-3">{getRoleLabel(a.role)}</td>
-                    <td className="py-3">
-                      <span
-                        className={
-                          isActive ? "text-success-500" : "text-error-500"
-                        }
-                      >
-                        {isActive ? tCommon("status.active") : tCommon("status.inactive")}
-                      </span>
-                    </td>
-                    <td className="py-3 font-mono">{a.short_id}</td>
-                    <td className="py-3">{a.phone || tCommon("emDash")}</td>
-                    <td className="py-3 space-x-3 whitespace-nowrap">
-                      {!isSelf && (
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(a)}
-                          disabled={statusLoading === a.id}
-                          className={
-                            isActive
-                              ? "text-warning-500 hover:underline"
-                              : "text-success-500 hover:underline"
-                          }
-                        >
-                          {statusLoading === a.id
-                            ? tCommon("ellipsis")
-                            : isActive
-                              ? tCommon("actions.deactivate")
-                              : tCommon("actions.activate")}
-                        </button>
-                      )}
-                      {!isSelf && (
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(a.id)}
-                          className="text-error-500 hover:underline"
-                        >
-                          {tCommon("actions.delete")}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        </SectionCard>
+        <SectionCard title={t("staff.allStaff")} className="lg:col-span-2">
+          <DataTable
+            columns={columns}
+            data={admins}
+            keyExtractor={(a) => a.id}
+            hoverRows
+          />
+        </SectionCard>
       </div>
     </div>
   );

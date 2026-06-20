@@ -4,8 +4,10 @@ import { Link } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import { SectionCard, StatCard } from "../../components/ui";
 import { api, type Ingredient, type TransferBalance } from "../../services/api";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -98,57 +100,43 @@ export default function PurchasesPage() {
       <PageBreadcrumb pageTitle={t("nav:purchases")} />
 
       {balance && (balance.total_received > 0 || balance.total_pending > 0) && (
-        <div className="p-5 mb-6 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <h3 className="mb-3 font-semibold">{t("common:transfers.transferBalance")}</h3>
-          <div className="flex flex-wrap gap-6 text-sm">
-            {balance.total_pending > 0 && (
-              <p>
-                <span className="text-gray-500">{t("common:transfers.pendingAcceptance")}</span>{" "}
-                <span className="font-medium text-warning-500">
-                  {formatCurrency(balance.total_pending)}
-                </span>
-              </p>
-            )}
-            <p>
-              <span className="text-gray-500">{t("common:transfers.totalReceived")}</span>{" "}
-              <span className="font-medium">{formatCurrency(balance.total_received)}</span>
-            </p>
-            <p>
-              <span className="text-gray-500">{t("common:transfers.remaining")}</span>{" "}
-              <span
-                className={`font-medium ${
-                  balance.total_remaining < 0 ? "text-error-500" : "text-success-500"
-                }`}
-              >
-                {formatCurrency(balance.total_remaining)}
-              </span>
-            </p>
-          </div>
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {balance.total_pending > 0 && (
+            <StatCard
+              title={t("common:transfers.pendingAcceptance")}
+              value={formatCurrency(balance.total_pending)}
+              accent="warning"
+            />
+          )}
+          {/* <StatCard
+            title={t("common:transfers.totalReceived")}
+            value={formatCurrency(balance.total_received)}
+            accent="brand"
+          /> */}
+          <StatCard
+            title={t("common:transfers.remaining")}
+            value={formatCurrency(balance.total_remaining)}
+            accent={balance.total_remaining < 0 ? "error" : "success"}
+          />
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-lg p-5 space-y-4 rounded-2xl border border-gray-200 dark:border-gray-800"
-      >
-        <h3 className="font-semibold">{t("purchases.newPurchaseInvoice")}</h3>
+      <SectionCard title={t("purchases.newPurchaseInvoice")} className="max-w-lg">
+        <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-error-500">{error}</p>}
         {warning && <p className="text-sm text-warning-500">{warning}</p>}
         {success && <p className="text-sm text-success-500">{success}</p>}
         <div>
           <Label>{t("common:fields.ingredient")}</Label>
-          <select
-            className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
+          <Select
             value={form.ingredient_id}
-            onChange={(e) => setForm({ ...form, ingredient_id: e.target.value })}
-          >
-            <option value="">{t("common:fields.selectIngredient")}</option>
-            {ingredients.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.name} ({i.unit})
-              </option>
-            ))}
-          </select>
+            onChange={(ingredient_id) => setForm({ ...form, ingredient_id })}
+            placeholder={t("common:fields.selectIngredient")}
+            options={ingredients.map((i) => ({
+              value: String(i.id),
+              label: `${i.name} (${i.unit})`,
+            }))}
+          />
         </div>
         <div>
           <Label>{t("common:fields.quantity")}</Label>
@@ -198,7 +186,8 @@ export default function PurchasesPage() {
             {t("purchases.viewHistoryLink")}
           </Link>
         </p>
-      </form>
+        </form>
+      </SectionCard>
     </div>
   );
 }

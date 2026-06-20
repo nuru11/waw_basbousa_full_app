@@ -1,4 +1,11 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  DataTable,
+  EmptyState,
+  StatusBadge,
+} from "../ui";
+import type { DataTableColumn } from "../ui";
 import type { Transfer } from "../../services/api";
 import { formatRelativeDate, formatShortDate } from "../../utils/formatDate";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -22,63 +29,91 @@ export default function TransferHistoryTable({
 }: Props) {
   const { t } = useTranslation("common");
 
-  if (transfers.length === 0) {
-    return (
-      <p className="text-gray-500">
-        {emptyMessage ?? t("transfers.noTransfersFound")}
-      </p>
+  const columns: DataTableColumn<Transfer>[] = useMemo(() => {
+    const cols: DataTableColumn<Transfer>[] = [
+      {
+        key: "when",
+        header: t("fields.when"),
+        render: (tfr) => formatRelativeDate(getTransferDateStr(tfr)),
+      },
+      {
+        key: "date",
+        header: t("fields.date"),
+        render: (tfr) => formatShortDate(getTransferDateStr(tfr)),
+      },
+    ];
+
+    if (showPurchaser) {
+      cols.push({
+        key: "purchaser",
+        header: t("fields.purchaser"),
+        render: (tfr) => tfr.purchaser?.name ?? t("emDash"),
+      });
+    }
+
+    if (showCreator) {
+      cols.push({
+        key: "creator",
+        header: t("fields.from"),
+        render: (tfr) => tfr.creator?.name ?? t("superAdmin"),
+      });
+    }
+
+    cols.push(
+      {
+        key: "amount",
+        header: t("fields.amount"),
+        render: (tfr) => formatCurrency(parseFloat(String(tfr.amount))),
+      },
+      {
+        key: "status",
+        header: t("fields.status"),
+        render: (tfr) => (
+          <StatusBadge variant={tfr.status === "pending" ? "pending" : "approved"}>
+            {tfr.status === "pending" ? t("status.pending") : t("status.accepted")}
+          </StatusBadge>
+        ),
+      },
+      {
+        key: "spent",
+        header: t("fields.spent"),
+        render: (tfr) => {
+          const isPending = tfr.status === "pending";
+          if (isPending) return t("emDash");
+          const amount = parseFloat(String(tfr.amount));
+          const remaining = parseFloat(String(tfr.amount_remaining));
+          return formatCurrency(amount - remaining);
+        },
+      },
+      {
+        key: "remaining",
+        header: t("fields.remaining"),
+        render: (tfr) => {
+          const isPending = tfr.status === "pending";
+          if (isPending) return t("emDash");
+          const remaining = parseFloat(String(tfr.amount_remaining));
+          return (
+            <span className={remaining < 0 ? "text-error-500" : undefined}>
+              {formatCurrency(remaining)}
+            </span>
+          );
+        },
+      }
     );
+
+    return cols;
+  }, [showCreator, showPurchaser, t]);
+
+  if (transfers.length === 0) {
+    return <EmptyState message={emptyMessage ?? t("transfers.noTransfersFound")} />;
   }
 
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-          <th className="pb-3">{t("fields.when")}</th>
-          <th className="pb-3">{t("fields.date")}</th>
-          {showPurchaser && <th className="pb-3">{t("fields.purchaser")}</th>}
-          {showCreator && <th className="pb-3">{t("fields.from")}</th>}
-          <th className="pb-3">{t("fields.amount")}</th>
-          <th className="pb-3">{t("fields.status")}</th>
-          <th className="pb-3">{t("fields.spent")}</th>
-          <th className="pb-3">{t("fields.remaining")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {transfers.map((tfr) => {
-          const amount = parseFloat(String(tfr.amount));
-          const isPending = tfr.status === "pending";
-          const remaining = isPending ? 0 : parseFloat(String(tfr.amount_remaining));
-          const spent = isPending ? 0 : amount - remaining;
-          const dateStr = getTransferDateStr(tfr);
-          return (
-            <tr key={tfr.id} className="border-b border-gray-100 dark:border-gray-800">
-              <td className="py-3">{formatRelativeDate(dateStr)}</td>
-              <td className="py-3">{formatShortDate(dateStr)}</td>
-              {showPurchaser && <td className="py-3">{tfr.purchaser?.name}</td>}
-              {showCreator && (
-                <td className="py-3">{tfr.creator?.name ?? t("superAdmin")}</td>
-              )}
-              <td className="py-3">{formatCurrency(amount)}</td>
-              <td className="py-3">
-                <span
-                  className={
-                    isPending ? "text-warning-500" : "text-success-500"
-                  }
-                >
-                  {isPending ? t("status.pending") : t("status.accepted")}
-                </span>
-              </td>
-              <td className="py-3">
-                {isPending ? t("emDash") : formatCurrency(spent)}
-              </td>
-              <td className={`py-3 ${!isPending && remaining < 0 ? "text-error-500" : ""}`}>
-                {isPending ? t("emDash") : formatCurrency(remaining)}
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <DataTable
+      columns={columns}
+      data={transfers}
+      keyExtractor={(tfr) => tfr.id}
+      hoverRows
+    />
   );
 }

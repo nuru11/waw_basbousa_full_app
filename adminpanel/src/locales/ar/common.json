@@ -17,7 +17,7 @@
   "daysAgo": "منذ {{count}} أيام",
   "lastWeek": "الأسبوع الماضي",
   "todayCount": "{{count}} اليوم",
-  "totalEventsToday": "إجمالي أحداث اليوم",
+  "totalPlatesToday": "إجمالي اطباق اليوم",
   "loadingTodayActivity": "جارٍ تحميل نشاط اليوم...",
   "loadingTodaySales": "جارٍ تحميل مبيعات اليوم...",
   "superAdmin": "المشرف العام",

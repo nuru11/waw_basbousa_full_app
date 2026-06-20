@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -11,6 +11,12 @@ import RecipeEditor, {
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import {
+  DataTable,
+  SectionCard,
+  StatusBadge,
+} from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { Modal } from "../../components/ui/modal";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Dish, type Ingredient } from "../../services/api";
@@ -118,17 +124,82 @@ export default function DishesPage() {
     });
   }
 
+  const columns: DataTableColumn<Dish>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: tCommon("fields.name"),
+        render: (d) => d.name,
+      },
+      {
+        key: "weight",
+        header: t("dishes.weightKgCol"),
+        render: (d) => formatNumber(plateWeightToKg(d.plate_weight_grams)),
+      },
+      {
+        key: "ingredients",
+        header: t("dishes.ingredientsCol"),
+        render: (d) => (
+          <span className="text-gray-600 dark:text-gray-400">
+            {recipeSummary(d, tCommon)}
+          </span>
+        ),
+      },
+      {
+        key: "quarter",
+        header: t("dishes.quarterCol"),
+        render: (d) => d.price_quarter ?? tCommon("emDash"),
+      },
+      {
+        key: "half",
+        header: t("dishes.halfCol"),
+        render: (d) => d.price_half ?? tCommon("emDash"),
+      },
+      {
+        key: "kilo",
+        header: t("dishes.kiloCol"),
+        render: (d) => d.price_kilo ?? tCommon("emDash"),
+      },
+      {
+        key: "slice",
+        header: t("dishes.sliceCol"),
+        render: (d) => d.price_per_slice ?? tCommon("emDash"),
+      },
+      {
+        key: "active",
+        header: t("dishes.activeCol"),
+        render: (d) => (
+          <button onClick={() => toggleActive(d)} className="hover:underline">
+            <StatusBadge variant={d.is_active ? "active" : "rejected"}>
+              {d.is_active ? tCommon("status.active") : tCommon("status.inactive")}
+            </StatusBadge>
+          </button>
+        ),
+      },
+      {
+        key: "recipe",
+        header: t("dishes.recipeCol"),
+        render: (d) => (
+          <button
+            onClick={() => openRecipeEditor(d)}
+            className="text-brand-500 hover:underline"
+          >
+            {tCommon("actions.edit")}
+          </button>
+        ),
+      },
+    ],
+    [t, tCommon]
+  );
+
   return (
     <div>
       <PageMeta title={t("dishes.metaTitle")} description={t("dishes.metaDescription")} />
       <PageBreadcrumb pageTitle={tNav("platesMenu")} />
       {error && <p className="mb-4 text-error-500">{error}</p>}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <form
-          onSubmit={handleSubmit}
-          className="p-5 space-y-3 rounded-2xl border border-gray-200 dark:border-gray-800"
-        >
-          <h3 className="font-semibold">{t("dishes.addPlate")}</h3>
+        <SectionCard title={t("dishes.addPlate")}>
+          <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <Label>{tCommon("fields.name")}</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -173,47 +244,16 @@ export default function DishesPage() {
           <Button type="submit" size="sm" disabled={submitting}>
             {submitting ? tCommon("actions.adding") : t("dishes.addPlate")}
           </Button>
-        </form>
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-2 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3">{tCommon("fields.name")}</th>
-                <th className="pb-3">{t("dishes.weightKgCol")}</th>
-                <th className="pb-3">{t("dishes.ingredientsCol")}</th>
-                <th className="pb-3">{t("dishes.quarterCol")}</th>
-                <th className="pb-3">{t("dishes.halfCol")}</th>
-                <th className="pb-3">{t("dishes.kiloCol")}</th>
-                <th className="pb-3">{t("dishes.sliceCol")}</th>
-                <th className="pb-3">{t("dishes.activeCol")}</th>
-                <th className="pb-3">{t("dishes.recipeCol")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dishes.map((d) => (
-                <tr key={d.id} className="border-b border-gray-100 dark:border-gray-800">
-                  <td className="py-3">{d.name}</td>
-                  <td className="py-3">{formatNumber(plateWeightToKg(d.plate_weight_grams))}</td>
-                  <td className="py-3 text-gray-600 dark:text-gray-400">{recipeSummary(d, tCommon)}</td>
-                  <td className="py-3">{d.price_quarter ?? tCommon("emDash")}</td>
-                  <td className="py-3">{d.price_half ?? tCommon("emDash")}</td>
-                  <td className="py-3">{d.price_kilo ?? tCommon("emDash")}</td>
-                  <td className="py-3">{d.price_per_slice ?? tCommon("emDash")}</td>
-                  <td className="py-3">
-                    <button onClick={() => toggleActive(d)} className="text-brand-500">
-                      {d.is_active ? tCommon("status.active") : tCommon("status.inactive")}
-                    </button>
-                  </td>
-                  <td className="py-3">
-                    <button onClick={() => openRecipeEditor(d)} className="text-brand-500">
-                      {tCommon("actions.edit")}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          </form>
+        </SectionCard>
+        <SectionCard title={tNav("platesMenu")} className="lg:col-span-2">
+          <DataTable
+            columns={columns}
+            data={dishes}
+            keyExtractor={(d) => d.id}
+            hoverRows
+          />
+        </SectionCard>
       </div>
 
       <Modal isOpen={!!editingDish} onClose={closeRecipeEditor} className="max-w-lg p-6 m-4">

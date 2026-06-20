@@ -3,8 +3,11 @@ import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
+import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import { DataTable, SectionCard, StatusBadge } from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Dish, type Ingredient, type ProductionLog } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
@@ -111,32 +114,26 @@ export default function ProductionPage() {
       />
       <PageBreadcrumb pageTitle={t("nav:cookPlates")} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <form
-          onSubmit={handleSubmit}
-          className="p-5 space-y-4 rounded-2xl border border-gray-200 dark:border-gray-800"
-        >
-          <h3 className="font-semibold">{t("production.logCookedPlates")}</h3>
+        <SectionCard title={t("production.logCookedPlates")}>
+          <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-error-500">{error}</p>}
           <div>
             <Label>{t("common:fields.plate")}</Label>
-            <select
-              className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
+            <Select
               value={form.dish_id}
-              onChange={(e) =>
+              onChange={(dish_id) =>
                 setForm({
                   ...emptyForm,
-                  dish_id: e.target.value,
+                  dish_id,
                   notes: form.notes,
                 })
               }
-            >
-              <option value="">{t("common:fields.selectPlate")}</option>
-              {producibleDishes.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              placeholder={t("common:fields.selectPlate")}
+              options={producibleDishes.map((d) => ({
+                value: String(d.id),
+                label: d.name,
+              }))}
+            />
             {producibleDishes.length === 0 && (
               <p className="mt-1 text-xs text-gray-500">{t("production.noRecipesHint")}</p>
             )}
@@ -174,11 +171,11 @@ export default function ProductionPage() {
                         {formatNumber(row.available)} {row.unit}
                       </td>
                       <td className="p-2">
-                        <span className={row.sufficient ? "text-success-500" : "text-error-500"}>
+                        <StatusBadge variant={row.sufficient ? "active" : "low_stock"}>
                           {row.sufficient
                             ? t("common:status.ok")
                             : t("common:status.insufficient")}
-                        </span>
+                        </StatusBadge>
                       </td>
                     </tr>
                   ))}
@@ -196,26 +193,27 @@ export default function ProductionPage() {
           <Button type="submit" size="sm" disabled={submitting || !canSubmit}>
             {submitting ? t("common:actions.logging") : t("production.logProductionBtn")}
           </Button>
-        </form>
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-          <h3 className="mb-4 font-semibold">{t("production.recentProduction")}</h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-2">{t("common:fields.plate")}</th>
-                <th className="pb-2">{t("common:fields.date")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-b border-gray-100 dark:border-gray-800">
-                  <td className="py-2">{log.dish?.name}</td>
-                  <td className="py-2">{new Date(log.logged_at).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          </form>
+        </SectionCard>
+        <SectionCard title={t("production.recentProduction")}>
+          <DataTable
+            columns={[
+              {
+                key: "plate",
+                header: t("common:fields.plate"),
+                render: (log) => log.dish?.name ?? t("common:emDash"),
+              },
+              {
+                key: "date",
+                header: t("common:fields.date"),
+                render: (log) => new Date(log.logged_at).toLocaleString(),
+              },
+            ] satisfies DataTableColumn<ProductionLog>[]}
+            data={logs}
+            keyExtractor={(log) => log.id}
+            hoverRows
+          />
+        </SectionCard>
       </div>
     </div>
   );

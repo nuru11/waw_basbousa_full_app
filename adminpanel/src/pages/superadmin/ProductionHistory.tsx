@@ -2,6 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import {
+  DataTable,
+  EmptyState,
+  SectionCard,
+  StatCard,
+} from "../../components/ui";
+import type { DataTableColumn } from "../../components/ui";
 import { api, type ProductionLog } from "../../services/api";
 import { formatShortDate, formatTime } from "../../utils/formatDate";
 import { formatNumber } from "../../utils/formatNumber";
@@ -37,6 +44,57 @@ export default function ProductionHistoryPage() {
     return { totalPlates, byPlate, byChief };
   }, [logs, tCommon]);
 
+  const logColumns: DataTableColumn<ProductionLog>[] = useMemo(
+    () => [
+      {
+        key: "date",
+        header: tCommon("fields.date"),
+        cellClassName: "whitespace-nowrap",
+        render: (log) => (
+          <>
+            {formatShortDate(log.logged_at)}
+            <span className="block text-xs text-gray-400">
+              {formatTime(log.logged_at)}
+            </span>
+          </>
+        ),
+      },
+      {
+        key: "chief",
+        header: tCommon("fields.chief"),
+        render: (log) => (
+          <>
+            {log.chief?.name ?? tCommon("emDash")}
+            {log.chief?.short_id && (
+              <span className="block text-xs text-gray-400">
+                {tCommon("idShort", { id: log.chief.short_id })}
+              </span>
+            )}
+          </>
+        ),
+      },
+      {
+        key: "plate",
+        header: tCommon("fields.plate"),
+        render: (log) => log.dish?.name ?? tCommon("emDash"),
+      },
+      {
+        key: "weight",
+        header: tCommon("fields.weightKg"),
+        render: (log) =>
+          formatNumber(
+            plateWeightToKg(log.plate_weight_grams ?? log.dish?.plate_weight_grams)
+          ),
+      },
+      {
+        key: "notes",
+        header: tCommon("fields.notes"),
+        render: (log) => log.notes || tCommon("emDash"),
+      },
+    ],
+    [tCommon]
+  );
+
   return (
     <div>
       <PageMeta
@@ -46,37 +104,42 @@ export default function ProductionHistoryPage() {
       <PageBreadcrumb pageTitle={tNav("platesMadeByChief")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
 
-      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-3">
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <p className="text-sm text-gray-500">{t("productionHistory.totalPlatesMade")}</p>
-          <p className="mt-1 text-3xl font-bold text-brand-500">{summary.totalPlates}</p>
-        </div>
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <p className="text-sm text-gray-500">{t("productionHistory.productionEntries")}</p>
-          <p className="mt-1 text-3xl font-bold text-gray-800 dark:text-white/90">{logs.length}</p>
-        </div>
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <p className="mb-2 text-sm text-gray-500">{t("productionHistory.byChief")}</p>
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          title={t("productionHistory.totalPlatesMade")}
+          value={String(summary.totalPlates)}
+          accent="brand"
+        />
+        <StatCard
+          title={t("productionHistory.productionEntries")}
+          value={String(logs.length)}
+          accent="neutral"
+        />
+        <SectionCard title={t("productionHistory.byChief")}>
           {summary.byChief.size === 0 ? (
-            <p className="text-gray-400">{t("productionHistory.noLogsYet")}</p>
+            <EmptyState message={t("productionHistory.noLogsYet")} />
           ) : (
             <ul className="space-y-1 text-sm">
               {[...summary.byChief.entries()].map(([name, count]) => (
-                <li key={name} className="flex justify-between gap-4">
+                <li
+                  key={name}
+                  className="flex justify-between gap-4 text-gray-600 dark:text-gray-400"
+                >
                   <span>{name}</span>
-                  <span className="font-medium">{count}</span>
+                  <span className="font-medium text-gray-800 dark:text-white/90">
+                    {count}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </SectionCard>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-1">
-          <h3 className="mb-3 font-semibold">{t("productionHistory.byPlate")}</h3>
+        <SectionCard title={t("productionHistory.byPlate")} className="lg:col-span-1">
           {summary.byPlate.size === 0 ? (
-            <p className="text-sm text-gray-500">{t("productionHistory.noProductionLogged")}</p>
+            <EmptyState message={t("productionHistory.noProductionLogged")} />
           ) : (
             <ul className="space-y-2 text-sm">
               {[...summary.byPlate.entries()]
@@ -92,55 +155,20 @@ export default function ProductionHistoryPage() {
                 ))}
             </ul>
           )}
-        </div>
+        </SectionCard>
 
-        <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto lg:col-span-3">
-          <h3 className="mb-4 font-semibold">{t("productionHistory.productionLog")}</h3>
-          {logs.length === 0 ? (
-            <p className="text-gray-500">{t("productionHistory.noPlatesLogged")}</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-start text-gray-500 border-b dark:border-gray-700">
-                  <th className="pb-3 pe-4">{tCommon("fields.date")}</th>
-                  <th className="pb-3 pe-4">{tCommon("fields.chief")}</th>
-                  <th className="pb-3 pe-4">{tCommon("fields.plate")}</th>
-                  <th className="pb-3 pe-4">{tCommon("fields.weightKg")}</th>
-                  <th className="pb-3">{tCommon("fields.notes")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log.id} className="border-b border-gray-100 dark:border-gray-800">
-                    <td className="py-3 pe-4 whitespace-nowrap">
-                      {formatShortDate(log.logged_at)}
-                      <span className="block text-xs text-gray-400">
-                        {formatTime(log.logged_at)}
-                      </span>
-                    </td>
-                    <td className="py-3 pe-4">
-                      {log.chief?.name ?? tCommon("emDash")}
-                      {log.chief?.short_id && (
-                        <span className="block text-xs text-gray-400">
-                          {tCommon("idShort", { id: log.chief.short_id })}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 pe-4">{log.dish?.name ?? tCommon("emDash")}</td>
-                    <td className="py-3 pe-4">
-                      {formatNumber(
-                        plateWeightToKg(
-                          log.plate_weight_grams ?? log.dish?.plate_weight_grams
-                        )
-                      )}
-                    </td>
-                    <td className="py-3 text-gray-500">{log.notes || tCommon("emDash")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <SectionCard
+          title={t("productionHistory.productionLog")}
+          className="lg:col-span-3"
+        >
+          <DataTable
+            columns={logColumns}
+            data={logs}
+            keyExtractor={(log) => log.id}
+            emptyMessage={t("productionHistory.noPlatesLogged")}
+            hoverRows
+          />
+        </SectionCard>
       </div>
     </div>
   );
