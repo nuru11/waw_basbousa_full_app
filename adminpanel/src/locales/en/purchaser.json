@@ -1,0 +1,38 @@
+{
+  "pendingTransfers": {
+    "metaTitle": "Pending Transfers | Restaurant",
+    "metaDescription": "Accept incoming transfers",
+    "awaitingAcceptance": "Transfers Awaiting Acceptance",
+    "empty": "No pending transfers",
+    "failedToAccept": "Failed to accept"
+  },
+  "transferHistory": {
+    "metaTitle": "Transfer History | Restaurant",
+    "metaDescription": "Past transfers",
+    "empty": "No accepted transfers yet"
+  },
+  "purchases": {
+    "metaTitle": "Purchases | Restaurant",
+    "metaDescription": "Record purchases",
+    "newPurchaseInvoice": "New Purchase / Invoice",
+    "unitPriceEtb": "Unit Price (ETB)",
+    "totalLabel": "Total: ETB {{amount}}",
+    "screenshotLabel": "Screenshot (invoice/receipt)",
+    "balanceExceededWarning": "This purchase exceeds your remaining balance (ETB {{amount}}). It will still be recorded.",
+    "submittedSuccess": "Purchase submitted — pending SuperAdmin approval",
+    "viewHistoryLink": "View purchase history →"
+  },
+  "purchaseHistory": {
+    "metaTitle": "Purchase History | Restaurant",
+    "metaDescription": "Purchase history",
+    "allPurchases": "All Purchases",
+    "empty": "No purchases recorded"
+  },
+  "inventory": {
+    "metaTitle": "My Inventory | Restaurant",
+    "metaDescription": "Purchaser inventory",
+    "itemsToHand": "Items to Hand to Chief",
+    "empty": "No items in your inventory",
+    "failedToHand": "Failed to hand to chief"
+  }
+}

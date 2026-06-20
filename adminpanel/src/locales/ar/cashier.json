@@ -1,0 +1,12 @@
+{
+  "mode": {
+    "title": "وضع أمين الصندوق",
+    "userLine": "{{name}} · #{{shortId}}"
+  },
+  "pos": {
+    "metaTitle": "أمين الصندوق | المطعم",
+    "metaDescription": "نقطة بيع أمين الصندوق",
+    "title": "أمين الصندوق",
+    "subtitle": "تسجيل بيع"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "pendingReceipts": {
+    "metaTitle": "الإيصالات المعلقة | المطعم",
+    "metaDescription": "استلام المشتريات",
+    "awaitingReceipt": "مشتريات في انتظار الاستلام",
+    "empty": "لا مشتريات مُسلّمة إليك في انتظار الاستلام",
+    "failedToConfirm": "فشل تأكيد الاستلام"
+  },
+  "inventory": {
+    "metaTitle": "المخزون | المطعم",
+    "metaDescription": "المخزون المتبقي",
+    "lowStockAlert": "تنبيه انخفاض المخزون"
+  },
+  "production": {
+    "metaTitle": "الإنتاج | المطعم",
+    "metaDescription": "تسجيل الأطباق المطبوخة",
+    "logCookedPlates": "تسجيل الأطباق المطبوخة",
+    "plateWeightKg": "وزن الطبق (كغ)",
+    "plateWeightHint": "وزن طبق واحد مطبوخ بالكيلوغرام (مثلاً 1، 5، 28)",
+    "noRecipesHint": "لا أطباق لها وصفات محددة. اطلب من المشرف العام إعداد الوصفات.",
+    "logProductionBtn": "تسجيل الإنتاج (يخصم من المخزون)",
+    "recentProduction": "الإنتاج الأخير"
+  }
+}

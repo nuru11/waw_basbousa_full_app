@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { api, type Ingredient } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 
 export default function InventoryPage() {
+  const { t } = useTranslation(["chief", "nav"]);
   const [stock, setStock] = useState<Ingredient[]>([]);
 
   useEffect(() => {
@@ -13,8 +15,11 @@ export default function InventoryPage() {
 
   return (
     <div>
-      <PageMeta title="Inventory | Restaurant" description="Remaining stock" />
-      <PageBreadcrumb pageTitle="Inventory & Remaining Food" />
+      <PageMeta
+        title={t("inventory.metaTitle")}
+        description={t("inventory.metaDescription")}
+      />
+      <PageBreadcrumb pageTitle={t("nav:inventoryRemainingFood")} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stock.map((item) => {
           const low =
@@ -37,7 +42,7 @@ export default function InventoryPage() {
                 <span className="text-base font-normal text-gray-500">{item.unit}</span>
               </p>
               {low && (
-                <p className="mt-1 text-sm text-error-500">Low stock alert</p>
+                <p className="mt-1 text-sm text-error-500">{t("inventory.lowStockAlert")}</p>
               )}
             </div>
           );

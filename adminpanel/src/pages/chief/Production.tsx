@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
@@ -8,6 +9,7 @@ import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Dish, type Ingredient, type ProductionLog } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 import { kgToStoredGrams, plateWeightToKg } from "../../utils/plateWeight";
+import { translateApiError } from "../../utils/translateApiError";
 
 const PLATES_COUNT = 1;
 
@@ -18,6 +20,7 @@ const emptyForm = {
 };
 
 export default function ProductionPage() {
+  const { t } = useTranslation(["chief", "common", "nav"]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [stock, setStock] = useState<Ingredient[]>([]);
   const [logs, setLogs] = useState<ProductionLog[]>([]);
@@ -54,14 +57,16 @@ export default function ProductionPage() {
       const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
       const available = ingredient ? parseFloat(String(ingredient.current_stock)) : 0;
       return {
-        name: ingredient?.name ?? `Ingredient #${item.ingredient_id}`,
+        name:
+          ingredient?.name ??
+          t("common:ingredientFallback", { id: item.ingredient_id }),
         unit: ingredient?.unit ?? "",
         needed,
         available,
         sufficient: available >= needed,
       };
     });
-  }, [selectedDish, stock]);
+  }, [selectedDish, stock, t]);
 
   const canSubmit =
     form.dish_id &&
@@ -93,24 +98,27 @@ export default function ProductionPage() {
         setForm(emptyForm);
         load();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed");
+        setError(translateApiError(err));
       }
     });
   }
 
   return (
     <div>
-      <PageMeta title="Production | Restaurant" description="Log cooked plates" />
-      <PageBreadcrumb pageTitle="Cook Plates" />
+      <PageMeta
+        title={t("production.metaTitle")}
+        description={t("production.metaDescription")}
+      />
+      <PageBreadcrumb pageTitle={t("nav:cookPlates")} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <form
           onSubmit={handleSubmit}
           className="p-5 space-y-4 rounded-2xl border border-gray-200 dark:border-gray-800"
         >
-          <h3 className="font-semibold">Log Cooked Plates</h3>
+          <h3 className="font-semibold">{t("production.logCookedPlates")}</h3>
           {error && <p className="text-sm text-error-500">{error}</p>}
           <div>
-            <Label>Plate</Label>
+            <Label>{t("common:fields.plate")}</Label>
             <select
               className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
               value={form.dish_id}
@@ -122,7 +130,7 @@ export default function ProductionPage() {
                 })
               }
             >
-              <option value="">Select plate</option>
+              <option value="">{t("common:fields.selectPlate")}</option>
               {producibleDishes.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -130,13 +138,11 @@ export default function ProductionPage() {
               ))}
             </select>
             {producibleDishes.length === 0 && (
-              <p className="mt-1 text-xs text-gray-500">
-                No plates with recipes defined. Ask superadmin to set up recipes.
-              </p>
+              <p className="mt-1 text-xs text-gray-500">{t("production.noRecipesHint")}</p>
             )}
           </div>
           <div>
-            <Label>Plate Weight (kg)</Label>
+            <Label>{t("production.plateWeightKg")}</Label>
             <Input
               type="number"
               min="0.01"
@@ -144,19 +150,17 @@ export default function ProductionPage() {
               value={form.plate_weight_kg}
               onChange={(e) => setForm({ ...form, plate_weight_kg: e.target.value })}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              Weight of one cooked plate in kilograms (e.g. 1, 5, 28)
-            </p>
+            <p className="mt-1 text-xs text-gray-500">{t("production.plateWeightHint")}</p>
           </div>
           {preview.length > 0 && (
             <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                    <th className="p-2">Ingredient</th>
-                    <th className="p-2">Needed</th>
-                    <th className="p-2">In Stock</th>
-                    <th className="p-2">Status</th>
+                  <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                    <th className="p-2">{t("common:fields.ingredient")}</th>
+                    <th className="p-2">{t("common:fields.needed")}</th>
+                    <th className="p-2">{t("common:fields.inStock")}</th>
+                    <th className="p-2">{t("common:fields.status")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,7 +175,9 @@ export default function ProductionPage() {
                       </td>
                       <td className="p-2">
                         <span className={row.sufficient ? "text-success-500" : "text-error-500"}>
-                          {row.sufficient ? "OK" : "Insufficient"}
+                          {row.sufficient
+                            ? t("common:status.ok")
+                            : t("common:status.insufficient")}
                         </span>
                       </td>
                     </tr>
@@ -181,23 +187,23 @@ export default function ProductionPage() {
             </div>
           )}
           <div>
-            <Label>Notes</Label>
+            <Label>{t("common:fields.notes")}</Label>
             <Input
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
           </div>
           <Button type="submit" size="sm" disabled={submitting || !canSubmit}>
-            {submitting ? "Logging..." : "Log Production (deducts stock)"}
+            {submitting ? t("common:actions.logging") : t("production.logProductionBtn")}
           </Button>
         </form>
         <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-          <h3 className="mb-4 font-semibold">Recent Production</h3>
+          <h3 className="mb-4 font-semibold">{t("production.recentProduction")}</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-2">Plate</th>
-                <th className="pb-2">Date</th>
+              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                <th className="pb-2">{t("common:fields.plate")}</th>
+                <th className="pb-2">{t("common:fields.date")}</th>
               </tr>
             </thead>
             <tbody>

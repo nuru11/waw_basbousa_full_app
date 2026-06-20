@@ -2,6 +2,7 @@ const path = require('path');
 const purchaseService = require('../services/purchaseService');
 const { UPLOAD_DIR } = require('../middleware/upload');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 
 async function list(req, res, next) {
   try {
@@ -34,10 +35,12 @@ async function create(req, res, next) {
   try {
     const { ingredient_id, quantity, unit_price } = req.body;
 
-    if (!ingredient_id) throw new AppError('Ingredient is required', 400);
-    if (!quantity || parseFloat(quantity) <= 0) throw new AppError('Quantity must be positive', 400);
+    if (!ingredient_id) throw new AppError('INGREDIENT_REQUIRED', ERROR_CODES.INGREDIENT_REQUIRED, 400);
+    if (!quantity || parseFloat(quantity) <= 0) {
+      throw new AppError('QUANTITY_MUST_BE_POSITIVE', ERROR_CODES.QUANTITY_MUST_BE_POSITIVE, 400);
+    }
     if (!unit_price || parseFloat(unit_price) <= 0) {
-      throw new AppError('Unit price must be positive', 400);
+      throw new AppError('UNIT_PRICE_MUST_BE_POSITIVE', ERROR_CODES.UNIT_PRICE_MUST_BE_POSITIVE, 400);
     }
 
     const purchase = await purchaseService.createPurchase(req.user.id, {

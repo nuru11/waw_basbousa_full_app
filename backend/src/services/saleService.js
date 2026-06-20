@@ -1,6 +1,7 @@
 const { sequelize, Sale, Dish, Admin } = require('../models');
 const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 const stockService = require('./stockService');
 
 function calculateUnitPrice(dish, weightType) {
@@ -12,7 +13,7 @@ function calculateUnitPrice(dish, weightType) {
   };
   const price = priceMap[weightType];
   if (price === null || price === undefined) {
-    throw new AppError(`Price not set for weight type: ${weightType}`, 400);
+    throw new AppError('PRICE_NOT_SET', ERROR_CODES.PRICE_NOT_SET, 400, { weightType });
   }
   return parseFloat(price);
 }
@@ -21,7 +22,7 @@ function calculateTotalPrice(dish, weightType, quantity, sliceCount) {
   const unitPrice = calculateUnitPrice(dish, weightType);
   if (weightType === 'slice') {
     if (!sliceCount || sliceCount < 1) {
-      throw new AppError('Slice count is required for slice sales', 422);
+      throw new AppError('SLICE_COUNT_REQUIRED', ERROR_CODES.SLICE_COUNT_REQUIRED, 422);
     }
     return unitPrice * sliceCount * quantity;
   }
@@ -39,22 +40,22 @@ function calculateKiloConsumed(weightType, quantity, sliceCount) {
       return 1.0 * q;
     case 'slice': {
       if (!sliceCount || sliceCount < 1) {
-        throw new AppError('Slice count is required for slice sales', 422);
+        throw new AppError('SLICE_COUNT_REQUIRED', ERROR_CODES.SLICE_COUNT_REQUIRED, 422);
       }
       return ((sliceCount / 3) * 0.25) * q;
     }
     default:
-      throw new AppError('Invalid weight type', 422);
+      throw new AppError('INVALID_WEIGHT_TYPE', ERROR_CODES.INVALID_WEIGHT_TYPE, 422);
   }
 }
 
 async function validateSeller(sellerId) {
   const seller = await Admin.findByPk(sellerId);
   if (!seller || seller.status !== 'active') {
-    throw new AppError('Seller not found or inactive', 404);
+    throw new AppError('SELLER_NOT_FOUND', ERROR_CODES.SELLER_NOT_FOUND, 404);
   }
   if (!['employee', 'chief'].includes(seller.role)) {
-    throw new AppError('Seller must be an employee or chief', 422);
+    throw new AppError('SELLER_INVALID_ROLE', ERROR_CODES.SELLER_INVALID_ROLE, 422);
   }
   return seller;
 }
@@ -79,7 +80,7 @@ async function createSale(userId, data) {
 
     const dish = await Dish.findByPk(data.dish_id, { transaction });
     if (!dish || !dish.is_active) {
-      throw new AppError('Dish not found or inactive', 404);
+      throw new AppError('DISH_NOT_FOUND_OR_INACTIVE', ERROR_CODES.DISH_NOT_FOUND_OR_INACTIVE, 404);
     }
 
     const quantity = data.quantity || 1;
@@ -102,8 +103,13 @@ async function createSale(userId, data) {
 
     if (kiloConsumed > availability.available_kg + 0.0001) {
       throw new AppError(
-        `Insufficient plate stock for today. Available: ${availability.available_kg.toFixed(3)} kg, need: ${kiloConsumed.toFixed(3)} kg`,
-        400
+        'INSUFFICIENT_PLATE_STOCK',
+        ERROR_CODES.INSUFFICIENT_PLATE_STOCK,
+        400,
+        {
+          available: availability.available_kg.toFixed(3),
+          needed: kiloConsumed.toFixed(3),
+        }
       );
     }
 

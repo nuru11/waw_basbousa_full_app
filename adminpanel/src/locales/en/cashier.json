@@ -1,0 +1,12 @@
+{
+  "mode": {
+    "title": "Cashier Mode",
+    "userLine": "{{name}} · #{{shortId}}"
+  },
+  "pos": {
+    "metaTitle": "Cashier | Restaurant",
+    "metaDescription": "Cashier point of sale",
+    "title": "Cashier",
+    "subtitle": "Record a sale"
+  }
+}

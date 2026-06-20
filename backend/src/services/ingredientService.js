@@ -1,5 +1,6 @@
 const { Ingredient } = require('../models');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 
 async function listIngredients() {
   return Ingredient.findAll({ order: [['name', 'ASC']] });
@@ -7,7 +8,7 @@ async function listIngredients() {
 
 async function getIngredient(id) {
   const ingredient = await Ingredient.findByPk(id);
-  if (!ingredient) throw new AppError('Ingredient not found', 404);
+  if (!ingredient) throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
   return ingredient;
 }
 

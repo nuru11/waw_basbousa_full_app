@@ -1,28 +1,21 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { useAuth } from "../../context/AuthContext";
 import { api, type Dish, type PlateAvailability, type User } from "../../services/api";
-import { ROLE_LABELS } from "../../utils/roleRoutes";
+import { getRoleLabel } from "../../utils/roleRoutes";
 import { formatNumber } from "../../utils/formatNumber";
+import { formatCurrency } from "../../utils/formatCurrency";
+import { translateApiError } from "../../utils/translateApiError";
+import { paymentMethodLabel, weightTypeLabel } from "../../utils/purchaseStatus";
 
 type WeightType = "quarter" | "half" | "kilo" | "slice";
 
-const WEIGHT_OPTIONS: { value: WeightType; label: string }[] = [
-  { value: "quarter", label: "Quarter" },
-  { value: "half", label: "Half" },
-  { value: "kilo", label: "Kilo" },
-  { value: "slice", label: "By Slice" },
-];
-
-const PAYMENT_OPTIONS = [
-  { value: "cash", label: "Cash" },
-  { value: "cbe", label: "CBE" },
-  { value: "telebirr", label: "Telebirr" },
-  { value: "other", label: "Other" },
-];
+const WEIGHT_OPTIONS: WeightType[] = ["quarter", "half", "kilo", "slice"];
+const PAYMENT_OPTIONS = ["cash", "cbe", "telebirr", "other"] as const;
 
 function calcPrice(dish: Dish, weightType: WeightType, qty: number, slices: number) {
   const map: Record<WeightType, number | null> = {
@@ -57,6 +50,7 @@ interface SalesFormProps {
 }
 
 export default function SalesForm({ compact = false }: SalesFormProps) {
+  const { t } = useTranslation("common");
   const { user } = useAuth();
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [sellers, setSellers] = useState<User[]>([]);
@@ -122,7 +116,11 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
           payment_method: form.payment_method,
         });
         const seller = sellers.find((s) => s.id === parseInt(form.seller_id));
-        setSuccess(`Sale recorded for ${seller?.name ?? "seller"}`);
+        setSuccess(
+          t("sales.saleRecorded", {
+            name: seller?.name ?? t("sales.saleRecordedFallback"),
+          })
+        );
         setForm((prev) => ({
           dish_id: "",
           seller_id: prev.seller_id,
@@ -133,7 +131,7 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
         }));
         setAvailability(null);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed");
+        setError(translateApiError(err));
       }
     });
   }
@@ -142,20 +140,20 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
     <div className={compact ? "" : "max-w-lg p-5 rounded-2xl border border-gray-200 dark:border-gray-800"}>
       {!compact && user && (
         <p className="mb-4 text-sm text-gray-500">
-          Logged in as <strong>{user.name}</strong> (ID: {user.short_id})
+          {t("sales.loggedInAs", { name: user.name, shortId: user.short_id })}
         </p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-error-500">{error}</p>}
         {success && <p className="text-sm text-success-500">{success}</p>}
         <div>
-          <Label>Plate</Label>
+          <Label>{t("fields.plate")}</Label>
           <select
             className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
             value={form.dish_id}
             onChange={(e) => setForm({ ...form, dish_id: e.target.value })}
           >
-            <option value="">Select plate</option>
+            <option value="">{t("fields.selectPlate")}</option>
             {dishes.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
@@ -165,59 +163,57 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
         </div>
         {selectedDish && availability && (
           <div className="p-3 text-sm rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <p className="text-gray-500">Today&apos;s plate stock</p>
+            <p className="text-gray-500">{t("sales.todaysPlateStock")}</p>
             <p className="font-semibold text-brand-600">
-              {formatNumber(availability.available_kg)} kg available
+              {t("units.kgAvailable", { amount: formatNumber(availability.available_kg) })}
             </p>
             <p className="text-xs text-gray-400">
-              {availability.produced_plates} plate{availability.produced_plates === 1 ? "" : "s"}{" "}
-              cooked today · Produced {formatNumber(availability.produced_kg)} kg · Sold{" "}
-              {formatNumber(availability.sold_kg)} kg
+              {t("units.platesCookedToday", { count: availability.produced_plates })}{" "}
+              · {t("units.producedKg", { amount: formatNumber(availability.produced_kg) })}{" "}
+              · {t("units.soldKg", { amount: formatNumber(availability.sold_kg) })}
             </p>
             {form.weight_type === "slice" && (
-              <p className="mt-1 text-xs text-gray-400">
-                Stock: every 3 slices = 1 quarter (0.25 kg)
-              </p>
+              <p className="mt-1 text-xs text-gray-400">{t("units.sliceStockRule")}</p>
             )}
           </div>
         )}
         <div>
-          <Label>Seller</Label>
+          <Label>{t("fields.seller")}</Label>
           <select
             className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
             value={form.seller_id}
             onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
           >
-            <option value="">Select seller</option>
+            <option value="">{t("fields.selectSeller")}</option>
             {sellers.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} ({ROLE_LABELS[s.role]}) #{s.short_id}
+                {s.name} ({getRoleLabel(s.role)}) #{s.short_id}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <Label>Weight / Portion</Label>
+          <Label>{t("sales.weightPortion")}</Label>
           <div className="grid grid-cols-2 gap-2 mt-1 sm:grid-cols-4">
             {WEIGHT_OPTIONS.map((opt) => (
               <button
-                key={opt.value}
+                key={opt}
                 type="button"
-                onClick={() => setForm({ ...form, weight_type: opt.value })}
+                onClick={() => setForm({ ...form, weight_type: opt })}
                 className={`py-2 text-sm rounded-lg border ${
-                  form.weight_type === opt.value
+                  form.weight_type === opt
                     ? "border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/10"
                     : "border-gray-200 dark:border-gray-700"
                 }`}
               >
-                {opt.label}
+                {weightTypeLabel(opt)}
               </button>
             ))}
           </div>
         </div>
         {form.weight_type === "slice" && (
           <div>
-            <Label>Number of Slices</Label>
+            <Label>{t("weightTypes.sliceCount")}</Label>
             <Input
               type="number"
               min="1"
@@ -227,7 +223,7 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
           </div>
         )}
         <div>
-          <Label>Quantity</Label>
+          <Label>{t("fields.quantity")}</Label>
           <Input
             type="number"
             min="1"
@@ -236,31 +232,31 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
           />
         </div>
         <div>
-          <Label>Payment Method</Label>
+          <Label>{t("paymentMethods.method")}</Label>
           <select
             className="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
             value={form.payment_method}
             onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
           >
             {PAYMENT_OPTIONS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
+              <option key={p} value={p}>
+                {paymentMethodLabel(p)}
               </option>
             ))}
           </select>
         </div>
         <div className="p-4 text-center rounded-xl bg-brand-50 dark:bg-brand-500/10">
-          <p className="text-sm text-gray-500">Total Price</p>
-          <p className="text-2xl font-bold text-brand-600">ETB {total.toFixed(2)}</p>
+          <p className="text-sm text-gray-500">{t("sales.totalPrice")}</p>
+          <p className="text-2xl font-bold text-brand-600">{formatCurrency(total)}</p>
           {dishId > 0 && (
             <p className="mt-1 text-xs text-gray-400">
-              Uses {formatNumber(kiloNeeded)} kg from today&apos;s stock
+              {t("units.kgUsed", { amount: formatNumber(kiloNeeded) })}
             </p>
           )}
         </div>
         {insufficientStock && (
           <p className="text-sm text-error-500">
-            Not enough stock today ({formatNumber(availableKg)} kg available)
+            {t("sales.notEnoughStock", { amount: formatNumber(availableKg) })}
           </p>
         )}
         <Button
@@ -271,7 +267,7 @@ export default function SalesForm({ compact = false }: SalesFormProps) {
             !form.dish_id || !form.seller_id || submitting || insufficientStock
           }
         >
-          {submitting ? "Recording..." : "Record Sale"}
+          {submitting ? t("actions.recording") : t("actions.recordSale")}
         </Button>
       </form>
     </div>

@@ -1,0 +1,14 @@
+{
+  "confirm": {
+    "deleteStaff": "Delete this staff member?",
+    "deleteIngredient": "Delete ingredient?",
+    "deactivateStaff": "Deactivate {{name}}?",
+    "activateStaff": "Activate {{name}}?"
+  },
+  "required": {
+    "screenshot": "Screenshot is required"
+  },
+  "stock": {
+    "insufficient": "Not enough stock today ({{amount}} kg available)"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "pendingTransfers": {
+    "metaTitle": "التحويلات المعلقة | المطعم",
+    "metaDescription": "قبول التحويلات الواردة",
+    "awaitingAcceptance": "تحويلات في انتظار القبول",
+    "empty": "لا تحويلات معلقة",
+    "failedToAccept": "فشل القبول"
+  },
+  "transferHistory": {
+    "metaTitle": "سجل التحويلات | المطعم",
+    "metaDescription": "التحويلات السابقة",
+    "empty": "لا تحويلات مقبولة بعد"
+  },
+  "purchases": {
+    "metaTitle": "المشتريات | المطعم",
+    "metaDescription": "تسجيل المشتريات",
+    "newPurchaseInvoice": "شراء / فاتورة جديدة",
+    "unitPriceEtb": "سعر الوحدة (ب.إ)",
+    "totalLabel": "الإجمالي: {{amount}} ب.إ",
+    "screenshotLabel": "لقطة الشاشة (فاتورة/إيصال)",
+    "balanceExceededWarning": "هذا الشراء يتجاوز رصيدك المتبقي ({{amount}} ب.إ). سيُسجَّل مع ذلك.",
+    "submittedSuccess": "تم إرسال الشراء — في انتظار موافقة المشرف العام",
+    "viewHistoryLink": "عرض سجل المشتريات ←"
+  },
+  "purchaseHistory": {
+    "metaTitle": "سجل المشتريات | المطعم",
+    "metaDescription": "سجل المشتريات",
+    "allPurchases": "جميع المشتريات",
+    "empty": "لا مشتريات مسجّلة"
+  },
+  "inventory": {
+    "metaTitle": "مخزوني | المطعم",
+    "metaDescription": "مخزون المشتري",
+    "itemsToHand": "عناصر للتسليم للطباخ",
+    "empty": "لا عناصر في مخزونك",
+    "failedToHand": "فشل التسليم للطباخ"
+  }
+}

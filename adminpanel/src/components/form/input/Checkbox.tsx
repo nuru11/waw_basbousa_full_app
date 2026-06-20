@@ -19,7 +19,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
 }) => {
   return (
     <label
-      className={`flex items-center space-x-3 group cursor-pointer ${
+      className={`flex items-center gap-3 group cursor-pointer ${
         disabled ? "cursor-not-allowed opacity-60" : ""
       }`}
     >
@@ -35,7 +35,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
         />
         {checked && (
           <svg
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
+            className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
             xmlns="http://www.w3.org/2000/svg"
             width="14"
             height="14"
@@ -53,7 +53,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
         )}
         {disabled && (
           <svg
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
+            className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
             xmlns="http://www.w3.org/2000/svg"
             width="14"
             height="14"

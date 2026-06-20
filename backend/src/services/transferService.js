@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { Transfer, Admin } = require('../models');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 const { getTodayRange } = require('../utils/dateUtils');
 
 const TRANSFER_DATE_FIELDS = ['created_at', 'accepted_at'];
@@ -43,12 +44,12 @@ async function listTransfers({ purchaserId, period, status, dateField } = {}) {
 async function createTransfer(createdBy, data) {
   const purchaser = await Admin.findByPk(data.purchaser_id);
   if (!purchaser || purchaser.role !== 'purchaser') {
-    throw new AppError('Invalid purchaser', 400);
+    throw new AppError('INVALID_PURCHASER', ERROR_CODES.INVALID_PURCHASER, 400);
   }
 
   const amount = parseFloat(data.amount);
   if (!amount || amount <= 0) {
-    throw new AppError('Amount must be positive', 400);
+    throw new AppError('AMOUNT_MUST_BE_POSITIVE', ERROR_CODES.AMOUNT_MUST_BE_POSITIVE, 400);
   }
 
   return Transfer.create({
@@ -70,13 +71,13 @@ async function createTransfer(createdBy, data) {
 async function acceptTransfer(transferId, purchaserId) {
   const transfer = await Transfer.findByPk(transferId);
   if (!transfer) {
-    throw new AppError('Transfer not found', 404);
+    throw new AppError('TRANSFER_NOT_FOUND', ERROR_CODES.TRANSFER_NOT_FOUND, 404);
   }
   if (transfer.purchaser_id !== purchaserId) {
-    throw new AppError('Not authorized to accept this transfer', 403);
+    throw new AppError('TRANSFER_NOT_AUTHORIZED', ERROR_CODES.TRANSFER_NOT_AUTHORIZED, 403);
   }
   if (transfer.status !== 'pending') {
-    throw new AppError('Transfer is not pending acceptance', 400);
+    throw new AppError('TRANSFER_NOT_PENDING', ERROR_CODES.TRANSFER_NOT_PENDING, 400);
   }
 
   await transfer.update({

@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { api, type ProductionLog } from "../../services/api";
-import { formatShortDate } from "../../utils/formatDate";
+import { formatShortDate, formatTime } from "../../utils/formatDate";
 import { formatNumber } from "../../utils/formatNumber";
 import { plateWeightToKg } from "../../utils/plateWeight";
+import { translateApiError } from "../../utils/translateApiError";
 
 export default function ProductionHistoryPage() {
+  const { t } = useTranslation("admin");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tNav } = useTranslation("nav");
   const [logs, setLogs] = useState<ProductionLog[]>([]);
   const [error, setError] = useState("");
 
@@ -14,7 +19,7 @@ export default function ProductionHistoryPage() {
     api
       .get<ProductionLog[]>("/stock/production")
       .then(setLogs)
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(translateApiError(e)));
   }, []);
 
   const summary = useMemo(() => {
@@ -23,34 +28,37 @@ export default function ProductionHistoryPage() {
     const byChief = new Map<string, number>();
 
     for (const log of logs) {
-      const plateName = log.dish?.name ?? `Plate #${log.dish_id}`;
-      const chiefName = log.chief?.name ?? "Unknown chief";
+      const plateName = log.dish?.name ?? tCommon("plateFallback", { id: log.dish_id });
+      const chiefName = log.chief?.name ?? tCommon("unknownChief");
       byPlate.set(plateName, (byPlate.get(plateName) ?? 0) + log.plates_count);
       byChief.set(chiefName, (byChief.get(chiefName) ?? 0) + log.plates_count);
     }
 
     return { totalPlates, byPlate, byChief };
-  }, [logs]);
+  }, [logs, tCommon]);
 
   return (
     <div>
-      <PageMeta title="Production History | Restaurant" description="Chief production logs" />
-      <PageBreadcrumb pageTitle="Plates Made by Chief" />
+      <PageMeta
+        title={t("productionHistory.metaTitle")}
+        description={t("productionHistory.metaDescription")}
+      />
+      <PageBreadcrumb pageTitle={tNav("platesMadeByChief")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
 
       <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-3">
         <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <p className="text-sm text-gray-500">Total Plates Made</p>
+          <p className="text-sm text-gray-500">{t("productionHistory.totalPlatesMade")}</p>
           <p className="mt-1 text-3xl font-bold text-brand-500">{summary.totalPlates}</p>
         </div>
         <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <p className="text-sm text-gray-500">Production Entries</p>
+          <p className="text-sm text-gray-500">{t("productionHistory.productionEntries")}</p>
           <p className="mt-1 text-3xl font-bold text-gray-800 dark:text-white/90">{logs.length}</p>
         </div>
         <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
-          <p className="mb-2 text-sm text-gray-500">By Chief</p>
+          <p className="mb-2 text-sm text-gray-500">{t("productionHistory.byChief")}</p>
           {summary.byChief.size === 0 ? (
-            <p className="text-gray-400">No logs yet</p>
+            <p className="text-gray-400">{t("productionHistory.noLogsYet")}</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {[...summary.byChief.entries()].map(([name, count]) => (
@@ -66,9 +74,9 @@ export default function ProductionHistoryPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-1">
-          <h3 className="mb-3 font-semibold">By Plate</h3>
+          <h3 className="mb-3 font-semibold">{t("productionHistory.byPlate")}</h3>
           {summary.byPlate.size === 0 ? (
-            <p className="text-sm text-gray-500">No production logged yet</p>
+            <p className="text-sm text-gray-500">{t("productionHistory.noProductionLogged")}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {[...summary.byPlate.entries()]
@@ -87,44 +95,46 @@ export default function ProductionHistoryPage() {
         </div>
 
         <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto lg:col-span-3">
-          <h3 className="mb-4 font-semibold">Production Log</h3>
+          <h3 className="mb-4 font-semibold">{t("productionHistory.productionLog")}</h3>
           {logs.length === 0 ? (
-            <p className="text-gray-500">No plates logged by chief yet</p>
+            <p className="text-gray-500">{t("productionHistory.noPlatesLogged")}</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                  <th className="pb-3 pr-4">Date</th>
-                  <th className="pb-3 pr-4">Chief</th>
-                  <th className="pb-3 pr-4">Plate</th>
-                  <th className="pb-3 pr-4">Weight (kg)</th>
-                  <th className="pb-3">Notes</th>
+                <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                  <th className="pb-3 pe-4">{tCommon("fields.date")}</th>
+                  <th className="pb-3 pe-4">{tCommon("fields.chief")}</th>
+                  <th className="pb-3 pe-4">{tCommon("fields.plate")}</th>
+                  <th className="pb-3 pe-4">{tCommon("fields.weightKg")}</th>
+                  <th className="pb-3">{tCommon("fields.notes")}</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((log) => (
                   <tr key={log.id} className="border-b border-gray-100 dark:border-gray-800">
-                    <td className="py-3 pr-4 whitespace-nowrap">
+                    <td className="py-3 pe-4 whitespace-nowrap">
                       {formatShortDate(log.logged_at)}
                       <span className="block text-xs text-gray-400">
-                        {new Date(log.logged_at).toLocaleTimeString()}
+                        {formatTime(log.logged_at)}
                       </span>
                     </td>
-                    <td className="py-3 pr-4">
-                      {log.chief?.name ?? "—"}
+                    <td className="py-3 pe-4">
+                      {log.chief?.name ?? tCommon("emDash")}
                       {log.chief?.short_id && (
-                        <span className="block text-xs text-gray-400">#{log.chief.short_id}</span>
+                        <span className="block text-xs text-gray-400">
+                          {tCommon("idShort", { id: log.chief.short_id })}
+                        </span>
                       )}
                     </td>
-                    <td className="py-3 pr-4">{log.dish?.name ?? "—"}</td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 pe-4">{log.dish?.name ?? tCommon("emDash")}</td>
+                    <td className="py-3 pe-4">
                       {formatNumber(
                         plateWeightToKg(
                           log.plate_weight_grams ?? log.dish?.plate_weight_grams
                         )
                       )}
                     </td>
-                    <td className="py-3 text-gray-500">{log.notes || "—"}</td>
+                    <td className="py-3 text-gray-500">{log.notes || tCommon("emDash")}</td>
                   </tr>
                 ))}
               </tbody>

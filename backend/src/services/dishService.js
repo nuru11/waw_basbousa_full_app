@@ -5,6 +5,7 @@ const {
   Ingredient,
 } = require('../models');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 
 async function listDishes({ activeOnly = false } = {}) {
   const where = activeOnly ? { is_active: true } : {};
@@ -31,7 +32,7 @@ async function getDish(id) {
       },
     ],
   });
-  if (!dish) throw new AppError('Dish not found', 404);
+  if (!dish) throw new AppError('DISH_NOT_FOUND', ERROR_CODES.DISH_NOT_FOUND, 404);
   return dish;
 }
 

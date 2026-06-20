@@ -2,9 +2,14 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  code?: string;
+  params?: Record<string, string | number>;
+
+  constructor(message: string, status: number, code?: string, params?: Record<string, string | number>) {
     super(message);
     this.status = status;
+    this.code = code;
+    this.params = params;
   }
 }
 
@@ -39,11 +44,20 @@ async function request<T>(
       setToken(null);
       window.location.href = '/signin';
     }
-    if (res.status === 403 && String(json.message || '').toLowerCase().includes('inactive')) {
+    if (
+      res.status === 403 &&
+      (json.code === "ACCOUNT_INACTIVE" ||
+        String(json.message || "").toLowerCase().includes("inactive"))
+    ) {
       setToken(null);
       window.location.href = '/signin';
     }
-    throw new ApiError(json.message || 'Request failed', res.status);
+    throw new ApiError(
+      json.message || 'Request failed',
+      res.status,
+      json.code,
+      json.params
+    );
   }
 
   return json.data as T;
@@ -57,7 +71,12 @@ async function requestBlob(path: string): Promise<Blob> {
   const res = await fetch(`${API_BASE}${path}`, { headers });
   if (!res.ok) {
     const json = await res.json().catch(() => ({}));
-    throw new ApiError(json.message || 'Request failed', res.status);
+    throw new ApiError(
+      json.message || 'Request failed',
+      res.status,
+      json.code,
+      json.params
+    );
   }
   return res.blob();
 }

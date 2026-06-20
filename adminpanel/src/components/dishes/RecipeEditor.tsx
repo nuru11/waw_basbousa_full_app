@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import type { Ingredient } from "../../services/api";
@@ -35,6 +36,8 @@ export function recipeRowsFromDish(
 }
 
 export default function RecipeEditor({ ingredients, rows, onChange }: RecipeEditorProps) {
+  const { t } = useTranslation("common");
+
   function updateRow(idx: number, field: keyof RecipeRow, value: string) {
     const next = [...rows];
     next[idx] = { ...next[idx], [field]: value };
@@ -43,7 +46,7 @@ export default function RecipeEditor({ ingredients, rows, onChange }: RecipeEdit
 
   return (
     <div>
-      <Label>Ingredients per Plate</Label>
+      <Label>{t("recipe.ingredientsPerPlate")}</Label>
       {rows.map((row, idx) => {
         const unit = ingredients.find((i) => String(i.id) === row.ingredient_id)?.unit;
         return (
@@ -53,7 +56,7 @@ export default function RecipeEditor({ ingredients, rows, onChange }: RecipeEdit
               value={row.ingredient_id}
               onChange={(e) => updateRow(idx, "ingredient_id", e.target.value)}
             >
-              <option value="">Ingredient</option>
+              <option value="">{t("recipe.ingredientOption")}</option>
               {ingredients.map((i) => (
                 <option key={i.id} value={i.id}>
                   {i.name} ({i.unit})
@@ -63,7 +66,9 @@ export default function RecipeEditor({ ingredients, rows, onChange }: RecipeEdit
             <Input
               type="number"
               step={0.001}
-              placeholder={unit ? `Qty (${unit})` : "Qty/plate"}
+              placeholder={
+                unit ? t("recipe.qtyWithUnit", { unit }) : t("recipe.qtyPerPlate")
+              }
               value={row.quantity_per_plate}
               onChange={(e) => updateRow(idx, "quantity_per_plate", e.target.value)}
             />
@@ -75,7 +80,7 @@ export default function RecipeEditor({ ingredients, rows, onChange }: RecipeEdit
         className="mt-2 text-sm text-brand-500"
         onClick={() => onChange([...rows, { ingredient_id: "", quantity_per_plate: "" }])}
       >
-        + Add ingredient
+        {t("recipe.addIngredient")}
       </button>
     </div>
   );

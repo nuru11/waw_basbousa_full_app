@@ -7,6 +7,7 @@ const {
 } = require('../models');
 const { fn, col, Op } = require('sequelize');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 const { getTodayRange } = require('../utils/dateUtils');
 const { deductFromTransfers } = require('./transferService');
 
@@ -42,7 +43,7 @@ async function createPurchase(purchaserId, data) {
 
   try {
     const ingredient = await Ingredient.findByPk(data.ingredient_id, { transaction });
-    if (!ingredient) throw new AppError('Ingredient not found', 404);
+    if (!ingredient) throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
 
     const quantity = parseFloat(data.quantity);
     const unitPrice = parseFloat(data.unit_price);
@@ -73,9 +74,9 @@ async function createPurchase(purchaserId, data) {
 
 async function approvePurchase(purchaseId, approverId) {
   const purchase = await Purchase.findByPk(purchaseId);
-  if (!purchase) throw new AppError('Purchase not found', 404);
+  if (!purchase) throw new AppError('PURCHASE_NOT_FOUND', ERROR_CODES.PURCHASE_NOT_FOUND, 404);
   if (purchase.status !== 'pending') {
-    throw new AppError('Only pending purchases can be approved', 400);
+    throw new AppError('PURCHASE_PENDING_ONLY', ERROR_CODES.PURCHASE_PENDING_ONLY, 400);
   }
 
   await purchase.update({
@@ -96,12 +97,12 @@ async function handPurchaseToChief(purchaseId, purchaserId) {
       transaction,
     });
 
-    if (!purchase) throw new AppError('Purchase not found', 404);
+    if (!purchase) throw new AppError('PURCHASE_NOT_FOUND', ERROR_CODES.PURCHASE_NOT_FOUND, 404);
     if (purchase.purchaser_id !== purchaserId) {
-      throw new AppError('Forbidden', 403);
+      throw new AppError('FORBIDDEN', ERROR_CODES.FORBIDDEN, 403);
     }
     if (purchase.status !== 'in_inventory') {
-      throw new AppError('Only in-inventory purchases can be handed to chief', 400);
+      throw new AppError('PURCHASE_IN_INVENTORY_ONLY', ERROR_CODES.PURCHASE_IN_INVENTORY_ONLY, 400);
     }
 
     await purchase.update(
@@ -129,12 +130,12 @@ async function receivePurchase(purchaseId, chiefId) {
       transaction,
     });
 
-    if (!purchase) throw new AppError('Purchase not found', 404);
+    if (!purchase) throw new AppError('PURCHASE_NOT_FOUND', ERROR_CODES.PURCHASE_NOT_FOUND, 404);
     if (purchase.status === 'received') {
-      throw new AppError('Purchase already received', 400);
+      throw new AppError('PURCHASE_ALREADY_RECEIVED', ERROR_CODES.PURCHASE_ALREADY_RECEIVED, 400);
     }
     if (purchase.status !== 'handed') {
-      throw new AppError('Purchase must be handed by purchaser before receiving', 400);
+      throw new AppError('PURCHASE_MUST_BE_HANDED', ERROR_CODES.PURCHASE_MUST_BE_HANDED, 400);
     }
 
     const ingredient = await Ingredient.findByPk(purchase.ingredient_id, {
@@ -204,15 +205,15 @@ async function getPurchaserInventory(purchaserId) {
 async function getPurchaseForScreenshot(purchaseId, user) {
   const purchase = await Purchase.findByPk(purchaseId);
   if (!purchase || !purchase.screenshot_path) {
-    throw new AppError('Screenshot not found', 404);
+    throw new AppError('SCREENSHOT_NOT_FOUND', ERROR_CODES.SCREENSHOT_NOT_FOUND, 404);
   }
 
   const allowedRoles = ['superAdmin', 'chief'];
   if (user.role === 'purchaser' && purchase.purchaser_id !== user.id) {
-    throw new AppError('Forbidden', 403);
+    throw new AppError('FORBIDDEN', ERROR_CODES.FORBIDDEN, 403);
   }
   if (!allowedRoles.includes(user.role) && user.role !== 'purchaser') {
-    throw new AppError('Forbidden', 403);
+    throw new AppError('FORBIDDEN', ERROR_CODES.FORBIDDEN, 403);
   }
 
   return purchase;

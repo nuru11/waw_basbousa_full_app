@@ -1,0 +1,24 @@
+{
+  "pendingReceipts": {
+    "metaTitle": "Pending Receipts | Restaurant",
+    "metaDescription": "Receive purchases",
+    "awaitingReceipt": "Purchases Awaiting Receipt",
+    "empty": "No purchases handed to you awaiting receipt",
+    "failedToConfirm": "Failed to confirm receipt"
+  },
+  "inventory": {
+    "metaTitle": "Inventory | Restaurant",
+    "metaDescription": "Remaining stock",
+    "lowStockAlert": "Low stock alert"
+  },
+  "production": {
+    "metaTitle": "Production | Restaurant",
+    "metaDescription": "Log cooked plates",
+    "logCookedPlates": "Log Cooked Plates",
+    "plateWeightKg": "Plate Weight (kg)",
+    "plateWeightHint": "Weight of one cooked plate in kilograms (e.g. 1, 5, 28)",
+    "noRecipesHint": "No plates with recipes defined. Ask superadmin to set up recipes.",
+    "logProductionBtn": "Log Production (deducts stock)",
+    "recentProduction": "Recent Production"
+  }
+}

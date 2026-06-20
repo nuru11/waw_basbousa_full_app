@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { api, type ReportSummary } from "../../services/api";
+import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
+import { translateApiError } from "../../utils/translateApiError";
 
 function StatCard({
   title,
@@ -27,6 +30,9 @@ function StatCard({
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation("admin");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tNav } = useTranslation("nav");
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [error, setError] = useState("");
 
@@ -34,43 +40,43 @@ export default function AdminDashboard() {
     api
       .get<ReportSummary>("/reports/summary")
       .then(setSummary)
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(translateApiError(e)));
   }, []);
-
-  const fmt = (n: number) =>
-    new Intl.NumberFormat("en-ET", {
-      style: "currency",
-      currency: "ETB",
-      maximumFractionDigits: 0,
-    }).format(n);
 
   return (
     <div>
-      <PageMeta title="Dashboard | Restaurant" description="Admin dashboard" />
-      <PageBreadcrumb pageTitle="Dashboard" />
+      <PageMeta
+        title={t("dashboard.metaTitle")}
+        description={t("dashboard.metaDescription")}
+      />
+      <PageBreadcrumb pageTitle={tNav("dashboard")} />
       {error && <p className="mb-4 text-error-500">{error}</p>}
       {summary && (
         <>
           <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Income" value={fmt(summary.income)} />
-            <StatCard title="Total Expense" value={fmt(summary.expense)} />
+            <StatCard title={t("dashboard.totalIncome")} value={formatCurrency(summary.income)} />
+            <StatCard title={t("dashboard.totalExpense")} value={formatCurrency(summary.expense)} />
             <StatCard
-              title="Net Profit"
-              value={fmt(summary.net_profit)}
-              subtitle={summary.net_profit >= 0 ? "Profitable" : "Loss"}
+              title={t("dashboard.netProfit")}
+              value={formatCurrency(summary.net_profit)}
+              subtitle={
+                summary.net_profit >= 0
+                  ? tCommon("status.profitable")
+                  : tCommon("status.loss")
+              }
             />
             <StatCard
-              title="Pending Purchases"
+              title={t("dashboard.pendingPurchases")}
               value={String(summary.pending_purchases)}
             />
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
               <h3 className="mb-4 font-semibold text-gray-800 dark:text-white/90">
-                Low Stock Alerts
+                {t("dashboard.lowStockAlerts")}
               </h3>
               {summary.low_stock.length === 0 ? (
-                <p className="text-sm text-gray-500">All stock levels OK</p>
+                <p className="text-sm text-gray-500">{t("dashboard.allStockOk")}</p>
               ) : (
                 <ul className="space-y-2">
                   {summary.low_stock.map((item) => (
@@ -89,10 +95,10 @@ export default function AdminDashboard() {
             </div>
             <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800">
               <h3 className="mb-4 font-semibold text-gray-800 dark:text-white/90">
-                Top Dishes
+                {t("dashboard.topDishes")}
               </h3>
               {summary.top_dishes.length === 0 ? (
-                <p className="text-sm text-gray-500">No sales yet</p>
+                <p className="text-sm text-gray-500">{t("dashboard.noSalesYet")}</p>
               ) : (
                 <ul className="space-y-2">
                   {summary.top_dishes.map((d) => (
@@ -100,8 +106,11 @@ export default function AdminDashboard() {
                       key={d.dish_id}
                       className="flex justify-between text-sm text-gray-600 dark:text-gray-400"
                     >
-                      <span>{d.dish?.name || `Dish #${d.dish_id}`}</span>
-                      <span>{fmt(parseFloat(d.total_revenue))}</span>
+                      <span>
+                        {d.dish?.name ||
+                          tCommon("dishFallback", { id: d.dish_id })}
+                      </span>
+                      <span>{formatCurrency(parseFloat(d.total_revenue))}</span>
                     </li>
                   ))}
                 </ul>

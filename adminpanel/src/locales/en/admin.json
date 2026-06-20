@@ -1,0 +1,119 @@
+{
+  "dashboard": {
+    "metaTitle": "Dashboard | Restaurant",
+    "metaDescription": "Admin dashboard",
+    "totalIncome": "Total Income",
+    "totalExpense": "Total Expense",
+    "netProfit": "Net Profit",
+    "pendingPurchases": "Pending Purchases",
+    "lowStockAlerts": "Low Stock Alerts",
+    "allStockOk": "All stock levels OK",
+    "topDishes": "Top Dishes",
+    "noSalesYet": "No sales yet"
+  },
+  "staff": {
+    "metaTitle": "Staff | Restaurant",
+    "metaDescription": "Manage staff",
+    "addStaff": "Add Staff",
+    "allStaff": "All Staff",
+    "created": "Staff member created",
+    "failedToCreate": "Failed to create",
+    "failedToDelete": "Failed to delete",
+    "memberActivated": "Staff member activated",
+    "memberDeactivated": "Staff member deactivated",
+    "failedToActivate": "Failed to activate",
+    "failedToDeactivate": "Failed to deactivate"
+  },
+  "ingredients": {
+    "metaTitle": "Ingredients | Restaurant",
+    "metaDescription": "Manage ingredients",
+    "addIngredient": "Add Ingredient",
+    "minStockAlert": "Min Stock Alert"
+  },
+  "dishes": {
+    "metaTitle": "Plates / Menu | Restaurant",
+    "metaDescription": "Manage plates and recipes",
+    "addPlate": "Add Plate",
+    "priceQuarter": "Price Quarter",
+    "priceHalf": "Price Half",
+    "priceKilo": "Price Kilo",
+    "pricePerSlice": "Price per Slice",
+    "weightKgCol": "Weight (kg)",
+    "ingredientsCol": "Ingredients",
+    "quarterCol": "¼",
+    "halfCol": "½",
+    "kiloCol": "Kilo",
+    "sliceCol": "Slice",
+    "activeCol": "Active",
+    "recipeCol": "Recipe"
+  },
+  "reports": {
+    "metaTitle": "Reports | Restaurant",
+    "metaDescription": "Financial reports",
+    "purchasesExpenses": "Purchases (Expenses)",
+    "salesIncome": "Sales (Income)"
+  },
+  "transfers": {
+    "metaTitle": "Transfer | Restaurant",
+    "metaDescription": "Allocate funds to purchasers",
+    "newTransfer": "New Transfer",
+    "amountEtb": "Amount (ETB)",
+    "toPurchaser": "To (Purchaser)",
+    "sentSuccess": "Transfer sent — awaiting purchaser acceptance",
+    "thisWeek": "This Week's Transfers",
+    "noTransfersThisWeek": "No transfers this week"
+  },
+  "transferHistory": {
+    "metaTitle": "Transfer History | Restaurant",
+    "metaDescription": "Past transfers",
+    "noBeforeWeek": "No transfers before this week"
+  },
+  "pendingPurchases": {
+    "metaTitle": "Pending Purchases | Restaurant",
+    "metaDescription": "Approve purchases",
+    "empty": "No pending purchases",
+    "failedToApprove": "Failed to approve"
+  },
+  "purchaserToday": {
+    "metaTitle": "Purchaser Today | Restaurant",
+    "metaDescription": "Today's purchaser activity",
+    "purchasesSubmitted": "Purchases Submitted",
+    "noPurchasesSubmitted": "No purchases submitted today",
+    "transfersSent": "Transfers Sent",
+    "noTransfersSent": "No transfers sent today",
+    "transfersAccepted": "Transfers Accepted",
+    "noTransfersAccepted": "No transfers accepted today",
+    "handedToChief": "Handed to Chief",
+    "noHandedToChief": "No items handed to chief today"
+  },
+  "productionHistory": {
+    "metaTitle": "Production History | Restaurant",
+    "metaDescription": "Chief production logs",
+    "totalPlatesMade": "Total Plates Made",
+    "productionEntries": "Production Entries",
+    "byChief": "By Chief",
+    "noLogsYet": "No logs yet",
+    "byPlate": "By Plate",
+    "noProductionLogged": "No production logged yet",
+    "productionLog": "Production Log",
+    "noPlatesLogged": "No plates logged by chief yet"
+  },
+  "chiefToday": {
+    "metaTitle": "Chief Today | Restaurant",
+    "metaDescription": "Today's chief activity",
+    "platesCooked": "Plates Cooked",
+    "noPlatesCooked": "No plates cooked today",
+    "receiptsConfirmed": "Receipts Confirmed",
+    "noReceiptsConfirmed": "No receipts confirmed today"
+  },
+  "salesToday": {
+    "metaTitle": "Today's Sales | Restaurant",
+    "metaDescription": "Today's sales overview"
+  },
+  "salesHistory": {
+    "metaTitle": "Sales History | Restaurant",
+    "metaDescription": "Sales by date",
+    "pickDatePrompt": "Pick a date and load the sales report.",
+    "failedToLoad": "Failed to load"
+  }
+}

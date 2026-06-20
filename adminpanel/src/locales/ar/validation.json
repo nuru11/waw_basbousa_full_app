@@ -1,0 +1,14 @@
+{
+  "confirm": {
+    "deleteStaff": "حذف هذا الموظف؟",
+    "deleteIngredient": "حذف المكوّن؟",
+    "deactivateStaff": "تعطيل {{name}}؟",
+    "activateStaff": "تفعيل {{name}}؟"
+  },
+  "required": {
+    "screenshot": "لقطة الشاشة مطلوبة"
+  },
+  "stock": {
+    "insufficient": "المخزون غير كافٍ اليوم ({{amount}} كغ متاح)"
+  }
+}

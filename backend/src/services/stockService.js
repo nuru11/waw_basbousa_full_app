@@ -10,6 +10,7 @@ const {
 } = require('../models');
 const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 const { getTodayRange, getDateRange } = require('../utils/dateUtils');
 const { plateWeightToKg } = require('../utils/plateWeight');
 
@@ -27,12 +28,12 @@ async function adjustStock(ingredientId, { quantity_delta, notes }, userId) {
       lock: transaction.LOCK.UPDATE,
       transaction,
     });
-    if (!ingredient) throw new AppError('Ingredient not found', 404);
+    if (!ingredient) throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
 
     const delta = parseFloat(quantity_delta);
     const newStock = parseFloat(ingredient.current_stock) + delta;
     if (newStock < 0) {
-      throw new AppError('Stock cannot go below zero', 400);
+      throw new AppError('STOCK_BELOW_ZERO', ERROR_CODES.STOCK_BELOW_ZERO, 400);
     }
 
     await ingredient.update({ current_stock: newStock }, { transaction });
@@ -119,11 +120,11 @@ async function logProduction(chiefId, { dish_id, plates_count, plate_weight_gram
       include: [{ model: DishIngredient, as: 'recipe' }],
       transaction,
     });
-    if (!dish) throw new AppError('Dish not found', 404);
+    if (!dish) throw new AppError('DISH_NOT_FOUND', ERROR_CODES.DISH_NOT_FOUND, 404);
 
     const recipe = dish.recipe || [];
     if (recipe.length === 0) {
-      throw new AppError('Dish has no recipe defined', 400);
+      throw new AppError('DISH_NO_RECIPE', ERROR_CODES.DISH_NO_RECIPE, 400);
     }
 
     for (const item of recipe) {
@@ -136,8 +137,14 @@ async function logProduction(chiefId, { dish_id, plates_count, plate_weight_gram
 
       if (newStock < 0) {
         throw new AppError(
-          `Insufficient stock for ${ingredient.name}. Need ${used}, have ${ingredient.current_stock}`,
-          400
+          'INSUFFICIENT_STOCK',
+          ERROR_CODES.INSUFFICIENT_STOCK,
+          400,
+          {
+            ingredient: ingredient.name,
+            needed: used,
+            have: ingredient.current_stock,
+          }
         );
       }
 

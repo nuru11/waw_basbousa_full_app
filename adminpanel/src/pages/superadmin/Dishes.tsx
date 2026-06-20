@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import RecipeEditor, {
@@ -14,6 +16,7 @@ import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Dish, type Ingredient } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 import { plateWeightToKg } from "../../utils/plateWeight";
+import { translateApiError } from "../../utils/translateApiError";
 
 const emptyForm = {
   name: "",
@@ -23,17 +26,24 @@ const emptyForm = {
   price_per_slice: "",
 };
 
-function recipeSummary(dish: Dish) {
+function recipeSummary(dish: Dish, tCommon: TFunction<"common">) {
   const count = dish.recipe?.length ?? 0;
-  if (count === 0) return "No recipe";
+  if (count === 0) return tCommon("noRecipe");
   const names = dish.recipe!
-    .map((r) => r.ingredient?.name ?? `#${r.ingredient_id}`)
+    .map(
+      (r) =>
+        r.ingredient?.name ??
+        tCommon("ingredientFallback", { id: r.ingredient_id })
+    )
     .slice(0, 2)
     .join(", ");
-  return count > 2 ? `${names} +${count - 2} more` : names;
+  return count > 2 ? tCommon("recipeMore", { names, count: count - 2 }) : names;
 }
 
 export default function DishesPage() {
+  const { t } = useTranslation("admin");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tNav } = useTranslation("nav");
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [form, setForm] = useState(emptyForm);
@@ -49,7 +59,7 @@ export default function DishesPage() {
     api
       .get<Dish[]>("/dishes")
       .then(setDishes)
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(translateApiError(e)));
 
   useEffect(() => {
     load();
@@ -73,7 +83,7 @@ export default function DishesPage() {
         setCreateRecipeRows([{ ingredient_id: "", quantity_per_plate: "" }]);
         load();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed");
+        setError(translateApiError(err, "common:failed"));
       }
     });
   }
@@ -103,28 +113,28 @@ export default function DishesPage() {
         closeRecipeEditor();
         load();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to save recipe");
+        setError(translateApiError(err, "common:recipe.failedToSave"));
       }
     });
   }
 
   return (
     <div>
-      <PageMeta title="Plates / Menu | Restaurant" description="Manage plates and recipes" />
-      <PageBreadcrumb pageTitle="Plates / Menu" />
+      <PageMeta title={t("dishes.metaTitle")} description={t("dishes.metaDescription")} />
+      <PageBreadcrumb pageTitle={tNav("platesMenu")} />
       {error && <p className="mb-4 text-error-500">{error}</p>}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <form
           onSubmit={handleSubmit}
           className="p-5 space-y-3 rounded-2xl border border-gray-200 dark:border-gray-800"
         >
-          <h3 className="font-semibold">Add Plate</h3>
+          <h3 className="font-semibold">{t("dishes.addPlate")}</h3>
           <div>
-            <Label>Name</Label>
+            <Label>{tCommon("fields.name")}</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <Label>Price Quarter</Label>
+            <Label>{t("dishes.priceQuarter")}</Label>
             <Input
               type="number"
               value={form.price_quarter}
@@ -132,7 +142,7 @@ export default function DishesPage() {
             />
           </div>
           <div>
-            <Label>Price Half</Label>
+            <Label>{t("dishes.priceHalf")}</Label>
             <Input
               type="number"
               value={form.price_half}
@@ -140,7 +150,7 @@ export default function DishesPage() {
             />
           </div>
           <div>
-            <Label>Price Kilo</Label>
+            <Label>{t("dishes.priceKilo")}</Label>
             <Input
               type="number"
               value={form.price_kilo}
@@ -148,7 +158,7 @@ export default function DishesPage() {
             />
           </div>
           <div>
-            <Label>Price per Slice</Label>
+            <Label>{t("dishes.pricePerSlice")}</Label>
             <Input
               type="number"
               value={form.price_per_slice}
@@ -161,22 +171,22 @@ export default function DishesPage() {
             onChange={setCreateRecipeRows}
           />
           <Button type="submit" size="sm" disabled={submitting}>
-            {submitting ? "Adding..." : "Add Plate"}
+            {submitting ? tCommon("actions.adding") : t("dishes.addPlate")}
           </Button>
         </form>
         <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 lg:col-span-2 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3">Name</th>
-                <th className="pb-3">Weight (kg)</th>
-                <th className="pb-3">Ingredients</th>
-                <th className="pb-3">¼</th>
-                <th className="pb-3">½</th>
-                <th className="pb-3">Kilo</th>
-                <th className="pb-3">Slice</th>
-                <th className="pb-3">Active</th>
-                <th className="pb-3">Recipe</th>
+              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                <th className="pb-3">{tCommon("fields.name")}</th>
+                <th className="pb-3">{t("dishes.weightKgCol")}</th>
+                <th className="pb-3">{t("dishes.ingredientsCol")}</th>
+                <th className="pb-3">{t("dishes.quarterCol")}</th>
+                <th className="pb-3">{t("dishes.halfCol")}</th>
+                <th className="pb-3">{t("dishes.kiloCol")}</th>
+                <th className="pb-3">{t("dishes.sliceCol")}</th>
+                <th className="pb-3">{t("dishes.activeCol")}</th>
+                <th className="pb-3">{t("dishes.recipeCol")}</th>
               </tr>
             </thead>
             <tbody>
@@ -184,19 +194,19 @@ export default function DishesPage() {
                 <tr key={d.id} className="border-b border-gray-100 dark:border-gray-800">
                   <td className="py-3">{d.name}</td>
                   <td className="py-3">{formatNumber(plateWeightToKg(d.plate_weight_grams))}</td>
-                  <td className="py-3 text-gray-600 dark:text-gray-400">{recipeSummary(d)}</td>
-                  <td className="py-3">{d.price_quarter ?? "-"}</td>
-                  <td className="py-3">{d.price_half ?? "-"}</td>
-                  <td className="py-3">{d.price_kilo ?? "-"}</td>
-                  <td className="py-3">{d.price_per_slice ?? "-"}</td>
+                  <td className="py-3 text-gray-600 dark:text-gray-400">{recipeSummary(d, tCommon)}</td>
+                  <td className="py-3">{d.price_quarter ?? tCommon("emDash")}</td>
+                  <td className="py-3">{d.price_half ?? tCommon("emDash")}</td>
+                  <td className="py-3">{d.price_kilo ?? tCommon("emDash")}</td>
+                  <td className="py-3">{d.price_per_slice ?? tCommon("emDash")}</td>
                   <td className="py-3">
                     <button onClick={() => toggleActive(d)} className="text-brand-500">
-                      {d.is_active ? "Active" : "Inactive"}
+                      {d.is_active ? tCommon("status.active") : tCommon("status.inactive")}
                     </button>
                   </td>
                   <td className="py-3">
                     <button onClick={() => openRecipeEditor(d)} className="text-brand-500">
-                      Edit
+                      {tCommon("actions.edit")}
                     </button>
                   </td>
                 </tr>
@@ -209,7 +219,7 @@ export default function DishesPage() {
       <Modal isOpen={!!editingDish} onClose={closeRecipeEditor} className="max-w-lg p-6 m-4">
         <form onSubmit={handleSaveRecipe} className="space-y-4">
           <h3 className="text-lg font-semibold">
-            Edit Recipe — {editingDish?.name}
+            {tCommon("recipe.editTitle", { name: editingDish?.name })}
           </h3>
           <RecipeEditor
             ingredients={ingredients}
@@ -218,10 +228,10 @@ export default function DishesPage() {
           />
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={submitting}>
-              {submitting ? "Saving..." : "Save Recipe"}
+              {submitting ? tCommon("actions.saving") : tCommon("actions.save")}
             </Button>
             <Button type="button" size="sm" variant="outline" onClick={closeRecipeEditor}>
-              Cancel
+              {tCommon("actions.cancel")}
             </Button>
           </div>
         </form>

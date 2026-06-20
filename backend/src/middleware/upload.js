@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads/purchases');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -25,7 +26,7 @@ const upload = multer({
     if (ALLOWED_TYPES.has(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new AppError('Only image screenshots are allowed (JPEG, PNG, WebP, GIF)', 400));
+      cb(new AppError('SCREENSHOT_INVALID_TYPE', ERROR_CODES.SCREENSHOT_INVALID_TYPE, 400));
     }
   },
 });
@@ -36,13 +37,13 @@ function handleUpload(req, res, next) {
   purchaseScreenshotUpload(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        return next(new AppError('Screenshot must be 5MB or smaller', 400));
+        return next(new AppError('SCREENSHOT_TOO_LARGE', ERROR_CODES.SCREENSHOT_TOO_LARGE, 400));
       }
-      return next(new AppError(err.message, 400));
+      return next(new AppError('VALIDATION_FAILED', err.message, 400));
     }
     if (err) return next(err);
     if (!req.file) {
-      return next(new AppError('Screenshot is required', 400));
+      return next(new AppError('SCREENSHOT_REQUIRED', ERROR_CODES.SCREENSHOT_REQUIRED, 400));
     }
     next();
   });

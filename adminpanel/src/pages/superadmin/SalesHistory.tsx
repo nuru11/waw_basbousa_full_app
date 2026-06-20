@@ -1,11 +1,14 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import SalesDailyReport from "../../components/sales/SalesDailyReport";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import { getIntlLocale } from "../../i18n";
 import { api, type DailySalesOverview } from "../../services/api";
+import { translateApiError } from "../../utils/translateApiError";
 
 function todayInputValue() {
   const d = new Date();
@@ -15,6 +18,9 @@ function todayInputValue() {
 }
 
 export default function SalesHistoryPage() {
+  const { t } = useTranslation("admin");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tNav } = useTranslation("nav");
   const [date, setDate] = useState(todayInputValue);
   const [data, setData] = useState<DailySalesOverview | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,7 +35,7 @@ export default function SalesHistoryPage() {
       );
       setData(result);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
+      setError(translateApiError(e, "admin:salesHistory.failedToLoad"));
       setData(null);
     } finally {
       setLoading(false);
@@ -42,7 +48,7 @@ export default function SalesHistoryPage() {
   }
 
   const dateLabel = data
-    ? new Date(data.date + "T12:00:00").toLocaleDateString(undefined, {
+    ? new Date(data.date + "T12:00:00").toLocaleDateString(getIntlLocale(), {
         weekday: "long",
         year: "numeric",
         month: "long",
@@ -52,14 +58,17 @@ export default function SalesHistoryPage() {
 
   return (
     <div>
-      <PageMeta title="Sales History | Restaurant" description="Sales by date" />
-      <PageBreadcrumb pageTitle="Sales History" />
+      <PageMeta
+        title={t("salesHistory.metaTitle")}
+        description={t("salesHistory.metaDescription")}
+      />
+      <PageBreadcrumb pageTitle={tNav("salesHistory")} />
       <form
         onSubmit={handleSubmit}
         className="flex flex-wrap items-end gap-4 p-5 mb-6 rounded-2xl border border-gray-200 dark:border-gray-800"
       >
         <div>
-          <Label>Select date</Label>
+          <Label>{tCommon("fields.selectDate")}</Label>
           <Input
             type="date"
             value={date}
@@ -67,7 +76,7 @@ export default function SalesHistoryPage() {
           />
         </div>
         <Button type="submit" size="sm" disabled={loading}>
-          {loading ? "Loading..." : "Load report"}
+          {loading ? tCommon("loading") : tCommon("actions.loadReport")}
         </Button>
       </form>
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
@@ -78,7 +87,7 @@ export default function SalesHistoryPage() {
         </>
       )}
       {!data && !loading && !error && (
-        <p className="text-gray-500">Pick a date and load the sales report.</p>
+        <p className="text-gray-500">{t("salesHistory.pickDatePrompt")}</p>
       )}
     </div>
   );

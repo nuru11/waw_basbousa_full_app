@@ -1,0 +1,119 @@
+{
+  "dashboard": {
+    "metaTitle": "لوحة التحكم | المطعم",
+    "metaDescription": "لوحة تحكم المشرف",
+    "totalIncome": "إجمالي الدخل",
+    "totalExpense": "إجمالي المصروفات",
+    "netProfit": "صافي الربح",
+    "pendingPurchases": "المشتريات المعلقة",
+    "lowStockAlerts": "تنبيهات انخفاض المخزون",
+    "allStockOk": "جميع مستويات المخزون جيدة",
+    "topDishes": "أفضل الأطباق",
+    "noSalesYet": "لا مبيعات بعد"
+  },
+  "staff": {
+    "metaTitle": "الموظفون | المطعم",
+    "metaDescription": "إدارة الموظفين",
+    "addStaff": "إضافة موظف",
+    "allStaff": "جميع الموظفين",
+    "created": "تم إنشاء الموظف",
+    "failedToCreate": "فشل الإنشاء",
+    "failedToDelete": "فشل الحذف",
+    "memberActivated": "تم تفعيل الموظف",
+    "memberDeactivated": "تم تعطيل الموظف",
+    "failedToActivate": "فشل التفعيل",
+    "failedToDeactivate": "فشل التعطيل"
+  },
+  "ingredients": {
+    "metaTitle": "المكونات | المطعم",
+    "metaDescription": "إدارة المكونات",
+    "addIngredient": "إضافة مكوّن",
+    "minStockAlert": "تنبيه الحد الأدنى للمخزون"
+  },
+  "dishes": {
+    "metaTitle": "الأطباق / القائمة | المطعم",
+    "metaDescription": "إدارة الأطباق والوصفات",
+    "addPlate": "إضافة طبق",
+    "priceQuarter": "سعر الربع",
+    "priceHalf": "سعر النصف",
+    "priceKilo": "سعر الكيلو",
+    "pricePerSlice": "سعر الشريحة",
+    "weightKgCol": "الوزن (كغ)",
+    "ingredientsCol": "المكونات",
+    "quarterCol": "¼",
+    "halfCol": "½",
+    "kiloCol": "كيلو",
+    "sliceCol": "شريحة",
+    "activeCol": "نشط",
+    "recipeCol": "الوصفة"
+  },
+  "reports": {
+    "metaTitle": "التقارير | المطعم",
+    "metaDescription": "التقارير المالية",
+    "purchasesExpenses": "المشتريات (مصروفات)",
+    "salesIncome": "المبيعات (دخل)"
+  },
+  "transfers": {
+    "metaTitle": "تحويل | المطعم",
+    "metaDescription": "تخصيص الأموال للمشترين",
+    "newTransfer": "تحويل جديد",
+    "amountEtb": "المبلغ (ب.إ)",
+    "toPurchaser": "إلى (المشتري)",
+    "sentSuccess": "تم إرسال التحويل — في انتظار قبول المشتري",
+    "thisWeek": "تحويلات هذا الأسبوع",
+    "noTransfersThisWeek": "لا تحويلات هذا الأسبوع"
+  },
+  "transferHistory": {
+    "metaTitle": "سجل التحويلات | المطعم",
+    "metaDescription": "التحويلات السابقة",
+    "noBeforeWeek": "لا تحويلات قبل هذا الأسبوع"
+  },
+  "pendingPurchases": {
+    "metaTitle": "المشتريات المعلقة | المطعم",
+    "metaDescription": "الموافقة على المشتريات",
+    "empty": "لا مشتريات معلقة",
+    "failedToApprove": "فشلت الموافقة"
+  },
+  "purchaserToday": {
+    "metaTitle": "المشتري اليوم | المطعم",
+    "metaDescription": "نشاط المشتري اليوم",
+    "purchasesSubmitted": "المشتريات المُرسَلة",
+    "noPurchasesSubmitted": "لا مشتريات مُرسَلة اليوم",
+    "transfersSent": "التحويلات المُرسَلة",
+    "noTransfersSent": "لا تحويلات مُرسَلة اليوم",
+    "transfersAccepted": "التحويلات المقبولة",
+    "noTransfersAccepted": "لا تحويلات مقبولة اليوم",
+    "handedToChief": "مُسلّم للطباخ",
+    "noHandedToChief": "لا عناصر مُسلّمة للطباخ اليوم"
+  },
+  "productionHistory": {
+    "metaTitle": "سجل الإنتاج | المطعم",
+    "metaDescription": "سجلات إنتاج الطباخ",
+    "totalPlatesMade": "إجمالي الأطباق المُعدّة",
+    "productionEntries": "سجلات الإنتاج",
+    "byChief": "حسب الطباخ",
+    "noLogsYet": "لا سجلات بعد",
+    "byPlate": "حسب الطبق",
+    "noProductionLogged": "لم يُسجَّل إنتاج بعد",
+    "productionLog": "سجل الإنتاج",
+    "noPlatesLogged": "لم يُسجَّل أطباق من الطباخ بعد"
+  },
+  "chiefToday": {
+    "metaTitle": "الطباخ اليوم | المطعم",
+    "metaDescription": "نشاط الطباخ اليوم",
+    "platesCooked": "الأطباق المطبوخة",
+    "noPlatesCooked": "لا أطباق مطبوخة اليوم",
+    "receiptsConfirmed": "الإيصالات المؤكدة",
+    "noReceiptsConfirmed": "لا إيصالات مؤكدة اليوم"
+  },
+  "salesToday": {
+    "metaTitle": "مبيعات اليوم | المطعم",
+    "metaDescription": "نظرة عامة على مبيعات اليوم"
+  },
+  "salesHistory": {
+    "metaTitle": "سجل المبيعات | المطعم",
+    "metaDescription": "المبيعات حسب التاريخ",
+    "pickDatePrompt": "اختر تاريخاً وحمّل تقرير المبيعات.",
+    "failedToLoad": "فشل التحميل"
+  }
+}

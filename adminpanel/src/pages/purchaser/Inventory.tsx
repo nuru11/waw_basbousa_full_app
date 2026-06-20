@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import { api, type PurchaserInventory } from "../../services/api";
+import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
+import { translateApiError } from "../../utils/translateApiError";
 
 export default function PurchaserInventoryPage() {
+  const { t } = useTranslation(["purchaser", "common", "nav"]);
   const [inventory, setInventory] = useState<PurchaserInventory | null>(null);
   const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -15,7 +19,7 @@ export default function PurchaserInventoryPage() {
     api
       .get<PurchaserInventory>("/purchases/inventory")
       .then(setInventory)
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(translateApiError(e)));
 
   useEffect(() => {
     load();
@@ -28,7 +32,7 @@ export default function PurchaserInventoryPage() {
       await api.post(`/purchases/${id}/hand-to-chief`, {});
       load();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to hand to chief");
+      setError(translateApiError(err, "purchaser:inventory.failedToHand"));
     } finally {
       setLoading(null);
     }
@@ -39,8 +43,11 @@ export default function PurchaserInventoryPage() {
 
   return (
     <div>
-      <PageMeta title="My Inventory | Restaurant" description="Purchaser inventory" />
-      <PageBreadcrumb pageTitle="My Inventory" />
+      <PageMeta
+        title={t("inventory.metaTitle")}
+        description={t("inventory.metaDescription")}
+      />
+      <PageBreadcrumb pageTitle={t("nav:myInventory")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
 
       {summary.length > 0 && (
@@ -65,19 +72,19 @@ export default function PurchaserInventoryPage() {
       )}
 
       <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
-        <h3 className="mb-4 font-semibold">Items to Hand to Chief</h3>
+        <h3 className="mb-4 font-semibold">{t("inventory.itemsToHand")}</h3>
         {purchases.length === 0 ? (
-          <p className="text-gray-500">No items in your inventory</p>
+          <p className="text-gray-500">{t("inventory.empty")}</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pr-4">ID</th>
-                <th className="pb-3 pr-4">Ingredient</th>
-                <th className="pb-3 pr-4">Qty</th>
-                <th className="pb-3 pr-4">Total</th>
-                <th className="pb-3 pr-4">Screenshot</th>
-                <th className="pb-3">Action</th>
+              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                <th className="pb-3 pe-4">{t("common:fields.id")}</th>
+                <th className="pb-3 pe-4">{t("common:fields.ingredient")}</th>
+                <th className="pb-3 pe-4">{t("common:fields.qty")}</th>
+                <th className="pb-3 pe-4">{t("common:fields.total")}</th>
+                <th className="pb-3 pe-4">{t("common:fields.screenshot")}</th>
+                <th className="pb-3">{t("common:fields.action")}</th>
               </tr>
             </thead>
             <tbody>
@@ -86,15 +93,17 @@ export default function PurchaserInventoryPage() {
                   key={p.id}
                   className="border-b border-gray-100 dark:border-gray-800 align-middle"
                 >
-                  <td className="py-4 pr-4 font-medium">#{p.id}</td>
-                  <td className="py-4 pr-4">{p.ingredient?.name}</td>
-                  <td className="py-4 pr-4 whitespace-nowrap">
+                  <td className="py-4 pe-4 font-medium">
+                    {t("common:idShort", { id: p.id })}
+                  </td>
+                  <td className="py-4 pe-4">{p.ingredient?.name}</td>
+                  <td className="py-4 pe-4 whitespace-nowrap">
                     {formatNumber(p.quantity)} {p.ingredient?.unit}
                   </td>
-                  <td className="py-4 pr-4 whitespace-nowrap">
-                    ETB {parseFloat(String(p.total_price)).toFixed(2)}
+                  <td className="py-4 pe-4 whitespace-nowrap">
+                    {formatCurrency(parseFloat(String(p.total_price)))}
                   </td>
-                  <td className="py-4 pr-4">
+                  <td className="py-4 pe-4">
                     <PurchaseScreenshot
                       purchaseId={p.id}
                       hasScreenshot={!!p.screenshot_path}
@@ -108,7 +117,9 @@ export default function PurchaserInventoryPage() {
                       disabled={loading === p.id}
                       onClick={() => handleHandToChief(p.id)}
                     >
-                      {loading === p.id ? "Handing..." : "Handed to Chief"}
+                      {loading === p.id
+                        ? t("common:actions.handing")
+                        : t("common:actions.handToChief")}
                     </Button>
                   </td>
                 </tr>

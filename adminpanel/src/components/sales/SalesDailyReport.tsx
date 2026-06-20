@@ -1,14 +1,10 @@
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { DailySalesOverview } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
-import { ROLE_LABELS } from "../../utils/roleRoutes";
-
-function fmtCurrency(n: number) {
-  return new Intl.NumberFormat("en-ET", {
-    style: "currency",
-    currency: "ETB",
-    maximumFractionDigits: 2,
-  }).format(n);
-}
+import { formatCurrency } from "../../utils/formatCurrency";
+import { formatTime } from "../../utils/formatDate";
+import { paymentMethodLabel, weightTypeLabel } from "../../utils/purchaseStatus";
 
 function StatCard({
   title,
@@ -35,7 +31,7 @@ function SectionCard({
 }: {
   title: string;
   count?: string | number;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="p-5 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
@@ -50,60 +46,61 @@ function SectionCard({
   );
 }
 
-function formatPortion(
-  weightType: string,
-  sliceCount: number | null,
-  quantity: number
-) {
-  let label = weightType;
-  if (weightType === "slice" && sliceCount) {
-    label = `${sliceCount} slice${sliceCount === 1 ? "" : "s"}`;
-  }
-  if (quantity > 1) {
-    return `${label} × ${quantity}`;
-  }
-  return label;
-}
-
 interface SalesDailyReportProps {
   data: DailySalesOverview;
 }
 
 export default function SalesDailyReport({ data }: SalesDailyReportProps) {
+  const { t } = useTranslation("common");
   const { summary } = data;
+
+  function formatPortion(
+    weightType: string,
+    sliceCount: number | null,
+    quantity: number
+  ) {
+    const label =
+      weightType === "slice" && sliceCount
+        ? t("units.slices", { count: sliceCount })
+        : weightTypeLabel(weightType);
+    if (quantity > 1) {
+      return `${label} × ${quantity}`;
+    }
+    return label;
+  }
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard title="Total Revenue" value={fmtCurrency(summary.total_revenue)} />
-        <StatCard title="Cash" value={fmtCurrency(summary.payments.cash)} />
-        <StatCard title="CBE" value={fmtCurrency(summary.payments.cbe)} />
-        <StatCard title="Telebirr" value={fmtCurrency(summary.payments.telebirr)} />
-        <StatCard title="Other" value={fmtCurrency(summary.payments.other)} />
+        <StatCard title={t("sales.totalRevenue")} value={formatCurrency(summary.total_revenue)} />
+        <StatCard title={t("paymentMethods.cash")} value={formatCurrency(summary.payments.cash)} />
+        <StatCard title={t("paymentMethods.cbe")} value={formatCurrency(summary.payments.cbe)} />
+        <StatCard title={t("paymentMethods.telebirr")} value={formatCurrency(summary.payments.telebirr)} />
+        <StatCard title={t("paymentMethods.other")} value={formatCurrency(summary.payments.other)} />
         <StatCard
-          title="Sales Count"
+          title={t("sales.salesCount")}
           value={String(summary.sale_count)}
-          subtitle={`${formatNumber(summary.kilo_sold)} kg sold`}
+          subtitle={t("units.kgSold", { amount: formatNumber(summary.kilo_sold) })}
         />
       </div>
 
       <SectionCard
-        title="Plate stock"
-        count={`${data.by_dish.length} plate${data.by_dish.length === 1 ? "" : "s"}`}
+        title={t("sales.plateStock")}
+        count={t("units.plates", { count: data.by_dish.length })}
       >
         {data.by_dish.length === 0 ? (
-          <p className="text-gray-500">No production or sales for this day</p>
+          <p className="text-gray-500">{t("sales.noProductionOrSales")}</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pr-4">Plate</th>
-                <th className="pb-3 pr-4">Produced (kg)</th>
-                <th className="pb-3 pr-4">Plates cooked</th>
-                <th className="pb-3 pr-4">Sold (kg)</th>
-                <th className="pb-3 pr-4">Remaining (kg)</th>
-                <th className="pb-3 pr-4">Revenue</th>
-                <th className="pb-3">Sales</th>
+              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                <th className="pb-3 pe-4">{t("fields.plate")}</th>
+                <th className="pb-3 pe-4">{t("sales.producedKg")}</th>
+                <th className="pb-3 pe-4">{t("sales.platesCooked")}</th>
+                <th className="pb-3 pe-4">{t("sales.soldKgCol")}</th>
+                <th className="pb-3 pe-4">{t("sales.remainingKg")}</th>
+                <th className="pb-3 pe-4">{t("sales.revenue")}</th>
+                <th className="pb-3">{t("sales.sales")}</th>
               </tr>
             </thead>
             <tbody>
@@ -112,14 +109,14 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
                   key={row.dish_id}
                   className="border-b border-gray-100 dark:border-gray-800"
                 >
-                  <td className="py-3 pr-4 font-medium">{row.dish_name}</td>
-                  <td className="py-3 pr-4">{formatNumber(row.produced_kg)}</td>
-                  <td className="py-3 pr-4">{row.produced_plates}</td>
-                  <td className="py-3 pr-4">{formatNumber(row.sold_kg)}</td>
-                  <td className="py-3 pr-4 font-medium text-brand-600">
+                  <td className="py-3 pe-4 font-medium">{row.dish_name}</td>
+                  <td className="py-3 pe-4">{formatNumber(row.produced_kg)}</td>
+                  <td className="py-3 pe-4">{row.produced_plates}</td>
+                  <td className="py-3 pe-4">{formatNumber(row.sold_kg)}</td>
+                  <td className="py-3 pe-4 font-medium text-brand-600">
                     {formatNumber(row.remaining_kg)}
                   </td>
-                  <td className="py-3 pr-4">{fmtCurrency(row.revenue)}</td>
+                  <td className="py-3 pe-4">{formatCurrency(row.revenue)}</td>
                   <td className="py-3">{row.sale_count}</td>
                 </tr>
               ))}
@@ -129,15 +126,15 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
       </SectionCard>
 
       {/* {data.by_seller.length > 0 && (
-        <SectionCard title="By seller" count={`${data.by_seller.length} sellers`}>
+        <SectionCard title={t("sales.bySeller")} count={`${data.by_seller.length} sellers`}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pr-4">Seller</th>
-                <th className="pb-3 pr-4">Role</th>
-                <th className="pb-3 pr-4">Sales</th>
-                <th className="pb-3 pr-4">Kg sold</th>
-                <th className="pb-3">Revenue</th>
+              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                <th className="pb-3 pe-4">{t("fields.seller")}</th>
+                <th className="pb-3 pe-4">{t("fields.role")}</th>
+                <th className="pb-3 pe-4">{t("sales.sales")}</th>
+                <th className="pb-3 pe-4">{t("units.kgAbbr")}</th>
+                <th className="pb-3">{t("sales.revenue")}</th>
               </tr>
             </thead>
             <tbody>
@@ -146,13 +143,13 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
                   key={row.seller_id}
                   className="border-b border-gray-100 dark:border-gray-800"
                 >
-                  <td className="py-3 pr-4">{row.seller_name}</td>
-                  <td className="py-3 pr-4">
-                    {row.role ? ROLE_LABELS[row.role] : "—"}
+                  <td className="py-3 pe-4">{row.seller_name}</td>
+                  <td className="py-3 pe-4">
+                    {row.role ? getRoleLabel(row.role) : t("emDash")}
                   </td>
-                  <td className="py-3 pr-4">{row.sale_count}</td>
-                  <td className="py-3 pr-4">{formatNumber(row.kilo_sold)}</td>
-                  <td className="py-3">{fmtCurrency(row.revenue)}</td>
+                  <td className="py-3 pe-4">{row.sale_count}</td>
+                  <td className="py-3 pe-4">{formatNumber(row.kilo_sold)}</td>
+                  <td className="py-3">{formatCurrency(row.revenue)}</td>
                 </tr>
               ))}
             </tbody>
@@ -160,20 +157,23 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
         </SectionCard>
       )} */}
 
-      <SectionCard title="All sales" count={`${data.sales.length} transactions`}>
+      <SectionCard
+        title={t("sales.allSales")}
+        count={t("sales.transactions", { count: data.sales.length })}
+      >
         {data.sales.length === 0 ? (
-          <p className="text-gray-500">No sales recorded for this day</p>
+          <p className="text-gray-500">{t("sales.noSalesRecorded")}</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b dark:border-gray-700">
-                <th className="pb-3 pr-4">Time</th>
-                <th className="pb-3 pr-4">Seller</th>
-                <th className="pb-3 pr-4">Plate</th>
-                <th className="pb-3 pr-4">Portion</th>
-                <th className="pb-3 pr-4">Kg used</th>
-                <th className="pb-3 pr-4">Payment</th>
-                <th className="pb-3">Total</th>
+              <tr className="text-start text-gray-500 border-b dark:border-gray-700">
+                <th className="pb-3 pe-4">{t("fields.time")}</th>
+                <th className="pb-3 pe-4">{t("fields.seller")}</th>
+                <th className="pb-3 pe-4">{t("fields.plate")}</th>
+                <th className="pb-3 pe-4">{t("sales.portion")}</th>
+                <th className="pb-3 pe-4">{t("sales.kgUsed")}</th>
+                <th className="pb-3 pe-4">{t("fields.payment")}</th>
+                <th className="pb-3">{t("fields.total")}</th>
               </tr>
             </thead>
             <tbody>
@@ -182,17 +182,21 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
                   key={sale.id}
                   className="border-b border-gray-100 dark:border-gray-800"
                 >
-                  <td className="py-3 pr-4 whitespace-nowrap">
-                    {new Date(sale.sold_at).toLocaleTimeString()}
+                  <td className="py-3 pe-4 whitespace-nowrap">
+                    {formatTime(sale.sold_at)}
                   </td>
-                  <td className="py-3 pr-4">{sale.seller?.name ?? "—"}</td>
-                  <td className="py-3 pr-4">{sale.dish?.name ?? "—"}</td>
-                  <td className="py-3 pr-4 capitalize">
+                  <td className="py-3 pe-4">{sale.seller?.name ?? t("emDash")}</td>
+                  <td className="py-3 pe-4">{sale.dish?.name ?? t("emDash")}</td>
+                  <td className="py-3 pe-4">
                     {formatPortion(sale.weight_type, sale.slice_count, sale.quantity)}
                   </td>
-                  <td className="py-3 pr-4">{formatNumber(sale.kilo_consumed)}</td>
-                  <td className="py-3 pr-4 uppercase">{sale.payment_method}</td>
-                  <td className="py-3 font-medium">{fmtCurrency(parseFloat(String(sale.total_price)))}</td>
+                  <td className="py-3 pe-4">{formatNumber(sale.kilo_consumed)}</td>
+                  <td className="py-3 pe-4">
+                    {paymentMethodLabel(sale.payment_method)}
+                  </td>
+                  <td className="py-3 font-medium">
+                    {formatCurrency(parseFloat(String(sale.total_price)))}
+                  </td>
                 </tr>
               ))}
             </tbody>

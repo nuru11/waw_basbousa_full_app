@@ -2,6 +2,7 @@ const { Admin } = require('../models');
 const { hashPassword } = require('../utils/password');
 const { generateShortId } = require('../utils/shortId');
 const AppError = require('../utils/AppError');
+const ERROR_CODES = require('../constants/errorCodes');
 
 const ROLES = ['superAdmin', 'purchaser', 'chief', 'employee'];
 const STATUSES = ['active', 'inactive'];
@@ -12,17 +13,17 @@ async function listAdmins() {
 
 async function getAdmin(id) {
   const admin = await Admin.findByPk(id);
-  if (!admin) throw new AppError('Admin not found', 404);
+  if (!admin) throw new AppError('ADMIN_NOT_FOUND', ERROR_CODES.ADMIN_NOT_FOUND, 404);
   return admin;
 }
 
 async function createAdmin(data) {
   if (!ROLES.includes(data.role)) {
-    throw new AppError('Invalid role', 422);
+    throw new AppError('INVALID_ROLE', ERROR_CODES.INVALID_ROLE, 422);
   }
 
   const existing = await Admin.findOne({ where: { username: data.username } });
-  if (existing) throw new AppError('Username already exists', 409);
+  if (existing) throw new AppError('USERNAME_EXISTS', ERROR_CODES.USERNAME_EXISTS, 409);
 
   const shortId = await generateShortId();
   const passwordHash = await hashPassword(data.password);
@@ -43,19 +44,19 @@ async function updateAdmin(id, data, currentUserId) {
 
   if (data.username && data.username !== admin.username) {
     const existing = await Admin.findOne({ where: { username: data.username } });
-    if (existing) throw new AppError('Username already exists', 409);
+    if (existing) throw new AppError('USERNAME_EXISTS', ERROR_CODES.USERNAME_EXISTS, 409);
   }
 
   if (data.role && !ROLES.includes(data.role)) {
-    throw new AppError('Invalid role', 422);
+    throw new AppError('INVALID_ROLE', ERROR_CODES.INVALID_ROLE, 422);
   }
 
   if (data.status && !STATUSES.includes(data.status)) {
-    throw new AppError('Invalid status', 422);
+    throw new AppError('INVALID_STATUS', ERROR_CODES.INVALID_STATUS, 422);
   }
 
   if (data.status === 'inactive' && Number(id) === Number(currentUserId)) {
-    throw new AppError('Cannot deactivate your own account', 400);
+    throw new AppError('CANNOT_DEACTIVATE_SELF', ERROR_CODES.CANNOT_DEACTIVATE_SELF, 400);
   }
 
   const updates = {};
@@ -72,7 +73,7 @@ async function updateAdmin(id, data, currentUserId) {
 
 async function deleteAdmin(id, currentUserId) {
   if (Number(id) === Number(currentUserId)) {
-    throw new AppError('Cannot delete your own account', 400);
+    throw new AppError('CANNOT_DELETE_SELF', ERROR_CODES.CANNOT_DELETE_SELF, 400);
   }
   const admin = await getAdmin(id);
   await admin.destroy();

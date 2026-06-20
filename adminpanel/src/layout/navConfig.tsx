@@ -9,57 +9,73 @@ import {
 } from "../icons";
 import type { User } from "../services/api";
 
-type NavItem = {
-  name: string;
+export type NavItem = {
+  nameKey: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string }[];
+  subItems?: { nameKey: string; path: string }[];
 };
 
 export function getNavForRole(role: User["role"]): NavItem[] {
   switch (role) {
     case "superAdmin":
       return [
-        { icon: <GridIcon />, name: "Dashboard", path: "/admin/dashboard" },
-        { icon: <UserCircleIcon />, name: "Staff", path: "/admin/staff" },
-        { icon: <ListIcon />, name: "Ingredients", path: "/admin/ingredients" },
-        { icon: <TableIcon />, name: "Plates / Menu", path: "/admin/dishes" },
-        { icon: <DollarLineIcon />, name: "Purchaser", subItems: [
-          { name: "Transfer", path: "/admin/transfers" },
-          { name: "Transfer History", path: "/admin/transfers/history" },
-          { name: "Pending Purchases", path: "/admin/purchases" },
-          { name: "Today's Activity", path: "/admin/purchaser/today" },
-        ] },
-        { icon: <BoxCubeIcon />, name: "Chief", subItems: [
-          { name: "Plates Made", path: "/admin/production" },
-          { name: "Today's Activity", path: "/admin/chief/today" },
-        ] },
-        { icon: <TableIcon />, name: "Sales", subItems: [
-          { name: "Today's Sales", path: "/admin/sales/today" },
-          { name: "Sales History", path: "/admin/sales/history" },
-        ] },
-        { icon: <PieChartIcon />, name: "Reports", path: "/admin/reports" },
+        { icon: <GridIcon />, nameKey: "dashboard", path: "/admin/dashboard" },
+        { icon: <UserCircleIcon />, nameKey: "staff", path: "/admin/staff" },
+        { icon: <ListIcon />, nameKey: "ingredients", path: "/admin/ingredients" },
+        { icon: <TableIcon />, nameKey: "platesMenu", path: "/admin/dishes" },
+        {
+          icon: <DollarLineIcon />,
+          nameKey: "purchaser",
+          subItems: [
+            { nameKey: "transfer", path: "/admin/transfers" },
+            { nameKey: "transferHistory", path: "/admin/transfers/history" },
+            { nameKey: "pendingPurchases", path: "/admin/purchases" },
+            { nameKey: "purchaserTodayActivity", path: "/admin/purchaser/today" },
+          ],
+        },
+        {
+          icon: <BoxCubeIcon />,
+          nameKey: "chief",
+          subItems: [
+            { nameKey: "platesMade", path: "/admin/production" },
+            { nameKey: "chiefTodayActivity", path: "/admin/chief/today" },
+          ],
+        },
+        {
+          icon: <TableIcon />,
+          nameKey: "sales",
+          subItems: [
+            { nameKey: "salesToday", path: "/admin/sales/today" },
+            { nameKey: "salesHistory", path: "/admin/sales/history" },
+          ],
+        },
+        { icon: <PieChartIcon />, nameKey: "reports", path: "/admin/reports" },
       ];
     case "purchaser":
       return [
-        { icon: <DollarLineIcon />, name: "Transfers", subItems: [
-          { name: "Pending Transfers", path: "/purchaser/transfers" },
-          { name: "Transfer History", path: "/purchaser/transfers/history" },
-        ] },
-        { icon: <ListIcon />, name: "Purchases", path: "/purchaser/purchases" },
-        { icon: <PieChartIcon />, name: "Purchase History", path: "/purchaser/purchases/history" },
-        { icon: <TableIcon />, name: "My Inventory", path: "/purchaser/inventory" },
+        {
+          icon: <DollarLineIcon />,
+          nameKey: "transfers",
+          subItems: [
+            { nameKey: "pendingTransfers", path: "/purchaser/transfers" },
+            { nameKey: "transferHistory", path: "/purchaser/transfers/history" },
+          ],
+        },
+        { icon: <ListIcon />, nameKey: "purchases", path: "/purchaser/purchases" },
+        { icon: <PieChartIcon />, nameKey: "purchaseHistory", path: "/purchaser/purchases/history" },
+        { icon: <TableIcon />, nameKey: "myInventory", path: "/purchaser/inventory" },
       ];
     case "chief":
       return [
-        { icon: <BoxCubeIcon />, name: "Pending Receipts", path: "/chief/receipts" },
-        { icon: <TableIcon />, name: "Inventory", path: "/chief/inventory" },
-        { icon: <PieChartIcon />, name: "Production", path: "/chief/production" },
+        { icon: <BoxCubeIcon />, nameKey: "pendingReceipts", path: "/chief/receipts" },
+        { icon: <TableIcon />, nameKey: "inventory", path: "/chief/inventory" },
+        { icon: <PieChartIcon />, nameKey: "production", path: "/chief/production" },
       ];
     case "employee":
       return [
-        { icon: <GridIcon />, name: "POS", path: "/employee/pos" },
-        { icon: <TableIcon />, name: "My Sales", path: "/employee/sales" },
+        { icon: <GridIcon />, nameKey: "pos", path: "/employee/pos" },
+        { icon: <TableIcon />, nameKey: "mySales", path: "/employee/sales" },
       ];
     default:
       return [];

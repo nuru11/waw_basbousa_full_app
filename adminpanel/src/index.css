@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
 layer(base);
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap")
+layer(base);
 
 @import "tailwindcss";
 
@@ -8,6 +10,7 @@ layer(base);
 @theme {
   --font-*: initial;
   --font-outfit: Outfit, sans-serif;
+  --font-cairo: Cairo, sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -187,6 +190,15 @@ layer(base);
   }
   body {
     @apply relative font-normal font-outfit z-1 bg-gray-50;
+  }
+
+  html[lang="ar"] {
+    font-family: var(--font-cairo);
+    line-height: 1.7;
+  }
+
+  html[lang="ar"] body {
+    font-family: inherit;
   }
 }
 
@@ -544,14 +556,14 @@ span.flatpickr-weekday,
 }
 
 .flatpickr-calendar.static {
-  @apply right-0;
+  inset-inline-end: 0;
 }
 
 @media (max-width: 639px) {
   .flatpickr-calendar.static {
-    left: auto !important;
-    right: 0 !important;
-    margin-right: -70px;
+    inset-inline-start: auto !important;
+    inset-inline-end: 0 !important;
+    margin-inline-end: -70px;
   }
 }
 
