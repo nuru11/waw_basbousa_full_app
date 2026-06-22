@@ -16,6 +16,20 @@ import {
   paymentMethodLabel,
   weightTypeLabel,
 } from "../../utils/purchaseStatus";
+import { PAYMENT_OPTIONS, type PaymentMethod } from "../../utils/paymentMethods";
+import type { StatCardAccent } from "../../components/ui/stat-card/StatCard";
+
+const PAYMENT_STAT_ACCENTS: Record<PaymentMethod, StatCardAccent> = {
+  cash: "success",
+  cbe: "brand",
+  telebirr: "info",
+  awash: "error",
+  dashen: "brand",
+  abyssinia: "success",
+  nib: "info",
+  coop: "orange",
+  other: "neutral",
+};
 
 interface SalesDailyReportProps {
   data: DailySalesOverview;
@@ -144,32 +158,20 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           title={t("sales.totalRevenue")}
           value={formatCurrency(summary.total_revenue)}
           accent="brand"
         />
-        <StatCard
-          title={t("paymentMethods.cash")}
-          value={formatCurrency(summary.payments.cash)}
-          accent="success"
-        />
-        <StatCard
-          title={t("paymentMethods.cbe")}
-          value={formatCurrency(summary.payments.cbe)}
-          accent="brand"
-        />
-        <StatCard
-          title={t("paymentMethods.telebirr")}
-          value={formatCurrency(summary.payments.telebirr)}
-          accent="info"
-        />
-        <StatCard
-          title={t("paymentMethods.other")}
-          value={formatCurrency(summary.payments.other)}
-          accent="neutral"
-        />
+        {PAYMENT_OPTIONS.map((method) => (
+          <StatCard
+            key={method}
+            title={t(`paymentMethods.${method}`)}
+            value={formatCurrency(summary.payments[method] ?? 0)}
+            accent={PAYMENT_STAT_ACCENTS[method]}
+          />
+        ))}
         <StatCard
           title={t("sales.salesCount")}
           value={String(summary.sale_count)}

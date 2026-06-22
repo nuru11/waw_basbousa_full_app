@@ -211,6 +211,11 @@ export interface DailySalesPayments {
   cash: number;
   cbe: number;
   telebirr: number;
+  awash: number;
+  dashen: number;
+  abyssinia: number;
+  nib: number;
+  coop: number;
   other: number;
 }
 

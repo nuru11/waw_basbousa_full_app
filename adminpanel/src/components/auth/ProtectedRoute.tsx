@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const { t } = useTranslation("common");
-  const { user, loading, isAuthenticated, cashierMode } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
 
   if (loading) {
     return (
@@ -25,7 +25,7 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={getRoleHome(user.role, cashierMode)} replace />;
+    return <Navigate to={getRoleHome(user.role)} replace />;
   }
 
   return <Outlet />;

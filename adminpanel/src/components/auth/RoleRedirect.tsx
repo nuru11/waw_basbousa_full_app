@@ -5,7 +5,7 @@ import { getRoleHome } from "../../utils/roleRoutes";
 
 export default function RoleRedirect() {
   const { t } = useTranslation("common");
-  const { user, loading, cashierMode } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -16,5 +16,5 @@ export default function RoleRedirect() {
   }
 
   if (!user) return <Navigate to="/signin" replace />;
-  return <Navigate to={getRoleHome(user.role, cashierMode)} replace />;
+  return <Navigate to={getRoleHome(user.role)} replace />;
 }

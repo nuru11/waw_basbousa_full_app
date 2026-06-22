@@ -1,5 +1,6 @@
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
+const { PAYMENT_METHODS } = require('../constants/paymentMethods');
 
 const loginValidation = [
   body('username').trim().notEmpty().withMessage('VALIDATION_USERNAME_REQUIRED'),
@@ -51,7 +52,7 @@ const createSaleValidation = [
     .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
   body('payment_method')
     .optional()
-    .isIn(['cash', 'cbe', 'telebirr', 'other'])
+    .isIn(PAYMENT_METHODS)
     .withMessage('VALIDATION_INVALID_PAYMENT'),
   body('quantity').optional().isInt({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
   body('slice_count')
@@ -69,6 +70,21 @@ const productionValidation = [
   validate,
 ];
 
+const createSalesBatchValidation = [
+  body('payment_method')
+    .optional()
+    .isIn(PAYMENT_METHODS)
+    .withMessage('VALIDATION_INVALID_PAYMENT'),
+  body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
+  body('items').isArray({ min: 1 }).withMessage('VALIDATION_ITEMS_REQUIRED'),
+  body('items.*.dish_id').isInt().withMessage('VALIDATION_DISH_REQUIRED'),
+  body('items.*.weight_type')
+    .isIn(['quarter', 'half', 'kilo', 'slice'])
+    .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
+  body('items.*.quantity').optional().isInt({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
+  validate,
+];
+
 const stockAdjustValidation = [
   body('ingredient_id').isInt().withMessage('VALIDATION_INGREDIENT_REQUIRED'),
   body('quantity_delta').isFloat().withMessage('VALIDATION_QUANTITY_DELTA_REQUIRED'),
@@ -82,6 +98,7 @@ module.exports = {
   createPurchaseValidation,
   createDishValidation,
   createSaleValidation,
+  createSalesBatchValidation,
   productionValidation,
   stockAdjustValidation,
   createTransferValidation,

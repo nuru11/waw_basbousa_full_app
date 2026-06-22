@@ -10,6 +10,7 @@ const {
 } = require('../models');
 const { getDateRange } = require('../utils/dateUtils');
 const stockService = require('./stockService');
+const { createEmptyPayments } = require('../constants/paymentMethods');
 
 async function getSummary() {
   const [expenseResult, incomeResult, purchaseCount, saleCount, lowStock] =
@@ -116,7 +117,7 @@ async function getDailySalesOverview(dateInput) {
     order: [['sold_at', 'DESC']],
   });
 
-  const payments = { cash: 0, cbe: 0, telebirr: 0, other: 0 };
+  const payments = createEmptyPayments();
   let totalRevenue = 0;
   let kiloSold = 0;
 

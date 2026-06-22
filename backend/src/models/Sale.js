@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const { PAYMENT_METHODS } = require('../constants/paymentMethods');
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -17,7 +18,7 @@ module.exports = (sequelize) => {
       unit_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
       payment_method: {
-        type: DataTypes.ENUM('cash', 'cbe', 'telebirr', 'other'),
+        type: DataTypes.ENUM(...PAYMENT_METHODS),
         allowNull: false,
         defaultValue: 'cash',
       },

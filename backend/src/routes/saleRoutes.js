@@ -1,7 +1,10 @@
 const express = require('express');
 const saleController = require('../controllers/saleController');
 const { authMiddleware, requireRole } = require('../middleware/auth');
-const { createSaleValidation } = require('../middleware/validators');
+const {
+  createSaleValidation,
+  createSalesBatchValidation,
+} = require('../middleware/validators');
 
 const router = express.Router();
 
@@ -11,6 +14,13 @@ router.get(
   '/sellers',
   requireRole('employee', 'chief'),
   saleController.sellers
+);
+
+router.post(
+  '/batch',
+  requireRole('employee', 'chief'),
+  createSalesBatchValidation,
+  saleController.createBatch
 );
 
 router.post(

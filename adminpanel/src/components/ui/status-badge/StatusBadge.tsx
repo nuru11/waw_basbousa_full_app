@@ -17,6 +17,11 @@ export type StatusBadgeVariant =
   | "cash"
   | "cbe"
   | "telebirr"
+  | "awash"
+  | "dashen"
+  | "abyssinia"
+  | "nib"
+  | "coop"
   | "other"
   | "info";
 
@@ -37,6 +42,11 @@ const variantMap: Record<StatusBadgeVariant, BadgeColor> = {
   cash: "success",
   cbe: "primary",
   telebirr: "info",
+  awash: "error",
+  dashen: "primary",
+  abyssinia: "success",
+  nib: "info",
+  coop: "warning",
   other: "light",
   info: "info",
 };
@@ -84,6 +94,18 @@ export function paymentMethodVariant(method: string): StatusBadgeVariant {
       return "cbe";
     case "telebirr":
       return "telebirr";
+    case "awash":
+      return "awash";
+    case "dashen":
+      return "dashen";
+    case "abyssinia":
+      return "abyssinia";
+    case "nib":
+      return "nib";
+    case "coop":
+      return "coop";
+    case "other":
+      return "other";
     default:
       return "other";
   }

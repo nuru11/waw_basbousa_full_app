@@ -1,10 +1,7 @@
 import i18n from "../i18n";
 import type { User } from "../services/api";
 
-export function getRoleHome(role: User["role"], cashierMode = false): string {
-  if (cashierMode && (role === "employee" || role === "chief")) {
-    return "/cashier/pos";
-  }
+export function getRoleHome(role: User["role"]): string {
   switch (role) {
     case "superAdmin":
       return "/admin/dashboard";
@@ -13,7 +10,7 @@ export function getRoleHome(role: User["role"], cashierMode = false): string {
     case "chief":
       return "/chief/inventory";
     case "employee":
-      return "/employee/pos";
+      return "/employee/sales";
     default:
       return "/signin";
   }
@@ -21,8 +18,4 @@ export function getRoleHome(role: User["role"], cashierMode = false): string {
 
 export function getRoleLabel(role: User["role"]): string {
   return i18n.t(`common:roles.${role}`);
-}
-
-export function isCashierEligible(role: User["role"]): boolean {
-  return role === "employee" || role === "chief";
 }

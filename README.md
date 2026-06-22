@@ -5,7 +5,8 @@ Single-restaurant management system with four roles: **SuperAdmin**, **Purchaser
 ## Stack
 
 - **Backend:** Node.js, Express, Sequelize, MySQL, JWT
-- **Frontend:** React 19, TailAdmin template, Vite, Tailwind CSS v4
+- **Admin frontend:** React 19, TailAdmin template, Vite, Tailwind CSS v4 (`adminpanel/`)
+- **Cashier frontend:** React 19, Vite, Tailwind CSS v4 (`cashier/`) — deploy on a separate subdomain
 
 ## Setup
 
@@ -34,24 +35,46 @@ npm run dev
 
 API runs at `http://localhost:3001`
 
-### 3. Frontend
+### 3. Admin panel
 
 ```bash
-cd free-react-tailwind-admin-dashboard-main
+cd adminpanel
 npm install
 npm run dev
 ```
 
-Frontend proxies `/api` to the backend (see `vite.config.ts`).
+Admin panel proxies `/api` to the backend (see `adminpanel/vite.config.ts`). Default dev URL: `http://localhost:5173`
+
+### 4. Cashier app (POS)
+
+```bash
+cd cashier
+npm install
+npm run dev
+```
+
+Cashier app proxies `/api` to the backend (see `cashier/vite.config.ts`). Default dev URL: `http://localhost:5174`
+
+For production, build and deploy to your cashier subdomain:
+
+```bash
+cd cashier
+# Set VITE_API_URL=https://your-api-domain.com/api in .env.production or CI
+npm run build
+```
+
+Serve the `cashier/dist` folder with SPA fallback (`try_files $uri /index.html`).
 
 ## Role Views
 
-| Role | Features |
-|------|----------|
-| **SuperAdmin** | Dashboard, staff CRUD, ingredients, dishes, reports |
-| **Purchaser** | Record purchases with invoice, price, quantity |
-| **Chief** | Receive purchases, inventory, recipes, production logging |
-| **Employee** | POS (quarter/half/kilo/slice), payment methods, sales history |
+| Role | Admin panel | Cashier app |
+|------|-------------|-------------|
+| **SuperAdmin** | Dashboard, staff CRUD, ingredients, dishes, reports | — |
+| **Purchaser** | Record purchases with invoice, price, quantity | — |
+| **Chief** | Receive purchases, inventory, recipes, production logging | Record sales (POS) |
+| **Employee** | Sales history | Record sales (POS) |
+
+Point-of-sale (recording sales) lives only in the **cashier** app. The admin panel is for management, kitchen/purchasing workflows, and viewing sales history.
 
 ## API Overview
 
@@ -64,5 +87,5 @@ Frontend proxies `/api` to the backend (see `vite.config.ts`).
 - `POST /api/purchases/:id/receive` — Chief receives stock
 - `GET /api/stock` — Inventory levels
 - `POST /api/stock/production` — Log plates made
-- `POST /api/sales` — Employee POS
+- `POST /api/sales` — Cashier POS (employee/chief)
 - `GET /api/reports/summary` — Financial summary

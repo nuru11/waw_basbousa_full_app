@@ -36,4 +36,13 @@ async function sellers(req, res, next) {
   }
 }
 
-module.exports = { create, list, mine, sellers };
+async function createBatch(req, res, next) {
+  try {
+    const result = await saleService.createSalesBatch(req.user.id, req.body);
+    res.status(201).json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, createBatch, list, mine, sellers };

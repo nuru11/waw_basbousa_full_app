@@ -6,11 +6,9 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import { Modal } from "../ui/modal";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { useAuth } from "../../context/AuthContext";
-import { type User } from "../../services/api";
-import { getRoleHome, isCashierEligible } from "../../utils/roleRoutes";
+import { getRoleHome } from "../../utils/roleRoutes";
 import { translateApiError } from "../../utils/translateApiError";
 
 export default function SignInForm() {
@@ -21,9 +19,8 @@ export default function SignInForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [pendingUser, setPendingUser] = useState<User | null>(null);
   const { submitting, run } = useSubmitLock();
-  const { login, setCashierMode } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
@@ -32,22 +29,11 @@ export default function SignInForm() {
       setError("");
       try {
         const user = await login(username, password);
-        if (isCashierEligible(user.role)) {
-          setPendingUser(user);
-        } else {
-          navigate(getRoleHome(user.role));
-        }
+        navigate(getRoleHome(user.role));
       } catch (err) {
         setError(translateApiError(err, "auth:signIn.loginFailed"));
       }
     });
-  }
-
-  function handleCashierChoice(asCashier: boolean) {
-    if (!pendingUser) return;
-    setCashierMode(asCashier);
-    setPendingUser(null);
-    navigate(getRoleHome(pendingUser.role, asCashier));
   }
 
   return (
@@ -132,28 +118,6 @@ export default function SignInForm() {
           </div>
         </div>
       </div>
-
-      <Modal
-        isOpen={!!pendingUser}
-        onClose={() => handleCashierChoice(false)}
-        showCloseButton={false}
-        className="max-w-md p-6 m-4"
-      >
-        <h2 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white/90">
-          {t("cashierModal.title")}
-        </h2>
-        <p className="mb-6 text-sm text-gray-500">
-          {t("cashierModal.description")}
-        </p>
-        <div className="flex gap-3">
-          <Button size="sm" className="flex-1" onClick={() => handleCashierChoice(true)}>
-            {t("cashierModal.yes")}
-          </Button>
-          <Button size="sm" variant="outline" className="flex-1" onClick={() => handleCashierChoice(false)}>
-            {t("cashierModal.no")}
-          </Button>
-        </div>
-      </Modal>
     </div>
   );
 }

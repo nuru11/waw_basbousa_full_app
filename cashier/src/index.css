@@ -1,0 +1,229 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
+layer(base);
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap")
+layer(base);
+
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-*: initial;
+  --font-outfit: Outfit, sans-serif;
+  --font-cairo: Cairo, sans-serif;
+
+  --color-brand-25: #f2f7ff;
+  --color-brand-50: #ecf3ff;
+  --color-brand-100: #dde9ff;
+  --color-brand-200: #c2d6ff;
+  --color-brand-300: #9cb9ff;
+  --color-brand-400: #7592ff;
+  --color-brand-500: #465fff;
+  --color-brand-600: #3641f5;
+  --color-brand-700: #2a31d8;
+  --color-brand-800: #252dae;
+  --color-brand-900: #262e89;
+  --color-brand-950: #161950;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #e4e7ec;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1d2939;
+  --color-gray-900: #101828;
+
+  --color-pos-orange-50: #fff7ed;
+  --color-pos-orange-100: #ffedd5;
+  --color-pos-orange-200: #fed7aa;
+  --color-pos-orange-300: #fdba74;
+  --color-pos-orange-500: #f97316;
+  --color-pos-orange-600: #ea580c;
+  --color-pos-orange-700: #c2410c;
+  --color-pos-orange-800: #9a3412;
+
+  --color-pos-amber-50: #fffbeb;
+  --color-pos-amber-100: #fef3c7;
+  --color-pos-amber-200: #fde68a;
+  --color-pos-amber-300: #fcd34d;
+  --color-pos-amber-500: #f59e0b;
+  --color-pos-amber-600: #d97706;
+  --color-pos-amber-700: #b45309;
+  --color-pos-amber-800: #92400e;
+
+  --color-pos-emerald-50: #ecfdf5;
+  --color-pos-emerald-100: #d1fae5;
+  --color-pos-emerald-200: #a7f3d0;
+  --color-pos-emerald-300: #6ee7b7;
+  --color-pos-emerald-400: #34d399;
+  --color-pos-emerald-500: #10b981;
+  --color-pos-emerald-600: #059669;
+  --color-pos-emerald-700: #047857;
+  --color-pos-emerald-800: #065f46;
+  --color-pos-emerald-900: #064e3b;
+
+  --color-pos-violet-50: #f5f3ff;
+  --color-pos-violet-100: #ede9fe;
+  --color-pos-violet-200: #ddd6fe;
+  --color-pos-violet-300: #c4b5fd;
+  --color-pos-violet-500: #8b5cf6;
+  --color-pos-violet-600: #7c3aed;
+  --color-pos-violet-700: #6d28d9;
+  --color-pos-violet-800: #5b21b6;
+
+  --color-pos-sky-50: #f0f9ff;
+  --color-pos-sky-100: #e0f2fe;
+  --color-pos-sky-200: #bae6fd;
+  --color-pos-sky-300: #7dd3fc;
+  --color-pos-sky-400: #38bdf8;
+  --color-pos-sky-500: #0ea5e9;
+  --color-pos-sky-600: #0284c7;
+  --color-pos-sky-700: #0369a1;
+  --color-pos-sky-800: #075985;
+
+  --color-pos-rose-50: #fff1f2;
+  --color-pos-rose-100: #ffe4e6;
+  --color-pos-rose-300: #fda4af;
+  --color-pos-rose-400: #fb7185;
+  --color-pos-rose-500: #f43f5e;
+  --color-pos-rose-600: #e11d48;
+  --color-pos-rose-700: #be123c;
+
+  --color-success-50: #ecfdf3;
+  --color-success-500: #12b76a;
+  --color-success-600: #039855;
+  --color-error-50: #fef3f2;
+  --color-error-200: #fecdca;
+  --color-error-500: #f04438;
+  --color-error-600: #d92d20;
+  --color-error-700: #b42318;
+
+  --color-pay-cbe-50: #f5ecf4;
+  --color-pay-cbe-100: #ead6e8;
+  --color-pay-cbe-300: #c48ab8;
+  --color-pay-cbe-500: #8e2689;
+  --color-pay-cbe-600: #7a1f77;
+  --color-pay-cbe-700: #651a63;
+
+  --color-pay-telebirr-50: #e7eef6;
+  --color-pay-telebirr-100: #cfddef;
+  --color-pay-telebirr-300: #5a8bc4;
+  --color-pay-telebirr-500: #0b4d9d;
+  --color-pay-telebirr-600: #0a4287;
+  --color-pay-telebirr-700: #083771;
+
+  --color-pay-cash-50: #f0fdf4;
+  --color-pay-cash-100: #dcfce7;
+  --color-pay-cash-300: #86efac;
+  --color-pay-cash-500: #16a34a;
+  --color-pay-cash-600: #15803d;
+  --color-pay-cash-700: #166534;
+
+  --color-pay-other-50: #f8fafc;
+  --color-pay-other-100: #f1f5f9;
+  --color-pay-other-300: #94a3b8;
+  --color-pay-other-500: #64748b;
+  --color-pay-other-600: #475569;
+  --color-pay-other-700: #334155;
+
+  --color-pay-awash-50: #fef5ee;
+  --color-pay-awash-100: #fde8d8;
+  --color-pay-awash-300: #f5b07a;
+  --color-pay-awash-500: #ef8d38;
+  --color-pay-awash-600: #d97a2f;
+  --color-pay-awash-700: #b86628;
+
+  --color-pay-dashen-50: #eef0f7;
+  --color-pay-dashen-100: #dce0ee;
+  --color-pay-dashen-300: #8a94c4;
+  --color-pay-dashen-500: #162066;
+  --color-pay-dashen-600: #121a52;
+  --color-pay-dashen-700: #0e1544;
+
+  --color-pay-abyssinia-50: #fdf6e8;
+  --color-pay-abyssinia-100: #f9ecd0;
+  --color-pay-abyssinia-300: #f0c96a;
+  --color-pay-abyssinia-500: #e8a61e;
+  --color-pay-abyssinia-600: #c98f1a;
+  --color-pay-abyssinia-700: #a87716;
+
+  --color-pay-nib-50: #f5efe9;
+  --color-pay-nib-100: #ebdfd3;
+  --color-pay-nib-300: #b88860;
+  --color-pay-nib-500: #864b20;
+  --color-pay-nib-600: #73411c;
+  --color-pay-nib-700: #603718;
+
+  --color-pay-coop-50: #e6f7fd;
+  --color-pay-coop-100: #cceffb;
+  --color-pay-coop-300: #66cff3;
+  --color-pay-coop-500: #00a8e8;
+  --color-pay-coop-600: #0092c9;
+  --color-pay-coop-700: #007ba9;
+
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1),
+    0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+
+  --z-index-1: 1;
+}
+
+@utility touch-target {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+@utility field-select {
+  @apply h-12 w-full rounded-xl border-2 border-gray-200 bg-white px-4 text-base shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90;
+}
+
+@utility pos-card {
+  @apply rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/80 md:p-5;
+}
+
+@utility pos-section-plate {
+  @apply rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/80 md:p-5;
+}
+
+@utility pos-section-portion {
+  @apply rounded-2xl border border-gray-200 bg-gray-50/80 p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/80 md:p-5;
+}
+
+@utility pos-section-payment {
+  @apply rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/80 md:p-5;
+}
+
+@utility pos-section-cart {
+  @apply rounded-2xl border border-gray-200 bg-gray-50/80 p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/80 md:p-5;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  body {
+    @apply relative font-normal font-outfit z-1 bg-gradient-to-br from-brand-50/30 via-white to-gray-50 text-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 dark:text-white/90;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  html[lang="ar"] {
+    font-family: var(--font-cairo);
+    line-height: 1.7;
+  }
+
+  html[lang="ar"] body {
+    font-family: inherit;
+  }
+}

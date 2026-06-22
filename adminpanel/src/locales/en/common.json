@@ -179,6 +179,11 @@
     "cash": "Cash",
     "cbe": "CBE",
     "telebirr": "Telebirr",
+    "awash": "Awash Bank",
+    "dashen": "Dashen Bank",
+    "abyssinia": "Bank of Abyssinia",
+    "nib": "NIB Bank",
+    "coop": "Coop Bank",
     "other": "Other",
     "method": "Payment Method"
   },

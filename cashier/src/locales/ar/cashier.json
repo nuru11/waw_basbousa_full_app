@@ -7,6 +7,9 @@
     "metaTitle": "أمين الصندوق | المطعم",
     "metaDescription": "نقطة بيع أمين الصندوق",
     "title": "أمين الصندوق",
-    "subtitle": "تسجيل بيع"
+    "subtitle": "تسجيل بيع",
+    "stepPickPlate": "١. اختر الطبق",
+    "stepAddItems": "٢. أضف العناصر",
+    "stepPay": "٣. ادفع"
   }
 }

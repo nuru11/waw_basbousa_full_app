@@ -60,6 +60,7 @@ const ERROR_CODES = {
   VALIDATION_PLATES_POSITIVE: 'Plates count must be positive',
   VALIDATION_PLATE_WEIGHT_REQUIRED: 'Plate weight is required',
   VALIDATION_QUANTITY_DELTA_REQUIRED: 'Quantity delta is required',
+  VALIDATION_ITEMS_REQUIRED: 'At least one item is required',
   VALIDATION_FAILED: 'Validation failed',
 };
 

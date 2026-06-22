@@ -9,7 +9,6 @@ import enAdmin from "../locales/en/admin.json";
 import enPurchaser from "../locales/en/purchaser.json";
 import enChief from "../locales/en/chief.json";
 import enEmployee from "../locales/en/employee.json";
-import enCashier from "../locales/en/cashier.json";
 import enErrors from "../locales/en/errors.json";
 import enValidation from "../locales/en/validation.json";
 
@@ -20,7 +19,6 @@ import arAdmin from "../locales/ar/admin.json";
 import arPurchaser from "../locales/ar/purchaser.json";
 import arChief from "../locales/ar/chief.json";
 import arEmployee from "../locales/ar/employee.json";
-import arCashier from "../locales/ar/cashier.json";
 import arErrors from "../locales/ar/errors.json";
 import arValidation from "../locales/ar/validation.json";
 
@@ -40,7 +38,6 @@ const namespaces = [
   "purchaser",
   "chief",
   "employee",
-  "cashier",
   "errors",
   "validation",
 ] as const;
@@ -58,7 +55,6 @@ i18n
         purchaser: enPurchaser,
         chief: enChief,
         employee: enEmployee,
-        cashier: enCashier,
         errors: enErrors,
         validation: enValidation,
       },
@@ -70,7 +66,6 @@ i18n
         purchaser: arPurchaser,
         chief: arChief,
         employee: arEmployee,
-        cashier: arCashier,
         errors: arErrors,
         validation: arValidation,
       },

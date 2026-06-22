@@ -179,6 +179,11 @@
     "cash": "نقداً",
     "cbe": "CBE",
     "telebirr": "Telebirr",
+    "awash": "بنك أواش",
+    "dashen": "بنك داشن",
+    "abyssinia": "بنك أبيسينيا",
+    "nib": "بنك NIB",
+    "coop": "بنك التعاون",
     "other": "أخرى",
     "method": "طريقة الدفع"
   },

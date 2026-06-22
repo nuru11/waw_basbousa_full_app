@@ -76,7 +76,6 @@ export function getNavForRole(role: User["role"]): NavItem[] {
       ];
     case "employee":
       return [
-        { icon: <GridIcon />, nameKey: "pos", path: "/employee/pos" },
         { icon: <TableIcon />, nameKey: "mySales", path: "/employee/sales" },
       ];
     default:
