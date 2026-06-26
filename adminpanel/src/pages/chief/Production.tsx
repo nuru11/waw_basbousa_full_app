@@ -12,6 +12,7 @@ import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Dish, type Ingredient, type ProductionLog } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 import { kgToStoredGrams, plateWeightToKg } from "../../utils/plateWeight";
+import { maxPlatesFromStock } from "../../utils/productionStock";
 import { translateApiError } from "../../utils/translateApiError";
 
 const PLATES_COUNT = 1;
@@ -60,6 +61,7 @@ export default function ProductionPage() {
       const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
       const available = ingredient ? parseFloat(String(ingredient.current_stock)) : 0;
       return {
+        ingredientId: item.ingredient_id,
         name:
           ingredient?.name ??
           t("common:ingredientFallback", { id: item.ingredient_id }),
@@ -70,6 +72,17 @@ export default function ProductionPage() {
       };
     });
   }, [selectedDish, stock, t]);
+
+  const maxPlates = useMemo(() => {
+    if (!selectedDish?.recipe) return 0;
+    const stockByIngredientId = new Map(
+      stock.map((ingredient) => [
+        ingredient.id,
+        parseFloat(String(ingredient.current_stock)),
+      ])
+    );
+    return maxPlatesFromStock(selectedDish.recipe, stockByIngredientId, PLATES_COUNT);
+  }, [selectedDish, stock]);
 
   const canSubmit =
     form.dish_id &&
@@ -150,7 +163,11 @@ export default function ProductionPage() {
             <p className="mt-1 text-xs text-gray-500">{t("production.plateWeightHint")}</p>
           </div>
           {preview.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t("production.maxPlatesFromStock", { count: formatNumber(maxPlates) })}
+              </p>
+              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-start text-gray-500 border-b dark:border-gray-700">
@@ -162,7 +179,10 @@ export default function ProductionPage() {
                 </thead>
                 <tbody>
                   {preview.map((row) => (
-                    <tr key={row.name} className="border-b border-gray-100 dark:border-gray-800">
+                    <tr
+                      key={`${row.ingredientId}-${row.name}`}
+                      className="border-b border-gray-100 dark:border-gray-800"
+                    >
                       <td className="p-2">{row.name}</td>
                       <td className="p-2">
                         {formatNumber(row.needed)} {row.unit}
@@ -181,6 +201,7 @@ export default function ProductionPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
           <div>

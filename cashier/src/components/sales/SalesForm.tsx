@@ -211,6 +211,7 @@ export default function SalesForm() {
     weight_type: "kilo" as WeightType,
     quantity: "1",
     slice_count: "1",
+    manual_kg: "1",
   });
   const [order, setOrder] = useState({
     seller_id: "",
@@ -240,10 +241,10 @@ export default function SalesForm() {
   const builderLineTotal = selectedDish
     ? calcPrice(selectedDish, builder.weight_type, builderQty, builderSlices)
     : 0;
-  const builderKilo = calcKiloConsumed(builder.weight_type, builderQty, builderSlices);
+  const builderManualKilo = parseFloat(builder.manual_kg) || 0;
   const builderAvailability = dishId > 0 ? availabilityByDish[dishId] : undefined;
   const builderKiloInCart = dishId > 0 ? kiloInCart(cart, dishId) : 0;
-  const builderTotalKilo = builderKiloInCart + builderKilo;
+  const builderTotalKilo = builderKiloInCart + builderManualKilo;
   const builderInsufficientStock =
     dishId > 0 &&
     builderAvailability !== undefined &&
@@ -285,9 +286,17 @@ export default function SalesForm() {
     refreshAvailability(ids);
   }, [cart, dishId, refreshAvailability, success]);
 
+  useEffect(() => {
+    const qty = parseInt(builder.quantity) || 1;
+    const slices = parseInt(builder.slice_count) || 1;
+    const kg = calcKiloConsumed(builder.weight_type, qty, slices);
+    setBuilder((prev) => ({ ...prev, manual_kg: String(kg) }));
+  }, [builder.weight_type, builder.quantity, builder.slice_count]);
+
   const canAddToCart =
     !!selectedDish &&
     builderLineTotal > 0 &&
+    builderManualKilo > 0 &&
     !builderInsufficientStock &&
     !(builder.weight_type === "slice" && builderSlices < 1);
 
@@ -321,7 +330,7 @@ export default function SalesForm() {
       slice_count: builder.weight_type === "slice" ? builderSlices : undefined,
       unit_price: unitPrice,
       line_total: builderLineTotal,
-      kilo_consumed: builderKilo,
+      kilo_consumed: builderManualKilo,
     };
 
     setCart((prev) => [...prev, line]);
@@ -330,6 +339,7 @@ export default function SalesForm() {
       weight_type: "kilo",
       quantity: "1",
       slice_count: "1",
+      manual_kg: "1",
     });
     setError("");
   }
@@ -354,6 +364,7 @@ export default function SalesForm() {
             weight_type: line.weight_type,
             quantity: line.quantity,
             slice_count: line.weight_type === "slice" ? line.slice_count : undefined,
+            kilo_consumed: line.kilo_consumed,
           })),
         });
 
@@ -592,6 +603,20 @@ export default function SalesForm() {
             </Section>
           )}
         </div>
+
+        <Section title={t("fields.weightKg")} accent="default">
+          <Input
+            type="number"
+            min="0.001"
+            step="0.001"
+            value={builder.manual_kg}
+            onChange={(e) => setBuilder({ ...builder, manual_kg: e.target.value })}
+            className="text-lg font-semibold border-gray-200"
+          />
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {t("sales.manualKgHint")}
+          </p>
+        </Section>
 
         {selectedDish && (
           <div className="p-4 text-center border rounded-xl bg-gray-50 border-gray-200 dark:bg-gray-900/50 dark:border-gray-700">

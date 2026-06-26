@@ -20,7 +20,11 @@
     "screenshotLabel": "Screenshot (invoice/receipt)",
     "balanceExceededWarning": "This purchase exceeds your remaining balance (ETB {{amount}}). It will still be recorded.",
     "submittedSuccess": "Purchase recorded — added to your inventory",
-    "viewHistoryLink": "View purchase history →"
+    "viewHistoryLink": "View purchase history →",
+    "sizeLabel": "Size",
+    "sizeSmall": "Small",
+    "sizeLarge": "Large",
+    "sizeRequired": "Please select a size for this ingredient"
   },
   "purchaseHistory": {
     "metaTitle": "Purchase History | Restaurant",

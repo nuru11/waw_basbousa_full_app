@@ -32,7 +32,10 @@
     "metaTitle": "Ingredients | Restaurant",
     "metaDescription": "Manage ingredients",
     "addIngredient": "Add Ingredient",
-    "minStockAlert": "Min Stock Alert"
+    "minStockAlert": "Min Stock Alert",
+    "hasSize": "Has size variants (small / large)",
+    "hasSizeCol": "Size variants",
+    "hasSizeYes": "Yes"
   },
   "dishes": {
     "metaTitle": "Plates / Menu | Restaurant",

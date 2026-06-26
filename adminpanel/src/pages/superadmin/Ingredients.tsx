@@ -5,6 +5,7 @@ import PageMeta from "../../components/common/PageMeta";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
+import Checkbox from "../../components/form/input/Checkbox";
 import Button from "../../components/ui/button/Button";
 import { DataTable, SectionCard } from "../../components/ui";
 import type { DataTableColumn } from "../../components/ui";
@@ -22,7 +23,7 @@ export default function IngredientsPage() {
   const { t: tNav } = useTranslation("nav");
   const { t: tValidation } = useTranslation("validation");
   const [items, setItems] = useState<Ingredient[]>([]);
-  const [form, setForm] = useState({ name: "", unit: "kg", min_stock: "0" });
+  const [form, setForm] = useState({ name: "", unit: "kg", min_stock: "0", has_size: false });
   const [error, setError] = useState("");
   const { submitting, run } = useSubmitLock();
 
@@ -41,8 +42,9 @@ export default function IngredientsPage() {
           name: form.name,
           unit: form.unit,
           min_stock: parseFloat(form.min_stock),
+          has_size: form.has_size,
         });
-        setForm({ name: "", unit: "kg", min_stock: "0" });
+        setForm({ name: "", unit: "kg", min_stock: "0", has_size: false });
         load();
       } catch (err: unknown) {
         setError(translateApiError(err, "common:failed"));
@@ -69,6 +71,12 @@ export default function IngredientsPage() {
         render: (item) => unitLabel(item.unit),
       },
       {
+        key: "has_size",
+        header: t("ingredients.hasSizeCol"),
+        render: (item) =>
+          item.has_size ? t("ingredients.hasSizeYes") : tCommon("emDash"),
+      },
+      {
         key: "stock",
         header: tCommon("fields.stock"),
         render: (item) => formatNumber(item.current_stock),
@@ -91,7 +99,7 @@ export default function IngredientsPage() {
         ),
       },
     ],
-    [tCommon]
+    [t, tCommon]
   );
 
   return (
@@ -128,6 +136,11 @@ export default function IngredientsPage() {
               onChange={(e) => setForm({ ...form, min_stock: e.target.value })}
             />
           </div>
+          <Checkbox
+            label={t("ingredients.hasSize")}
+            checked={form.has_size}
+            onChange={(has_size) => setForm({ ...form, has_size })}
+          />
           <Button type="submit" size="sm" disabled={submitting}>
             {submitting ? tCommon("actions.adding") : tCommon("actions.add")}
           </Button>

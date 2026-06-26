@@ -36,7 +36,7 @@ async function inventory(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    const { ingredient_id, quantity, unit_price } = req.body;
+    const { ingredient_id, quantity, unit_price, size } = req.body;
 
     if (!ingredient_id) throw new AppError('INGREDIENT_REQUIRED', ERROR_CODES.INGREDIENT_REQUIRED, 400);
     if (!quantity || parseFloat(quantity) <= 0) {
@@ -50,6 +50,7 @@ async function create(req, res, next) {
       ingredient_id: parseInt(ingredient_id, 10),
       quantity: parseFloat(quantity),
       unit_price: parseFloat(unit_price),
+      size: size || null,
       screenshot_path: req.file.filename,
     });
     res.status(201).json({ success: true, data: purchase });

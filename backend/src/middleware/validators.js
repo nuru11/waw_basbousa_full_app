@@ -24,6 +24,7 @@ const createIngredientValidation = [
     .optional()
     .isIn(['bottle', 'kg', 'piece', 'liter', 'gram'])
     .withMessage('VALIDATION_INVALID_UNIT'),
+  body('has_size').optional().isBoolean().withMessage('VALIDATION_FAILED'),
   validate,
 ];
 
@@ -37,6 +38,10 @@ const createPurchaseValidation = [
   body('ingredient_id').isInt().withMessage('VALIDATION_INGREDIENT_REQUIRED'),
   body('quantity').isFloat({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
   body('unit_price').isFloat({ gt: 0 }).withMessage('VALIDATION_UNIT_PRICE_POSITIVE'),
+  body('size')
+    .optional()
+    .isIn(['small', 'large'])
+    .withMessage('VALIDATION_INVALID_SIZE'),
   validate,
 ];
 
@@ -59,6 +64,7 @@ const createSaleValidation = [
     .if((value, { req }) => req.body.weight_type === 'slice')
     .isInt({ gt: 0 })
     .withMessage('VALIDATION_SLICE_COUNT_REQUIRED'),
+  body('kilo_consumed').optional().isFloat({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
   body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
   validate,
 ];
@@ -82,6 +88,10 @@ const createSalesBatchValidation = [
     .isIn(['quarter', 'half', 'kilo', 'slice'])
     .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
   body('items.*.quantity').optional().isInt({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
+  body('items.*.kilo_consumed')
+    .optional()
+    .isFloat({ gt: 0 })
+    .withMessage('VALIDATION_QUANTITY_POSITIVE'),
   validate,
 ];
 

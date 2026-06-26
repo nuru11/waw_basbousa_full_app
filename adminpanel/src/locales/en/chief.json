@@ -19,7 +19,8 @@
     "plateWeightHint": "Weight of one cooked plate in kilograms (e.g. 1, 5, 28)",
     "noRecipesHint": "No plates with recipes defined. Ask superadmin to set up recipes.",
     "logProductionBtn": "Log Production (deducts stock)",
-    "recentProduction": "Recent Production"
+    "recentProduction": "Recent Production",
+    "maxPlatesFromStock": "Up to {{count}} plate(s) possible with current stock"
   },
   "todaysPlates": {
     "metaTitle": "Today's Plates | Restaurant",

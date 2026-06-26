@@ -130,6 +130,7 @@
     "seller": "Seller",
     "plate": "Plate",
     "ingredient": "Ingredient",
+    "size": "Size",
     "from": "From",
     "when": "When",
     "spent": "Spent",
@@ -152,6 +153,10 @@
     "category": "Category",
     "description": "Description",
     "recordedBy": "Recorded By"
+  },
+  "purchaseSizes": {
+    "small": "Small",
+    "large": "Large"
   },
   "units": {
     "bottle": "Bottle",
@@ -240,8 +245,15 @@
     "qtyPerPlate": "Qty/plate",
     "qtyWithUnit": "Qty ({{unit}})",
     "addIngredient": "+ Add ingredient",
-    "editTitle": "Edit Recipe — {{name}}",
-    "failedToSave": "Failed to save recipe"
+    "editTitle": "Edit Plate — {{name}}",
+    "failedToSave": "Failed to save recipe",
+    "qtySmallPerPlate": "Small ({{unit}})/plate",
+    "qtyLargePerPlate": "Large ({{unit}})/plate",
+    "qtySmallPerPlateShort": "Small qty/plate",
+    "qtyLargePerPlateShort": "Large qty/plate",
+    "sizeQtyRequired": "Enter at least one small or large quantity for size ingredients",
+    "qtyWithUnitExample": "e.g. {{example}} {{unit}}/plate",
+    "fractionalQtyHint": "Fractions are supported (e.g. 0.5 for half a bottle per plate)."
   },
   "datePicker": {
     "label": "Date",

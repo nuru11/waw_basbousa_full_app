@@ -16,3 +16,8 @@ export function paymentMethodLabel(method: string) {
 export function unitLabel(unit: string) {
   return i18n.t(`common:units.${unit}`, { defaultValue: unit });
 }
+
+export function purchaseSizeLabel(size: 'small' | 'large' | null | undefined) {
+  if (!size) return "";
+  return i18n.t(`common:purchaseSizes.${size}`, { defaultValue: size });
+}

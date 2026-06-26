@@ -70,6 +70,11 @@ const ERROR_CODES = {
   SALARY_ALREADY_PAID: 'Salary already paid for this period',
   NOT_AN_EMPLOYEE: 'Target user is not an employee',
   INVALID_PAY_PERIOD: 'Invalid pay period. Use YYYY-MM',
+  PURCHASE_SIZE_REQUIRED: 'Size is required for this ingredient (small or large)',
+  PURCHASE_SIZE_NOT_ALLOWED: 'Size is not applicable for this ingredient',
+  VALIDATION_INVALID_SIZE: 'Invalid size. Use small or large',
+  RECIPE_SIZE_REQUIRED: 'Recipe size is required for this ingredient (small or large)',
+  RECIPE_SIZE_NOT_ALLOWED: 'Recipe size is not applicable for this ingredient',
 };
 
 module.exports = ERROR_CODES;

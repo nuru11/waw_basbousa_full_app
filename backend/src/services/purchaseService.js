@@ -67,10 +67,21 @@ async function createPurchase(purchaserId, data) {
     const quantity = parseFloat(data.quantity);
     const unitPrice = parseFloat(data.unit_price);
     const totalPrice = quantity * unitPrice;
+    const size = data.size || null;
+    const validSizes = ['small', 'large'];
+
+    if (ingredient.has_size) {
+      if (!size || !validSizes.includes(size)) {
+        throw new AppError('PURCHASE_SIZE_REQUIRED', ERROR_CODES.PURCHASE_SIZE_REQUIRED, 400);
+      }
+    } else if (size) {
+      throw new AppError('PURCHASE_SIZE_NOT_ALLOWED', ERROR_CODES.PURCHASE_SIZE_NOT_ALLOWED, 400);
+    }
 
     const purchase = await Purchase.create(
       {
         ingredient_id: data.ingredient_id,
+        size: ingredient.has_size ? size : null,
         quantity,
         unit_price: unitPrice,
         total_price: totalPrice,
@@ -188,16 +199,25 @@ async function getPurchaserInventory(purchaserId) {
   const aggregated = await Purchase.findAll({
     attributes: [
       'ingredient_id',
+      'size',
       [fn('SUM', col('quantity')), 'total_quantity'],
     ],
     where: { purchaser_id: purchaserId, status: 'in_inventory' },
-    include: [{ model: Ingredient, as: 'ingredient', attributes: ['id', 'name', 'unit'] }],
-    group: ['ingredient_id', 'ingredient.id', 'ingredient.name', 'ingredient.unit'],
+    include: [{ model: Ingredient, as: 'ingredient', attributes: ['id', 'name', 'unit', 'has_size'] }],
+    group: [
+      'ingredient_id',
+      'size',
+      'ingredient.id',
+      'ingredient.name',
+      'ingredient.unit',
+      'ingredient.has_size',
+    ],
     raw: false,
   });
 
   const summary = aggregated.map((row) => ({
     ingredient_id: row.ingredient_id,
+    size: row.size,
     ingredient: row.ingredient,
     total_quantity: parseFloat(row.get('total_quantity')),
   }));

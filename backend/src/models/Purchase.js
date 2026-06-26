@@ -6,6 +6,10 @@ module.exports = (sequelize) => {
     {
       id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       ingredient_id: { type: DataTypes.INTEGER, allowNull: false },
+      size: {
+        type: DataTypes.ENUM('small', 'large'),
+        allowNull: true,
+      },
       quantity: { type: DataTypes.DECIMAL(12, 3), allowNull: false },
       unit_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },

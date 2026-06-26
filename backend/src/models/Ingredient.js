@@ -21,6 +21,11 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      has_size: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     { tableName: 'ingredients', underscored: true }
   );

@@ -7,6 +7,58 @@ const {
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
 
+const VALID_SIZES = ['small', 'large'];
+
+async function normalizeRecipeItems(recipe, transaction) {
+  if (!recipe || recipe.length === 0) return [];
+
+  const ingredientIds = [...new Set(recipe.map((r) => r.ingredient_id))];
+  const ingredients = await Ingredient.findAll({
+    where: { id: ingredientIds },
+    transaction,
+  });
+  const byId = new Map(ingredients.map((i) => [i.id, i]));
+
+  const normalized = [];
+
+  for (const item of recipe) {
+    const ingredient = byId.get(item.ingredient_id);
+    if (!ingredient) {
+      throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
+    }
+
+    const qty = parseFloat(item.quantity_per_plate);
+    if (!qty || qty <= 0) continue;
+
+    const size = item.size ?? null;
+
+    if (ingredient.has_size) {
+      if (!size || !VALID_SIZES.includes(size)) {
+        throw new AppError('RECIPE_SIZE_REQUIRED', ERROR_CODES.RECIPE_SIZE_REQUIRED, 400);
+      }
+    } else if (size) {
+      throw new AppError('RECIPE_SIZE_NOT_ALLOWED', ERROR_CODES.RECIPE_SIZE_NOT_ALLOWED, 400);
+    }
+
+    normalized.push({
+      ingredient_id: item.ingredient_id,
+      quantity_per_plate: qty,
+      size: ingredient.has_size ? size : null,
+    });
+  }
+
+  return normalized;
+}
+
+function mapRecipeForCreate(dishId, recipe) {
+  return recipe.map((r) => ({
+    dish_id: dishId,
+    ingredient_id: r.ingredient_id,
+    quantity_per_plate: r.quantity_per_plate,
+    size: r.size ?? null,
+  }));
+}
+
 async function listDishes({ activeOnly = false } = {}) {
   const where = activeOnly ? { is_active: true } : {};
   return Dish.findAll({
@@ -44,14 +96,10 @@ async function createDish(data) {
     const dish = await Dish.create(dishData, { transaction });
 
     if (recipe && recipe.length > 0) {
-      await DishIngredient.bulkCreate(
-        recipe.map((r) => ({
-          dish_id: dish.id,
-          ingredient_id: r.ingredient_id,
-          quantity_per_plate: r.quantity_per_plate,
-        })),
-        { transaction }
-      );
+      const normalized = await normalizeRecipeItems(recipe, transaction);
+      if (normalized.length > 0) {
+        await DishIngredient.bulkCreate(mapRecipeForCreate(dish.id, normalized), { transaction });
+      }
     }
 
     await transaction.commit();
@@ -73,14 +121,10 @@ async function updateDish(id, data) {
     if (recipe !== undefined) {
       await DishIngredient.destroy({ where: { dish_id: id }, transaction });
       if (recipe.length > 0) {
-        await DishIngredient.bulkCreate(
-          recipe.map((r) => ({
-            dish_id: id,
-            ingredient_id: r.ingredient_id,
-            quantity_per_plate: r.quantity_per_plate,
-          })),
-          { transaction }
-        );
+        const normalized = await normalizeRecipeItems(recipe, transaction);
+        if (normalized.length > 0) {
+          await DishIngredient.bulkCreate(mapRecipeForCreate(id, normalized), { transaction });
+        }
       }
     }
 
@@ -93,21 +137,17 @@ async function updateDish(id, data) {
 }
 
 async function updateRecipe(id, { recipe }) {
-  const dish = await getDish(id);
+  await getDish(id);
   const transaction = await sequelize.transaction();
 
   try {
     if (recipe !== undefined) {
       await DishIngredient.destroy({ where: { dish_id: id }, transaction });
       if (recipe.length > 0) {
-        await DishIngredient.bulkCreate(
-          recipe.map((r) => ({
-            dish_id: id,
-            ingredient_id: r.ingredient_id,
-            quantity_per_plate: r.quantity_per_plate,
-          })),
-          { transaction }
-        );
+        const normalized = await normalizeRecipeItems(recipe, transaction);
+        if (normalized.length > 0) {
+          await DishIngredient.bulkCreate(mapRecipeForCreate(id, normalized), { transaction });
+        }
       }
     }
 

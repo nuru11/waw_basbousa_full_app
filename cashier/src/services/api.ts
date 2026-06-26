@@ -108,6 +108,7 @@ export interface SaleBatchItem {
   weight_type: "quarter" | "half" | "kilo" | "slice";
   quantity: number;
   slice_count?: number;
+  kilo_consumed?: number;
 }
 
 export interface SaleBatchRequest {

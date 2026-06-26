@@ -85,11 +85,10 @@ async function resolveSaleLine(item, transaction) {
     quantity,
     item.slice_count
   );
-  const kiloConsumed = calculateKiloConsumed(
-    item.weight_type,
-    quantity,
-    item.slice_count
-  );
+  const kiloConsumed =
+    item.kilo_consumed != null && parseFloat(item.kilo_consumed) > 0
+      ? parseFloat(item.kilo_consumed)
+      : calculateKiloConsumed(item.weight_type, quantity, item.slice_count);
 
   return {
     dish_id: item.dish_id,
@@ -201,11 +200,10 @@ async function createSale(userId, data) {
       quantity,
       data.slice_count
     );
-    const kiloConsumed = calculateKiloConsumed(
-      data.weight_type,
-      quantity,
-      data.slice_count
-    );
+    const kiloConsumed =
+      data.kilo_consumed != null && parseFloat(data.kilo_consumed) > 0
+        ? parseFloat(data.kilo_consumed)
+        : calculateKiloConsumed(data.weight_type, quantity, data.slice_count);
 
     const availability = await stockService.getTodayPlateAvailability(data.dish_id, {
       transaction,

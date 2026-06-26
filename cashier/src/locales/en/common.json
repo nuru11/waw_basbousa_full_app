@@ -210,6 +210,7 @@
     "noProductionOrSales": "No production or sales for this day",
     "noSalesRecorded": "No sales recorded for this day",
     "notEnoughStock": "Not enough stock today ({{amount}} kg available)",
+    "manualKgHint": "For stock only; price is based on portion above.",
     "totalSold": "Total sold: ETB {{amount}}",
     "byDish": "By Dish",
     "bySeller": "By Seller",

@@ -19,7 +19,8 @@
     "plateWeightHint": "وزن طبق واحد مطبوخ بالكيلوغرام (مثلاً 1، 5، 28)",
     "noRecipesHint": "لا أطباق لها وصفات محددة. اطلب من المشرف العام إعداد الوصفات.",
     "logProductionBtn": "تسجيل الإنتاج (يخصم من المخزون)",
-    "recentProduction": "الإنتاج الأخير"
+    "recentProduction": "الإنتاج الأخير",
+    "maxPlatesFromStock": "يمكن طبخ حتى {{count}} طبق بالمخزون الحالي"
   },
   "todaysPlates": {
     "metaTitle": "أطباق اليوم | المطعم",

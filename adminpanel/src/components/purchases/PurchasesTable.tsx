@@ -11,7 +11,7 @@ import type { Purchase } from "../../services/api";
 import { formatShortDate } from "../../utils/formatDate";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
-import { purchaseStatusLabel } from "../../utils/purchaseStatus";
+import { purchaseStatusLabel, purchaseSizeLabel } from "../../utils/purchaseStatus";
 
 function getPurchaseDate(p: Purchase) {
   return p.created_at ?? p.createdAt;
@@ -62,6 +62,12 @@ export default function PurchasesTable({
           key: "ingredient",
           header: tCommon("fields.ingredient"),
           render: (p) => p.ingredient?.name ?? tCommon("emDash"),
+        },
+        {
+          key: "size",
+          header: tCommon("fields.size"),
+          render: (p) =>
+            p.size ? purchaseSizeLabel(p.size) : tCommon("emDash"),
         },
         {
           key: "qty",

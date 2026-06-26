@@ -32,7 +32,10 @@
     "metaTitle": "المكونات | المطعم",
     "metaDescription": "إدارة المكونات",
     "addIngredient": "إضافة مكوّن",
-    "minStockAlert": "تنبيه الحد الأدنى للمخزون"
+    "minStockAlert": "تنبيه الحد الأدنى للمخزون",
+    "hasSize": "له أحجام (صغير / كبير)",
+    "hasSizeCol": "أحجام",
+    "hasSizeYes": "نعم"
   },
   "dishes": {
     "metaTitle": "الأطباق / القائمة | المطعم",

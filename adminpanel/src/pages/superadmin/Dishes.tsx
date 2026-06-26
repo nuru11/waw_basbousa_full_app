@@ -4,7 +4,9 @@ import type { TFunction } from "i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import RecipeEditor, {
+  emptyRecipeRow,
   parseRecipeRows,
+  RecipeParseError,
   recipeRowsFromDish,
   type RecipeRow,
 } from "../../components/dishes/RecipeEditor";
@@ -32,6 +34,16 @@ const emptyForm = {
   price_per_slice: "",
 };
 
+function dishToForm(dish: Dish) {
+  return {
+    name: dish.name,
+    price_quarter: dish.price_quarter != null ? String(dish.price_quarter) : "",
+    price_half: dish.price_half != null ? String(dish.price_half) : "",
+    price_kilo: dish.price_kilo != null ? String(dish.price_kilo) : "",
+    price_per_slice: dish.price_per_slice != null ? String(dish.price_per_slice) : "",
+  };
+}
+
 function recipeSummary(dish: Dish, tCommon: TFunction<"common">) {
   const count = dish.recipe?.length ?? 0;
   if (count === 0) return tCommon("noRecipe");
@@ -53,10 +65,9 @@ export default function DishesPage() {
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [form, setForm] = useState(emptyForm);
-  const [createRecipeRows, setCreateRecipeRows] = useState<RecipeRow[]>([
-    { ingredient_id: "", quantity_per_plate: "" },
-  ]);
+  const [createRecipeRows, setCreateRecipeRows] = useState<RecipeRow[]>([emptyRecipeRow()]);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
+  const [editForm, setEditForm] = useState(emptyForm);
   const [editRecipeRows, setEditRecipeRows] = useState<RecipeRow[]>([]);
   const [error, setError] = useState("");
   const { submitting, run } = useSubmitLock();
@@ -76,7 +87,7 @@ export default function DishesPage() {
     e.preventDefault();
     await run(async () => {
       try {
-        const recipe = parseRecipeRows(createRecipeRows);
+        const recipe = parseRecipeRows(createRecipeRows, ingredients);
         await api.post("/dishes", {
           name: form.name,
           price_quarter: form.price_quarter ? parseFloat(form.price_quarter) : null,
@@ -86,9 +97,13 @@ export default function DishesPage() {
           ...(recipe.length > 0 ? { recipe } : {}),
         });
         setForm(emptyForm);
-        setCreateRecipeRows([{ ingredient_id: "", quantity_per_plate: "" }]);
+        setCreateRecipeRows([emptyRecipeRow()]);
         load();
       } catch (err: unknown) {
+        if (err instanceof RecipeParseError && err.code === "RECIPE_SIZE_QTY_REQUIRED") {
+          setError(tCommon("recipe.sizeQtyRequired"));
+          return;
+        }
         setError(translateApiError(err, "common:failed"));
       }
     });
@@ -99,26 +114,36 @@ export default function DishesPage() {
     load();
   }
 
-  function openRecipeEditor(dish: Dish) {
+  function openEditModal(dish: Dish) {
     setEditingDish(dish);
+    setEditForm(dishToForm(dish));
     setEditRecipeRows(recipeRowsFromDish(dish.recipe));
   }
 
-  function closeRecipeEditor() {
+  function closeEditModal() {
     setEditingDish(null);
   }
 
-  async function handleSaveRecipe(e: FormEvent) {
+  async function handleSaveEdit(e: FormEvent) {
     e.preventDefault();
     if (!editingDish) return;
     await run(async () => {
       try {
-        await api.put(`/dishes/${editingDish.id}/recipe`, {
-          recipe: parseRecipeRows(editRecipeRows),
+        await api.put(`/dishes/${editingDish.id}`, {
+          name: editForm.name,
+          price_quarter: editForm.price_quarter ? parseFloat(editForm.price_quarter) : null,
+          price_half: editForm.price_half ? parseFloat(editForm.price_half) : null,
+          price_kilo: editForm.price_kilo ? parseFloat(editForm.price_kilo) : null,
+          price_per_slice: editForm.price_per_slice ? parseFloat(editForm.price_per_slice) : null,
+          recipe: parseRecipeRows(editRecipeRows, ingredients),
         });
-        closeRecipeEditor();
+        closeEditModal();
         load();
       } catch (err: unknown) {
+        if (err instanceof RecipeParseError && err.code === "RECIPE_SIZE_QTY_REQUIRED") {
+          setError(tCommon("recipe.sizeQtyRequired"));
+          return;
+        }
         setError(translateApiError(err, "common:recipe.failedToSave"));
       }
     });
@@ -181,7 +206,7 @@ export default function DishesPage() {
         header: t("dishes.recipeCol"),
         render: (d) => (
           <button
-            onClick={() => openRecipeEditor(d)}
+            onClick={() => openEditModal(d)}
             className="text-brand-500 hover:underline"
           >
             {tCommon("actions.edit")}
@@ -256,11 +281,50 @@ export default function DishesPage() {
         </SectionCard>
       </div>
 
-      <Modal isOpen={!!editingDish} onClose={closeRecipeEditor} className="max-w-lg p-6 m-4">
-        <form onSubmit={handleSaveRecipe} className="space-y-4">
+      <Modal isOpen={!!editingDish} onClose={closeEditModal} className="max-w-lg p-6 m-4">
+        <form onSubmit={handleSaveEdit} className="space-y-4">
           <h3 className="text-lg font-semibold">
             {tCommon("recipe.editTitle", { name: editingDish?.name })}
           </h3>
+          <div>
+            <Label>{tCommon("fields.name")}</Label>
+            <Input
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{t("dishes.priceQuarter")}</Label>
+            <Input
+              type="number"
+              value={editForm.price_quarter}
+              onChange={(e) => setEditForm({ ...editForm, price_quarter: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{t("dishes.priceHalf")}</Label>
+            <Input
+              type="number"
+              value={editForm.price_half}
+              onChange={(e) => setEditForm({ ...editForm, price_half: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{t("dishes.priceKilo")}</Label>
+            <Input
+              type="number"
+              value={editForm.price_kilo}
+              onChange={(e) => setEditForm({ ...editForm, price_kilo: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{t("dishes.pricePerSlice")}</Label>
+            <Input
+              type="number"
+              value={editForm.price_per_slice}
+              onChange={(e) => setEditForm({ ...editForm, price_per_slice: e.target.value })}
+            />
+          </div>
           <RecipeEditor
             ingredients={ingredients}
             rows={editRecipeRows}
@@ -270,7 +334,7 @@ export default function DishesPage() {
             <Button type="submit" size="sm" disabled={submitting}>
               {submitting ? tCommon("actions.saving") : tCommon("actions.save")}
             </Button>
-            <Button type="button" size="sm" variant="outline" onClick={closeRecipeEditor}>
+            <Button type="button" size="sm" variant="outline" onClick={closeEditModal}>
               {tCommon("actions.cancel")}
             </Button>
           </div>

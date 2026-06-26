@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -21,6 +21,7 @@ export default function PurchasesPage() {
     ingredient_id: "",
     quantity: "",
     unit_price: "",
+    size: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -53,6 +54,17 @@ export default function PurchasesPage() {
       ? parseFloat(form.quantity) * parseFloat(form.unit_price)
       : 0;
 
+  const selectedIngredient = useMemo(
+    () => ingredients.find((i) => String(i.id) === form.ingredient_id),
+    [ingredients, form.ingredient_id]
+  );
+
+  const requiresSize = selectedIngredient?.has_size ?? false;
+
+  function handleIngredientChange(ingredient_id: string) {
+    setForm({ ...form, ingredient_id, size: "" });
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     await run(async () => {
@@ -73,16 +85,24 @@ export default function PurchasesPage() {
         return;
       }
 
+      if (requiresSize && !form.size) {
+        setError(t("purchases.sizeRequired"));
+        return;
+      }
+
       try {
         const formData = new FormData();
         formData.append("ingredient_id", form.ingredient_id);
         formData.append("quantity", form.quantity);
         formData.append("unit_price", form.unit_price);
+        if (requiresSize) {
+          formData.append("size", form.size);
+        }
         formData.append("screenshot", screenshot);
 
         await api.postForm("/purchases", formData);
         setSuccess(t("purchases.submittedSuccess"));
-        setForm({ ingredient_id: "", quantity: "", unit_price: "" });
+        setForm({ ingredient_id: "", quantity: "", unit_price: "", size: "" });
         setScreenshot(null);
         load();
       } catch (err: unknown) {
@@ -130,7 +150,7 @@ export default function PurchasesPage() {
           <Label>{t("common:fields.ingredient")}</Label>
           <Select
             value={form.ingredient_id}
-            onChange={(ingredient_id) => setForm({ ...form, ingredient_id })}
+            onChange={handleIngredientChange}
             placeholder={t("common:fields.selectIngredient")}
             options={ingredients.map((i) => ({
               value: String(i.id),
@@ -138,6 +158,20 @@ export default function PurchasesPage() {
             }))}
           />
         </div>
+        {requiresSize && (
+          <div>
+            <Label>{t("purchases.sizeLabel")}</Label>
+            <Select
+              value={form.size}
+              onChange={(size) => setForm({ ...form, size })}
+              placeholder={t("purchases.sizeLabel")}
+              options={[
+                { value: "small", label: t("purchases.sizeSmall") },
+                { value: "large", label: t("purchases.sizeLarge") },
+              ]}
+            />
+          </div>
+        )}
         <div>
           <Label>{t("common:fields.quantity")}</Label>
           <Input

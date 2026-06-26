@@ -115,12 +115,14 @@ export interface Ingredient {
   unit: string;
   current_stock: string | number;
   min_stock: string | number;
+  has_size: boolean;
 }
 
 export interface DishIngredient {
   id: number;
   ingredient_id: number;
   quantity_per_plate: string | number;
+  size: 'small' | 'large' | null;
   ingredient?: Ingredient;
 }
 
@@ -139,6 +141,7 @@ export interface Dish {
 export interface Purchase {
   id: number;
   ingredient_id: number;
+  size: 'small' | 'large' | null;
   quantity: string | number;
   unit_price: string | number;
   total_price: string | number;
@@ -157,6 +160,7 @@ export interface Purchase {
 
 export interface PurchaserInventorySummary {
   ingredient_id: number;
+  size: 'small' | 'large' | null;
   ingredient?: Ingredient;
   total_quantity: number;
 }

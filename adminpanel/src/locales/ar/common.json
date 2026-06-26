@@ -130,6 +130,7 @@
     "seller": "البائع",
     "plate": "الطبق",
     "ingredient": "المكوّن",
+    "size": "الحجم",
     "from": "من",
     "when": "متى",
     "spent": "المُنفَق",
@@ -153,8 +154,12 @@
     "description": "الوصف",
     "recordedBy": "سجّله"
   },
+  "purchaseSizes": {
+    "small": "صغير",
+    "large": "كبير"
+  },
   "units": {
-    "bottle": "زجاجة",
+    "bottle": "علبة",
     "kg": "كيلوغرام",
     "piece": "قطعة",
     "liter": "لتر",
@@ -240,8 +245,15 @@
     "qtyPerPlate": "الكمية/طبق",
     "qtyWithUnit": "الكمية ({{unit}})",
     "addIngredient": "+ إضافة مكوّن",
-    "editTitle": "تعديل الوصفة — {{name}}",
-    "failedToSave": "فشل حفظ الوصفة"
+    "editTitle": "تعديل الطبق — {{name}}",
+    "failedToSave": "فشل حفظ الوصفة",
+    "qtySmallPerPlate": "صغير ({{unit}})/طبق",
+    "qtyLargePerPlate": "كبير ({{unit}})/طبق",
+    "qtySmallPerPlateShort": "كمية صغير/طبق",
+    "qtyLargePerPlateShort": "كمية كبير/طبق",
+    "sizeQtyRequired": "أدخل كمية صغير أو كبير واحدة على الأقل للمكوّنات ذات الحجم",
+    "qtyWithUnitExample": "مثال: {{example}} {{unit}}/طبق",
+    "fractionalQtyHint": "الكميات الكسرية مدعومة (مثلاً 0.5 لنصف علبة لكل طبق)."
   },
   "datePicker": {
     "label": "التاريخ",

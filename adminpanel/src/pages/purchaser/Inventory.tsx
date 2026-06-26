@@ -13,6 +13,7 @@ import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import { api, type Purchase, type PurchaserInventory } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
+import { purchaseSizeLabel } from "../../utils/purchaseStatus";
 import { translateApiError } from "../../utils/translateApiError";
 
 export default function PurchaserInventoryPage() {
@@ -62,6 +63,12 @@ export default function PurchaserInventoryPage() {
         key: "ingredient",
         header: t("common:fields.ingredient"),
         render: (p) => p.ingredient?.name ?? t("common:emDash"),
+      },
+      {
+        key: "size",
+        header: t("common:fields.size"),
+        render: (p) =>
+          p.size ? purchaseSizeLabel(p.size) : t("common:emDash"),
       },
       {
         key: "qty",
@@ -119,8 +126,12 @@ export default function PurchaserInventoryPage() {
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {summary.map((item) => (
             <StatCard
-              key={item.ingredient_id}
-              title={item.ingredient?.name ?? ""}
+              key={`${item.ingredient_id}-${item.size ?? "none"}`}
+              title={
+                item.size
+                  ? `${item.ingredient?.name ?? ""} (${purchaseSizeLabel(item.size)})`
+                  : (item.ingredient?.name ?? "")
+              }
               value={`${formatNumber(item.total_quantity)} ${item.ingredient?.unit ?? ""}`}
               accent="brand"
             />

@@ -70,6 +70,11 @@
   "SALARY_ALREADY_PAID": "تم دفع الراتب لهذه الفترة مسبقاً",
   "NOT_AN_EMPLOYEE": "المستخدم المستهدف ليس موظفاً",
   "INVALID_PAY_PERIOD": "فترة دفع غير صالحة. استخدم YYYY-MM",
+  "PURCHASE_SIZE_REQUIRED": "الحجم مطلوب لهذا المكوّن (صغير أو كبير)",
+  "PURCHASE_SIZE_NOT_ALLOWED": "الحجم غير مطبق على هذا المكوّن",
+  "VALIDATION_INVALID_SIZE": "حجم غير صالح. استخدم صغير أو كبير",
+  "RECIPE_SIZE_REQUIRED": "حجم الوصفة مطلوب لهذا المكوّن (صغير أو كبير)",
+  "RECIPE_SIZE_NOT_ALLOWED": "حجم الوصفة غير مطبق على هذا المكوّن",
   "notFound": {
     "title": "خطأ",
     "message": "لا يمكننا العثور على الصفحة التي تبحث عنها!",

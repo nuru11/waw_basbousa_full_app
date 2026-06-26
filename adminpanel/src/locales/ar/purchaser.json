@@ -20,7 +20,11 @@
     "screenshotLabel": "لقطة الشاشة (فاتورة/إيصال)",
     "balanceExceededWarning": "هذا الشراء يتجاوز رصيدك المتبقي ({{amount}} ب.إ). سيُسجَّل مع ذلك.",
     "submittedSuccess": "تم تسجيل الشراء — أُضيف إلى مخزونك",
-    "viewHistoryLink": "عرض سجل المشتريات ←"
+    "viewHistoryLink": "عرض سجل المشتريات ←",
+    "sizeLabel": "الحجم",
+    "sizeSmall": "صغير",
+    "sizeLarge": "كبير",
+    "sizeRequired": "يرجى اختيار الحجم لهذا المكوّن"
   },
   "purchaseHistory": {
     "metaTitle": "سجل المشتريات | المطعم",
