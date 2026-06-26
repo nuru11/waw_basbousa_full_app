@@ -6,6 +6,7 @@ import {
   UserCircleIcon,
   BoxCubeIcon,
   DollarLineIcon,
+  FileIcon,
 } from "../icons";
 import type { User } from "../services/api";
 
@@ -30,7 +31,7 @@ export function getNavForRole(role: User["role"]): NavItem[] {
           subItems: [
             { nameKey: "transfer", path: "/admin/transfers" },
             { nameKey: "transferHistory", path: "/admin/transfers/history" },
-            { nameKey: "pendingPurchases", path: "/admin/purchases" },
+            { nameKey: "inventoryLocations", path: "/admin/purchases" },
             { nameKey: "allPurchases", path: "/admin/purchases/history" },
             { nameKey: "purchaserTodayActivity", path: "/admin/purchaser/today" },
           ],
@@ -51,7 +52,23 @@ export function getNavForRole(role: User["role"]): NavItem[] {
             { nameKey: "salesHistory", path: "/admin/sales/history" },
           ],
         },
-        { icon: <PieChartIcon />, nameKey: "reports", path: "/admin/reports" },
+        {
+          icon: <FileIcon />,
+          nameKey: "operatingExpenses",
+          subItems: [
+            { nameKey: "salaries", path: "/admin/salaries" },
+            { nameKey: "recordExpense", path: "/admin/expenses" },
+            { nameKey: "expenseHistory", path: "/admin/expenses/history" },
+          ],
+        },
+        {
+          icon: <PieChartIcon />,
+          nameKey: "reports",
+          subItems: [
+            { nameKey: "reportsAllTime", path: "/admin/reports" },
+            { nameKey: "monthlyAnalysis", path: "/admin/reports/monthly" },
+          ],
+        },
       ];
     case "purchaser":
       return [

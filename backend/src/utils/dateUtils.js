@@ -1,3 +1,47 @@
+const AppError = require('./AppError');
+const ERROR_CODES = require('../constants/errorCodes');
+
+const PAY_PERIOD_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+function currentPayPeriod() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+function parsePayPeriod(period) {
+  const value = period || currentPayPeriod();
+  if (!PAY_PERIOD_RE.test(value)) {
+    throw new AppError('INVALID_PAY_PERIOD', ERROR_CODES.INVALID_PAY_PERIOD, 400);
+  }
+  return value;
+}
+
+function formatPayPeriodLabel(period) {
+  const [year, month] = period.split('-').map(Number);
+  return `${MONTH_NAMES[month - 1]} ${year}`;
+}
+
+function getMonthRange(periodInput) {
+  const period = parsePayPeriod(periodInput);
+  const [year, month] = period.split('-').map(Number);
+  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
+  const end = new Date(year, month, 0, 23, 59, 59, 999);
+  return {
+    period,
+    start,
+    end,
+    fromYmd: formatDateYmd(start),
+    toYmd: formatDateYmd(end),
+  };
+}
+
 function formatDateYmd(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -64,4 +108,8 @@ module.exports = {
   getStartOfWeek,
   getStartOfMonth,
   getStartOfQuarter,
+  currentPayPeriod,
+  parsePayPeriod,
+  formatPayPeriodLabel,
+  getMonthRange,
 };

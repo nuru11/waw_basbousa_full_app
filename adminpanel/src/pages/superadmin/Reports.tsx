@@ -2,14 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import ExpensesTable from "../../components/expenses/ExpensesTable";
 import {
   DataTable,
   purchaseStatusVariant,
   SectionCard,
+  StatCard,
   StatusBadge,
 } from "../../components/ui";
 import type { DataTableColumn } from "../../components/ui";
-import { api, type Purchase, type Sale } from "../../services/api";
+import { api, type Expense, type Purchase, type ReportSummary, type Sale } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
 import { purchaseStatusLabel, weightTypeLabel } from "../../utils/purchaseStatus";
@@ -18,11 +20,15 @@ export default function ReportsPage() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
   const { t: tNav } = useTranslation("nav");
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
 
   useEffect(() => {
+    api.get<ReportSummary>("/reports/summary").then(setSummary);
     api.get<Purchase[]>("/reports/purchases").then(setPurchases);
+    api.get<Expense[]>("/reports/expenses").then(setExpenses);
     api.get<Sale[]>("/reports/sales").then(setSales);
   }, []);
 
@@ -96,8 +102,42 @@ export default function ReportsPage() {
     <div>
       <PageMeta title={t("reports.metaTitle")} description={t("reports.metaDescription")} />
       <PageBreadcrumb pageTitle={tNav("reports")} />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SectionCard title={t("reports.purchasesExpenses")}>
+
+      {summary && (
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title={t("reports.totalIncome")}
+            value={formatCurrency(summary.income)}
+            accent="brand"
+          />
+          <StatCard
+            title={t("reports.ingredientExpense")}
+            value={formatCurrency(summary.ingredient_expense ?? summary.expense)}
+            accent="orange"
+          />
+          <StatCard
+            title={t("reports.operatingExpense")}
+            value={formatCurrency(summary.operating_expense ?? 0)}
+            accent="warning"
+          />
+          <StatCard
+            title={t("reports.netProfit")}
+            value={formatCurrency(summary.net_profit)}
+            accent={summary.net_profit >= 0 ? "success" : "error"}
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <SectionCard title={t("reports.salesIncome")}>
+          <DataTable
+            columns={salesColumns}
+            data={sales}
+            keyExtractor={(s) => s.id}
+            hoverRows
+          />
+        </SectionCard>
+        <SectionCard title={t("reports.ingredientPurchases")}>
           <DataTable
             columns={purchaseColumns}
             data={purchases}
@@ -105,12 +145,10 @@ export default function ReportsPage() {
             hoverRows
           />
         </SectionCard>
-        <SectionCard title={t("reports.salesIncome")}>
-          <DataTable
-            columns={salesColumns}
-            data={sales}
-            keyExtractor={(s) => s.id}
-            hoverRows
+        <SectionCard title={t("reports.operatingExpenses")}>
+          <ExpensesTable
+            expenses={expenses}
+            emptyMessage={t("reports.noOperatingExpenses")}
           />
         </SectionCard>
       </div>

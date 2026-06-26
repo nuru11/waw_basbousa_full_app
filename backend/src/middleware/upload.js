@@ -5,7 +5,9 @@ const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads/purchases');
+const EXPENSE_RECEIPT_DIR = path.join(__dirname, '../../uploads/expenses');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+fs.mkdirSync(EXPENSE_RECEIPT_DIR, { recursive: true });
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
@@ -49,4 +51,38 @@ function handleUpload(req, res, next) {
   });
 }
 
-module.exports = { handleUpload, UPLOAD_DIR };
+const expenseReceiptStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, EXPENSE_RECEIPT_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeExt = ALLOWED_EXT.has(ext) ? ext : '.jpg';
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${safeExt}`);
+  },
+});
+
+const expenseReceiptUpload = multer({
+  storage: expenseReceiptStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_TYPES.has(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new AppError('SCREENSHOT_INVALID_TYPE', ERROR_CODES.SCREENSHOT_INVALID_TYPE, 400));
+    }
+  },
+}).single('receipt');
+
+function handleOptionalReceiptUpload(req, res, next) {
+  expenseReceiptUpload(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return next(new AppError('SCREENSHOT_TOO_LARGE', ERROR_CODES.SCREENSHOT_TOO_LARGE, 400));
+      }
+      return next(new AppError('VALIDATION_FAILED', err.message, 400));
+    }
+    if (err) return next(err);
+    next();
+  });
+}
+
+module.exports = { handleUpload, handleOptionalReceiptUpload, UPLOAD_DIR, EXPENSE_RECEIPT_DIR };

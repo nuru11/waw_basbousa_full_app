@@ -19,7 +19,6 @@
   "DISH_NOT_FOUND_OR_INACTIVE": "الطبق غير موجود أو غير نشط",
   "DISH_NO_RECIPE": "الطبق ليس له وصفة محددة",
   "PURCHASE_NOT_FOUND": "عملية الشراء غير موجودة",
-  "PURCHASE_PENDING_ONLY": "يمكن الموافقة على المشتريات المعلقة فقط",
   "PURCHASE_IN_INVENTORY_ONLY": "يمكن تسليم مشتريات المخزون فقط للطباخ",
   "PURCHASE_ALREADY_RECEIVED": "تم استلام عملية الشراء مسبقاً",
   "PURCHASE_MUST_BE_HANDED": "يجب أن يسلم المشتري عملية الشراء قبل الاستلام",

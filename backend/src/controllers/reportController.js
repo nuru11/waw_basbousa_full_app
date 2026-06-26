@@ -36,6 +36,15 @@ async function stockMovements(req, res, next) {
   }
 }
 
+async function expenses(req, res, next) {
+  try {
+    const data = await reportService.getExpensesReport(req.query);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function dailySales(req, res, next) {
   try {
     const data = await reportService.getDailySalesOverview(req.query.date);
@@ -45,4 +54,13 @@ async function dailySales(req, res, next) {
   }
 }
 
-module.exports = { summary, purchases, sales, stockMovements, dailySales };
+async function monthly(req, res, next) {
+  try {
+    const data = await reportService.getMonthlyAnalysis(req.query.period);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { summary, purchases, expenses, sales, stockMovements, dailySales, monthly };

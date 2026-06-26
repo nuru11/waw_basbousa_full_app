@@ -19,6 +19,7 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 'active',
       },
+      monthly_salary: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
     },
     { tableName: 'admins', underscored: true }
   );

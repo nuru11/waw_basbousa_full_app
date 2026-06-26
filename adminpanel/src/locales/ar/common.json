@@ -48,6 +48,7 @@
   "logout": "خروج",
   "breadcrumbHome": "الرئيسية",
   "required": "*",
+  "optional": "اختياري",
   "roles": {
     "superAdmin": "المشرف العام",
     "purchaser": "المشتري",
@@ -84,7 +85,7 @@
     "accepting": "جارٍ القبول...",
     "transfer": "تحويل",
     "transferring": "جارٍ التحويل...",
-    "submit": "إرسال للموافقة",
+    "submit": "إرسال الشراء",
     "submitting": "جارٍ الإرسال...",
     "loadReport": "تحميل التقرير",
     "recordSale": "تسجيل بيع",
@@ -97,7 +98,8 @@
     "receiving": "جارٍ الاستلام...",
     "logging": "جارٍ التسجيل...",
     "approve": "موافقة",
-    "approving": "جارٍ الموافقة..."
+    "approving": "جارٍ الموافقة...",
+    "deleting": "جارٍ الحذف..."
   },
   "fields": {
     "name": "الاسم",
@@ -106,6 +108,7 @@
     "phone": "الهاتف",
     "role": "الدور",
     "status": "الحالة",
+    "location": "الموقع",
     "shortId": "المعرف القصير",
     "quantity": "الكمية",
     "unit": "الوحدة",
@@ -145,7 +148,10 @@
     "selectPurchaser": "اختر المشتري",
     "createdAt": "تاريخ الإنشاء",
     "approvedAt": "تاريخ الموافقة",
-    "creator": "المنشئ"
+    "creator": "المنشئ",
+    "category": "الفئة",
+    "description": "الوصف",
+    "recordedBy": "سجّله"
   },
   "units": {
     "bottle": "زجاجة",

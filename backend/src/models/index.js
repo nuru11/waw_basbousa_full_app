@@ -22,6 +22,8 @@ const ProductionLog = require('./ProductionLog')(sequelize);
 const Sale = require('./Sale')(sequelize);
 const StockMovement = require('./StockMovement')(sequelize);
 const Transfer = require('./Transfer')(sequelize);
+const Expense = require('./Expense')(sequelize);
+const SalaryPayment = require('./SalaryPayment')(sequelize);
 
 Admin.hasMany(Purchase, { foreignKey: 'purchaser_id', as: 'purchasesMade' });
 Purchase.belongsTo(Admin, { foreignKey: 'purchaser_id', as: 'purchaser' });
@@ -69,6 +71,16 @@ Transfer.belongsTo(Admin, { foreignKey: 'purchaser_id', as: 'purchaser' });
 Admin.hasMany(Transfer, { foreignKey: 'created_by', as: 'transfersCreated' });
 Transfer.belongsTo(Admin, { foreignKey: 'created_by', as: 'creator' });
 
+Admin.hasMany(Expense, { foreignKey: 'created_by', as: 'expensesCreated' });
+Expense.belongsTo(Admin, { foreignKey: 'created_by', as: 'creator' });
+
+Admin.hasMany(SalaryPayment, { foreignKey: 'employee_id', as: 'salaryPayments' });
+SalaryPayment.belongsTo(Admin, { foreignKey: 'employee_id', as: 'employee' });
+Admin.hasMany(SalaryPayment, { foreignKey: 'paid_by', as: 'salaryPaymentsMade' });
+SalaryPayment.belongsTo(Admin, { foreignKey: 'paid_by', as: 'payer' });
+Expense.hasOne(SalaryPayment, { foreignKey: 'expense_id', as: 'salaryPayment' });
+SalaryPayment.belongsTo(Expense, { foreignKey: 'expense_id', as: 'expense' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -81,4 +93,6 @@ module.exports = {
   Sale,
   StockMovement,
   Transfer,
+  Expense,
+  SalaryPayment,
 };

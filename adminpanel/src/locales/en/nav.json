@@ -7,7 +7,7 @@
   "purchaser": "Purchaser",
   "transfer": "Transfer",
   "transferHistory": "Transfer History",
-  "pendingPurchases": "Pending Purchases",
+  "inventoryLocations": "Inventory Locations",
   "allPurchases": "All Purchases",
   "purchaserTodayActivity": "Today's Activity",
   "purchaserTodayTitle": "Purchaser — Today's Activity",
@@ -21,6 +21,8 @@
   "salesTodayTitle": "Sales — Today",
   "salesHistory": "Sales History",
   "reports": "Reports",
+  "reportsAllTime": "All-time Reports",
+  "monthlyAnalysis": "Monthly Analysis",
   "transfers": "Transfers",
   "pendingTransfers": "Pending Transfers",
   "purchases": "Purchases",
@@ -34,5 +36,9 @@
   "cookPlates": "Cook Plates",
   "pos": "POS",
   "pointOfSale": "Point of Sale",
-  "mySales": "My Sales"
+  "mySales": "My Sales",
+  "operatingExpenses": "Operating Expenses",
+  "salaries": "Salaries",
+  "recordExpense": "Record Expense",
+  "expenseHistory": "Expense History"
 }

@@ -48,6 +48,7 @@
   "logout": "Logout",
   "breadcrumbHome": "Home",
   "required": "*",
+  "optional": "optional",
   "roles": {
     "superAdmin": "Super Admin",
     "purchaser": "Purchaser",
@@ -84,7 +85,7 @@
     "accepting": "Accepting...",
     "transfer": "Transfer",
     "transferring": "Transferring...",
-    "submit": "Submit for Approval",
+    "submit": "Submit Purchase",
     "submitting": "Submitting...",
     "loadReport": "Load report",
     "recordSale": "Record Sale",
@@ -97,7 +98,8 @@
     "receiving": "Receiving...",
     "logging": "Logging...",
     "approve": "Approve",
-    "approving": "Approving..."
+    "approving": "Approving...",
+    "deleting": "Deleting..."
   },
   "fields": {
     "name": "Name",
@@ -106,6 +108,7 @@
     "phone": "Phone",
     "role": "Role",
     "status": "Status",
+    "location": "Location",
     "shortId": "Short ID",
     "quantity": "Quantity",
     "unit": "Unit",
@@ -145,7 +148,10 @@
     "selectPurchaser": "Select purchaser",
     "createdAt": "Created",
     "approvedAt": "Approved",
-    "creator": "Creator"
+    "creator": "Creator",
+    "category": "Category",
+    "description": "Description",
+    "recordedBy": "Recorded By"
   },
   "units": {
     "bottle": "Bottle",

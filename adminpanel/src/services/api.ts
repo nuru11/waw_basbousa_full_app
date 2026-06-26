@@ -101,6 +101,7 @@ export interface User {
   role: 'superAdmin' | 'purchaser' | 'chief' | 'employee';
   short_id: string;
   status: 'active' | 'inactive';
+  monthly_salary?: number | null;
 }
 
 export interface LoginResponse {
@@ -254,11 +255,19 @@ export interface DailySalesOverview {
 
 export interface ReportSummary {
   expense: number;
+  ingredient_expense: number;
+  operating_expense: number;
+  expense_by_category: {
+    rental: number;
+    salaries: number;
+    electricity: number;
+    other: number;
+  };
   income: number;
   net_profit: number;
   purchase_count: number;
   sale_count: number;
-  pending_purchases: number;
+  active_inventory: number;
   low_stock: Ingredient[];
   top_dishes: Array<{
     dish_id: number;
@@ -266,6 +275,106 @@ export interface ReportSummary {
     sale_count: string;
     dish?: { name: string };
   }>;
+}
+
+export type ExpenseCategory = 'rental' | 'salaries' | 'electricity' | 'other';
+
+export interface Expense {
+  id: number;
+  category: ExpenseCategory;
+  amount: string | number;
+  description: string | null;
+  spent_at: string;
+  receipt_path: string | null;
+  created_by: number;
+  created_at?: string;
+  creator?: { id: number; name: string; short_id: string };
+}
+
+export interface ExpenseSummary {
+  total: number;
+  by_category: {
+    rental: number;
+    salaries: number;
+    electricity: number;
+    other: number;
+  };
+}
+
+export interface PayrollPayment {
+  paid_at: string;
+  amount: number;
+  expense_id: number;
+}
+
+export interface PayrollEmployee {
+  id: number;
+  name: string;
+  short_id: string;
+  status: 'active' | 'inactive';
+  monthly_salary: number | null;
+  payment: PayrollPayment | null;
+}
+
+export interface PayrollOverview {
+  period: string;
+  summary: {
+    total_payroll: number;
+    paid_count: number;
+    pending_count: number;
+    paid_amount: number;
+  };
+  employees: PayrollEmployee[];
+}
+
+export interface MonthlyAnalysisDishRow {
+  dish_id: number;
+  dish_name: string;
+  revenue: number;
+  sale_count: number;
+}
+
+export interface MonthlyAnalysisSellerRow {
+  seller_id: number;
+  seller_name: string;
+  revenue: number;
+  sale_count: number;
+}
+
+export interface MonthlyAnalysisDayRow {
+  date: string;
+  income: number;
+  operating_expense: number;
+  ingredient_expense: number;
+  net: number;
+}
+
+export interface MonthlyAnalysis {
+  period: string;
+  period_label: string;
+  income: number;
+  ingredient_expense: number;
+  operating_expense: number;
+  expense: number;
+  expense_by_category: {
+    rental: number;
+    salaries: number;
+    electricity: number;
+    other: number;
+  };
+  net_profit: number;
+  sale_count: number;
+  purchase_count: number;
+  payments: DailySalesPayments;
+  payroll: {
+    total_payroll: number;
+    paid_count: number;
+    pending_count: number;
+    paid_amount: number;
+  };
+  top_dishes: MonthlyAnalysisDishRow[];
+  by_seller: MonthlyAnalysisSellerRow[];
+  by_day: MonthlyAnalysisDayRow[];
 }
 
 export interface ProductionLog {

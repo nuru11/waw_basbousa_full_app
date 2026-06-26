@@ -28,14 +28,8 @@ router.post(
 
 router.get(
   '/:id/screenshot',
-  requireRole('superAdmin', 'purchaser', 'chief'),
+  requireRole('superAdmin', 'purchaser'),
   purchaseController.screenshot
-);
-
-router.post(
-  '/:id/approve',
-  requireRole('superAdmin'),
-  purchaseController.approve
 );
 
 router.post(

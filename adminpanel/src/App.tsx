@@ -20,6 +20,10 @@ import PurchaserTodayPage from "./pages/superadmin/PurchaserToday";
 import ChiefTodayPage from "./pages/superadmin/ChiefToday";
 import SalesTodayPage from "./pages/superadmin/SalesToday";
 import SalesHistoryPage from "./pages/superadmin/SalesHistory";
+import RecordExpensePage from "./pages/superadmin/RecordExpense";
+import ExpenseHistoryPage from "./pages/superadmin/ExpenseHistory";
+import SalariesPage from "./pages/superadmin/Salaries";
+import MonthlyAnalysisPage from "./pages/superadmin/MonthlyAnalysis";
 
 import PurchasesPage from "./pages/purchaser/Purchases";
 import PurchaseHistoryPage from "./pages/purchaser/PurchaseHistory";
@@ -51,6 +55,7 @@ export default function App() {
               <Route path="/admin/ingredients" element={<IngredientsPage />} />
               <Route path="/admin/dishes" element={<DishesPage />} />
               <Route path="/admin/reports" element={<ReportsPage />} />
+              <Route path="/admin/reports/monthly" element={<MonthlyAnalysisPage />} />
               <Route path="/admin/transfers" element={<TransfersPage />} />
               <Route path="/admin/transfers/history" element={<TransferHistoryPage />} />
               <Route path="/admin/purchases" element={<PendingPurchasesPage />} />
@@ -60,6 +65,9 @@ export default function App() {
               <Route path="/admin/chief/today" element={<ChiefTodayPage />} />
               <Route path="/admin/sales/today" element={<SalesTodayPage />} />
               <Route path="/admin/sales/history" element={<SalesHistoryPage />} />
+              <Route path="/admin/expenses" element={<RecordExpensePage />} />
+              <Route path="/admin/expenses/history" element={<ExpenseHistoryPage />} />
+              <Route path="/admin/salaries" element={<SalariesPage />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={["purchaser"]} />}>

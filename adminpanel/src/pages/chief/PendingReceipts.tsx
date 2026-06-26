@@ -2,13 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import Button from "../../components/ui/button/Button";
 import { DataTable, SectionCard } from "../../components/ui";
 import type { DataTableColumn } from "../../components/ui";
 import { api, type Purchase } from "../../services/api";
 import { formatRelativeDate, formatShortDate } from "../../utils/formatDate";
-import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
 import { translateApiError } from "../../utils/translateApiError";
 
@@ -77,24 +75,6 @@ export default function PendingReceiptsPage() {
         header: t("common:fields.qty"),
         cellClassName: "whitespace-nowrap",
         render: (p) => `${formatNumber(p.quantity)} ${p.ingredient?.unit ?? ""}`,
-      },
-      {
-        key: "total",
-        header: t("common:fields.total"),
-        cellClassName: "font-medium whitespace-nowrap",
-        render: (p) => formatCurrency(parseFloat(String(p.total_price))),
-      },
-      {
-        key: "receipt",
-        header: t("common:fields.receipt"),
-        render: (p) => (
-          <PurchaseScreenshot
-            purchaseId={p.id}
-            hasScreenshot={!!p.screenshot_path}
-            width={72}
-            height={72}
-          />
-        ),
       },
       {
         key: "action",

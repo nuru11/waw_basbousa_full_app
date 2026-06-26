@@ -29,7 +29,11 @@ const purchaseIncludes = [
 async function listPurchases({ purchaserId, status, period, dateField } = {}) {
   const where = {};
   if (purchaserId) where.purchaser_id = purchaserId;
-  if (status) where.status = status;
+  if (status) {
+    where.status = status.includes(',')
+      ? { [Op.in]: status.split(',') }
+      : status;
+  }
 
   if (period === 'today') {
     const field = PURCHASE_DATE_FIELDS.includes(dateField) ? dateField : 'created_at';
@@ -72,7 +76,7 @@ async function createPurchase(purchaserId, data) {
         total_price: totalPrice,
         purchaser_id: purchaserId,
         screenshot_path: data.screenshot_path,
-        status: 'pending',
+        status: 'in_inventory',
       },
       { transaction }
     );
@@ -85,22 +89,6 @@ async function createPurchase(purchaserId, data) {
     await transaction.rollback();
     throw err;
   }
-}
-
-async function approvePurchase(purchaseId, approverId) {
-  const purchase = await Purchase.findByPk(purchaseId);
-  if (!purchase) throw new AppError('PURCHASE_NOT_FOUND', ERROR_CODES.PURCHASE_NOT_FOUND, 404);
-  if (purchase.status !== 'pending') {
-    throw new AppError('PURCHASE_PENDING_ONLY', ERROR_CODES.PURCHASE_PENDING_ONLY, 400);
-  }
-
-  await purchase.update({
-    status: 'in_inventory',
-    approved_by: approverId,
-    approved_at: new Date(),
-  });
-
-  return Purchase.findByPk(purchaseId, { include: purchaseIncludes });
 }
 
 async function handPurchaseToChief(purchaseId, purchaserId) {
@@ -223,7 +211,7 @@ async function getPurchaseForScreenshot(purchaseId, user) {
     throw new AppError('SCREENSHOT_NOT_FOUND', ERROR_CODES.SCREENSHOT_NOT_FOUND, 404);
   }
 
-  const allowedRoles = ['superAdmin', 'chief'];
+  const allowedRoles = ['superAdmin'];
   if (user.role === 'purchaser' && purchase.purchaser_id !== user.id) {
     throw new AppError('FORBIDDEN', ERROR_CODES.FORBIDDEN, 403);
   }
@@ -237,7 +225,6 @@ async function getPurchaseForScreenshot(purchaseId, user) {
 module.exports = {
   listPurchases,
   createPurchase,
-  approvePurchase,
   handPurchaseToChief,
   receivePurchase,
   getPurchaserInventory,

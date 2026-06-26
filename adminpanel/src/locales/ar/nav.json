@@ -7,7 +7,7 @@
   "purchaser": "المشتري",
   "transfer": "تحويل",
   "transferHistory": "سجل التحويلات",
-  "pendingPurchases": "المشتريات المعلقة",
+  "inventoryLocations": "مواقع المخزون",
   "allPurchases": "جميع المشتريات",
   "purchaserTodayActivity": "نشاط اليوم",
   "purchaserTodayTitle": "المشتري — نشاط اليوم",
@@ -21,6 +21,8 @@
   "salesTodayTitle": "المبيعات — اليوم",
   "salesHistory": "سجل المبيعات",
   "reports": "التقارير",
+  "reportsAllTime": "تقارير شاملة",
+  "monthlyAnalysis": "التحليل الشهري",
   "transfers": "التحويلات",
   "pendingTransfers": "التحويلات المعلقة",
   "purchases": "المشتريات",
@@ -34,5 +36,9 @@
   "cookPlates": "طبخ الأطباق",
   "pos": "نقطة البيع",
   "pointOfSale": "نقطة البيع",
-  "mySales": "مبيعاتي"
+  "mySales": "مبيعاتي",
+  "operatingExpenses": "المصروفات التشغيلية",
+  "salaries": "الرواتب",
+  "recordExpense": "تسجيل مصروف",
+  "expenseHistory": "سجل المصروفات"
 }

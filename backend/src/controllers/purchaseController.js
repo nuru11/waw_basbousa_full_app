@@ -3,6 +3,7 @@ const purchaseService = require('../services/purchaseService');
 const { UPLOAD_DIR } = require('../middleware/upload');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
+const { redactPurchase, redactPurchases } = require('../utils/financialRedaction');
 
 async function list(req, res, next) {
   try {
@@ -16,7 +17,9 @@ async function list(req, res, next) {
       period: req.query.period || undefined,
       dateField: req.query.date_field || undefined,
     });
-    res.json({ success: true, data: purchases });
+    const data =
+      req.user.role === 'chief' ? redactPurchases(purchases) : purchases;
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
@@ -65,15 +68,6 @@ async function screenshot(req, res, next) {
   }
 }
 
-async function approve(req, res, next) {
-  try {
-    const purchase = await purchaseService.approvePurchase(req.params.id, req.user.id);
-    res.json({ success: true, data: purchase });
-  } catch (err) {
-    next(err);
-  }
-}
-
 async function handToChief(req, res, next) {
   try {
     const purchase = await purchaseService.handPurchaseToChief(
@@ -89,10 +83,10 @@ async function handToChief(req, res, next) {
 async function receive(req, res, next) {
   try {
     const purchase = await purchaseService.receivePurchase(req.params.id, req.user.id);
-    res.json({ success: true, data: purchase });
+    res.json({ success: true, data: redactPurchase(purchase) });
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { list, inventory, create, screenshot, approve, handToChief, receive };
+module.exports = { list, inventory, create, screenshot, handToChief, receive };

@@ -19,7 +19,7 @@
     "totalLabel": "Total: ETB {{amount}}",
     "screenshotLabel": "Screenshot (invoice/receipt)",
     "balanceExceededWarning": "This purchase exceeds your remaining balance (ETB {{amount}}). It will still be recorded.",
-    "submittedSuccess": "Purchase submitted — pending SuperAdmin approval",
+    "submittedSuccess": "Purchase recorded — added to your inventory",
     "viewHistoryLink": "View purchase history →"
   },
   "purchaseHistory": {

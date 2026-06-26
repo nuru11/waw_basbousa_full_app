@@ -2,16 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import Button from "../../components/ui/button/Button";
 import {
   DataTable,
+  purchaseStatusVariant,
   SectionCard,
+  StatusBadge,
 } from "../../components/ui";
 import type { DataTableColumn } from "../../components/ui";
 import { api, type Purchase } from "../../services/api";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
+import { purchaseStatusLabel } from "../../utils/purchaseStatus";
 import { translateApiError } from "../../utils/translateApiError";
 
 export default function PendingPurchasesPage() {
@@ -19,31 +21,17 @@ export default function PendingPurchasesPage() {
   const { t: tCommon } = useTranslation("common");
   const { t: tNav } = useTranslation("nav");
   const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const load = () =>
     api
-      .get<Purchase[]>("/purchases?status=pending")
+      .get<Purchase[]>("/purchases?status=in_inventory,handed")
       .then(setPurchases)
       .catch((e) => setError(translateApiError(e)));
 
   useEffect(() => {
     load();
   }, []);
-
-  async function handleApprove(id: number) {
-    setLoading(id);
-    setError("");
-    try {
-      await api.post(`/purchases/${id}/approve`, {});
-      load();
-    } catch (err: unknown) {
-      setError(translateApiError(err, "admin:pendingPurchases.failedToApprove"));
-    } finally {
-      setLoading(null);
-    }
-  }
 
   const columns: DataTableColumn<Purchase>[] = useMemo(
     () => [
@@ -85,6 +73,25 @@ export default function PendingPurchasesPage() {
         render: (p) => formatCurrency(parseFloat(String(p.total_price))),
       },
       {
+        key: "location",
+        header: tCommon("fields.location"),
+        render: (p) =>
+          p.status === "in_inventory"
+            ? t("inventoryLocations.withPurchaser", {
+                name: p.purchaser?.name ?? tCommon("emDash"),
+              })
+            : t("inventoryLocations.handedToChief"),
+      },
+      {
+        key: "status",
+        header: tCommon("fields.status"),
+        render: (p) => (
+          <StatusBadge variant={purchaseStatusVariant(p.status)}>
+            {purchaseStatusLabel(p.status)}
+          </StatusBadge>
+        ),
+      },
+      {
         key: "screenshot",
         header: tCommon("fields.screenshot"),
         render: (p) => (
@@ -96,39 +103,24 @@ export default function PendingPurchasesPage() {
           />
         ),
       },
-      {
-        key: "action",
-        header: tCommon("fields.action"),
-        render: (p) => (
-          <Button
-            size="sm"
-            onClick={() => handleApprove(p.id)}
-            disabled={loading === p.id}
-          >
-            {loading === p.id
-              ? tCommon("actions.approving")
-              : tCommon("actions.approve")}
-          </Button>
-        ),
-      },
     ],
-    [loading, tCommon]
+    [t, tCommon]
   );
 
   return (
     <div>
       <PageMeta
-        title={t("pendingPurchases.metaTitle")}
-        description={t("pendingPurchases.metaDescription")}
+        title={t("inventoryLocations.metaTitle")}
+        description={t("inventoryLocations.metaDescription")}
       />
-      <PageBreadcrumb pageTitle={tNav("pendingPurchases")} />
+      <PageBreadcrumb pageTitle={tNav("inventoryLocations")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
-      <SectionCard title={tNav("pendingPurchases")}>
+      <SectionCard title={tNav("inventoryLocations")}>
         <DataTable
           columns={columns}
           data={purchases}
           keyExtractor={(p) => p.id}
-          emptyMessage={t("pendingPurchases.empty")}
+          emptyMessage={t("inventoryLocations.empty")}
           hoverRows
         />
       </SectionCard>

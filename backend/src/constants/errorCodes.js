@@ -18,7 +18,6 @@ const ERROR_CODES = {
   DISH_NOT_FOUND_OR_INACTIVE: 'Dish not found or inactive',
   DISH_NO_RECIPE: 'Dish has no recipe defined',
   PURCHASE_NOT_FOUND: 'Purchase not found',
-  PURCHASE_PENDING_ONLY: 'Only pending purchases can be approved',
   PURCHASE_IN_INVENTORY_ONLY: 'Only in-inventory purchases can be handed to chief',
   PURCHASE_ALREADY_RECEIVED: 'Purchase already received',
   PURCHASE_MUST_BE_HANDED: 'Purchase must be handed by purchaser before receiving',
@@ -62,6 +61,15 @@ const ERROR_CODES = {
   VALIDATION_QUANTITY_DELTA_REQUIRED: 'Quantity delta is required',
   VALIDATION_ITEMS_REQUIRED: 'At least one item is required',
   VALIDATION_FAILED: 'Validation failed',
+  EXPENSE_NOT_FOUND: 'Expense not found',
+  RECEIPT_NOT_FOUND: 'Receipt not found',
+  VALIDATION_INVALID_EXPENSE_CATEGORY: 'Invalid expense category',
+  VALIDATION_DESCRIPTION_REQUIRED: 'Description is required for other expenses',
+  VALIDATION_SPENT_AT_REQUIRED: 'Spent date is required',
+  SALARY_NOT_SET: 'Monthly salary is not set for this employee',
+  SALARY_ALREADY_PAID: 'Salary already paid for this period',
+  NOT_AN_EMPLOYEE: 'Target user is not an employee',
+  INVALID_PAY_PERIOD: 'Invalid pay period. Use YYYY-MM',
 };
 
 module.exports = ERROR_CODES;
