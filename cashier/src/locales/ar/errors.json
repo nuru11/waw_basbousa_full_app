@@ -53,6 +53,7 @@
   "VALIDATION_QUANTITY_POSITIVE": "يجب أن تكون الكمية موجبة",
   "VALIDATION_UNIT_PRICE_POSITIVE": "يجب أن يكون سعر الوحدة موجباً",
   "VALIDATION_DISH_REQUIRED": "الطبق مطلوب",
+  "VALIDATION_DISH_INVALID": "معرف الطبق غير صالح",
   "VALIDATION_INVALID_WEIGHT_TYPE": "نوع وزن غير صالح",
   "VALIDATION_INVALID_PAYMENT": "طريقة دفع غير صالحة",
   "VALIDATION_SLICE_COUNT_REQUIRED": "عدد الشرائح مطلوب لمبيعات الشرائح",

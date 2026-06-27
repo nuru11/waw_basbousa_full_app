@@ -8,7 +8,7 @@
     "metaDescription": "نقطة بيع أمين الصندوق",
     "title": "أمين الصندوق",
     "subtitle": "تسجيل بيع",
-    "stepPickPlate": "١. اختر الطبق",
+    "stepPickPlate": "١. اختر الطبق (اختياري)",
     "stepAddItems": "٢. أضف العناصر",
     "stepPay": "٣. ادفع"
   }

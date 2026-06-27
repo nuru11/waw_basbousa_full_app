@@ -30,7 +30,7 @@ export default function TodaysPlatesPage() {
         header: t("common:fields.plate"),
         render: (row) => (
           <span className="font-medium text-gray-800 dark:text-white/90">
-            {row.dish_name}
+            {row.dish_name ?? t("common:plateFallback", { id: row.dish_id })}
           </span>
         ),
       },
@@ -49,20 +49,6 @@ export default function TodaysPlatesPage() {
         key: "platesCooked",
         header: t("common:sales.platesCooked"),
         render: (row) => row.produced_plates,
-      },
-      {
-        key: "soldKg",
-        header: t("common:sales.soldKgCol"),
-        render: (row) => formatNumber(row.sold_kg),
-      },
-      {
-        key: "remainingKg",
-        header: t("common:sales.remainingKg"),
-        render: (row) => (
-          <span className="font-medium text-brand-600 dark:text-brand-400">
-            {formatNumber(row.remaining_kg)}
-          </span>
-        ),
       },
     ],
     [t]
@@ -91,18 +77,50 @@ export default function TodaysPlatesPage() {
           {t("common:loadingTodayActivity")}
         </p>
       ) : (
-        <SectionCard
-          title={t("todaysPlates.title")}
-          count={t("common:todayCount", { count: data?.plates.length ?? 0 })}
-        >
-          <DataTable
-            columns={columns}
-            data={data?.plates ?? []}
-            keyExtractor={(row) => row.dish_id}
-            emptyMessage={t("common:sales.noProductionOrSales")}
-            hoverRows
-          />
-        </SectionCard>
+        <>
+          {data?.summary && (
+            <SectionCard title={t("todaysPlates.sharedPoolTitle")} className="mb-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {t("common:sales.producedKg")}
+                  </p>
+                  <p className="text-xl font-bold text-gray-800 dark:text-white/90">
+                    {formatNumber(data.summary.produced_kg)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {t("common:sales.soldKgCol")}
+                  </p>
+                  <p className="text-xl font-bold text-gray-800 dark:text-white/90">
+                    {formatNumber(data.summary.sold_kg)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {t("common:sales.remainingKg")}
+                  </p>
+                  <p className="text-xl font-bold text-brand-600 dark:text-brand-400">
+                    {formatNumber(data.summary.remaining_kg)}
+                  </p>
+                </div>
+              </div>
+            </SectionCard>
+          )}
+          <SectionCard
+            title={t("todaysPlates.title")}
+            count={t("common:todayCount", { count: data?.plates.length ?? 0 })}
+          >
+            <DataTable
+              columns={columns}
+              data={data?.plates ?? []}
+              keyExtractor={(row) => row.dish_id ?? row.dish_name ?? row.date}
+              emptyMessage={t("common:sales.noProductionOrSales")}
+              hoverRows
+            />
+          </SectionCard>
+        </>
       )}
     </div>
   );

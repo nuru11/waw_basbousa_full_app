@@ -12,6 +12,10 @@ import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { api, type Dish, type Ingredient, type ProductionLog } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 import { kgToStoredGrams, plateWeightToKg } from "../../utils/plateWeight";
+import {
+  buildAdjustmentNote,
+  ingredientDisplayName,
+} from "../../utils/productionAdjustmentNote";
 import { maxPlatesFromStock } from "../../utils/productionStock";
 import { translateApiError } from "../../utils/translateApiError";
 
@@ -20,8 +24,12 @@ const PLATES_COUNT = 1;
 const emptyForm = {
   dish_id: "",
   plate_weight_kg: "",
-  notes: "",
+  chiefNote: "",
 };
+
+function recipeUsageKey(ingredientId: number, size: string | null | undefined) {
+  return `${ingredientId}:${size ?? ""}`;
+}
 
 export default function ProductionPage() {
   const { t } = useTranslation(["chief", "common", "nav"]);
@@ -29,6 +37,7 @@ export default function ProductionPage() {
   const [stock, setStock] = useState<Ingredient[]>([]);
   const [logs, setLogs] = useState<ProductionLog[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [ingredientUsage, setIngredientUsage] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const { submitting, run } = useSubmitLock();
 
@@ -54,24 +63,58 @@ export default function ProductionPage() {
     }));
   }, [selectedDish?.id, selectedDish?.plate_weight_grams]);
 
+  useEffect(() => {
+    if (!selectedDish?.recipe) {
+      setIngredientUsage({});
+      return;
+    }
+    const defaults: Record<string, string> = {};
+    for (const item of selectedDish.recipe) {
+      const key = recipeUsageKey(item.ingredient_id, item.size);
+      const defaultQty = parseFloat(String(item.quantity_per_plate)) * PLATES_COUNT;
+      defaults[key] = String(defaultQty);
+    }
+    setIngredientUsage(defaults);
+  }, [selectedDish?.id]);
+
   const preview = useMemo(() => {
     if (!selectedDish?.recipe) return [];
     return selectedDish.recipe.map((item) => {
-      const needed = parseFloat(String(item.quantity_per_plate)) * PLATES_COUNT;
+      const key = recipeUsageKey(item.ingredient_id, item.size);
+      const recipeDefault = parseFloat(String(item.quantity_per_plate)) * PLATES_COUNT;
+      const used = parseFloat(ingredientUsage[key] ?? "");
       const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
       const available = ingredient ? parseFloat(String(ingredient.current_stock)) : 0;
+      const sizeLabel = item.size ? t(`common:fields.${item.size}`) : null;
+      const baseName =
+        ingredient?.name ??
+        t("common:ingredientFallback", { id: item.ingredient_id });
       return {
+        key,
         ingredientId: item.ingredient_id,
-        name:
-          ingredient?.name ??
-          t("common:ingredientFallback", { id: item.ingredient_id }),
+        size: item.size ?? null,
+        name: baseName,
+        displayName: ingredientDisplayName(baseName, item.size),
+        sizeLabel,
         unit: ingredient?.unit ?? "",
-        needed,
+        recipeDefault,
+        used,
         available,
-        sufficient: available >= needed,
+        sufficient: used > 0 && available >= used,
       };
     });
-  }, [selectedDish, stock, t]);
+  }, [selectedDish, stock, ingredientUsage, t]);
+
+  const adjustmentNote = useMemo(
+    () =>
+      buildAdjustmentNote(
+        preview.map((row) => ({
+          delta: row.used - row.recipeDefault,
+          name: row.displayName,
+        }))
+      ),
+    [preview]
+  );
 
   const maxPlates = useMemo(() => {
     if (!selectedDish?.recipe) return 0;
@@ -102,6 +145,8 @@ export default function ProductionPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const recipe = selectedDish?.recipe;
+    if (!recipe) return;
     await run(async () => {
       setError("");
       try {
@@ -109,9 +154,17 @@ export default function ProductionPage() {
           dish_id: parseInt(form.dish_id),
           plates_count: PLATES_COUNT,
           plate_weight_grams: kgToStoredGrams(plateWeightKg),
-          notes: form.notes || null,
+          notes: form.chiefNote.trim() || null,
+          ingredient_usage: recipe.map((item) => ({
+            ingredient_id: item.ingredient_id,
+            size: item.size ?? null,
+            quantity_used: parseFloat(
+              ingredientUsage[recipeUsageKey(item.ingredient_id, item.size)]
+            ),
+          })),
         });
         setForm(emptyForm);
+        setIngredientUsage({});
         load();
       } catch (err: unknown) {
         setError(translateApiError(err));
@@ -138,7 +191,6 @@ export default function ProductionPage() {
                 setForm({
                   ...emptyForm,
                   dish_id,
-                  notes: form.notes,
                 })
               }
               placeholder={t("common:fields.selectPlate")}
@@ -164,6 +216,9 @@ export default function ProductionPage() {
           </div>
           {preview.length > 0 && (
             <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t("production.ingredientsUsed")}
+              </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t("production.maxPlatesFromStock", { count: formatNumber(maxPlates) })}
               </p>
@@ -172,7 +227,7 @@ export default function ProductionPage() {
                 <thead>
                   <tr className="text-start text-gray-500 border-b dark:border-gray-700">
                     <th className="p-2">{t("common:fields.ingredient")}</th>
-                    <th className="p-2">{t("common:fields.needed")}</th>
+                    <th className="p-2">{t("production.quantityUsed")}</th>
                     <th className="p-2">{t("common:fields.inStock")}</th>
                     <th className="p-2">{t("common:fields.status")}</th>
                   </tr>
@@ -180,12 +235,35 @@ export default function ProductionPage() {
                 <tbody>
                   {preview.map((row) => (
                     <tr
-                      key={`${row.ingredientId}-${row.name}`}
+                      key={row.key}
                       className="border-b border-gray-100 dark:border-gray-800"
                     >
-                      <td className="p-2">{row.name}</td>
                       <td className="p-2">
-                        {formatNumber(row.needed)} {row.unit}
+                        {row.name}
+                        {row.sizeLabel && (
+                          <span className="ms-1 text-xs text-gray-500">({row.sizeLabel})</span>
+                        )}
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          type="number"
+                          min="0.001"
+                          step={0.001}
+                          value={ingredientUsage[row.key] ?? ""}
+                          onChange={(e) =>
+                            setIngredientUsage((prev) => ({
+                              ...prev,
+                              [row.key]: e.target.value,
+                            }))
+                          }
+                          className="max-w-28"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          {t("production.recipeDefault", {
+                            amount: formatNumber(row.recipeDefault),
+                            unit: row.unit,
+                          })}
+                        </p>
                       </td>
                       <td className="p-2">
                         {formatNumber(row.available)} {row.unit}
@@ -205,10 +283,19 @@ export default function ProductionPage() {
             </div>
           )}
           <div>
-            <Label>{t("common:fields.notes")}</Label>
+            <Label>{t("production.adjustmentNote")}</Label>
             <Input
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              value={adjustmentNote}
+              disabled
+              placeholder={t("production.noAdjustments")}
+            />
+            <p className="mt-1 text-xs text-gray-500">{t("production.adjustmentHint")}</p>
+          </div>
+          <div>
+            <Label>{t("production.optionalNote")}</Label>
+            <Input
+              value={form.chiefNote}
+              onChange={(e) => setForm({ ...form, chiefNote: e.target.value })}
             />
           </div>
           <Button type="submit" size="sm" disabled={submitting || !canSubmit}>
@@ -228,6 +315,11 @@ export default function ProductionPage() {
                 key: "date",
                 header: t("common:fields.date"),
                 render: (log) => new Date(log.logged_at).toLocaleString(),
+              },
+              {
+                key: "notes",
+                header: t("common:fields.notes"),
+                render: (log) => log.notes || t("common:emDash"),
               },
             ] satisfies DataTableColumn<ProductionLog>[]}
             data={logs}

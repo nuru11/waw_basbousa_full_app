@@ -30,6 +30,12 @@ router.get(
 );
 
 router.get(
+  '/plate-availability/today/total',
+  requireRole('employee', 'chief'),
+  stockController.plateAvailabilityTodayTotal
+);
+
+router.get(
   '/plate-availability/today',
   requireRole('employee', 'chief'),
   stockController.plateAvailabilityToday

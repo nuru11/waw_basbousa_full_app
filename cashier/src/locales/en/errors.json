@@ -53,6 +53,7 @@
   "VALIDATION_QUANTITY_POSITIVE": "Quantity must be positive",
   "VALIDATION_UNIT_PRICE_POSITIVE": "Unit price must be positive",
   "VALIDATION_DISH_REQUIRED": "Dish is required",
+  "VALIDATION_DISH_INVALID": "Invalid dish id",
   "VALIDATION_INVALID_WEIGHT_TYPE": "Invalid weight type",
   "VALIDATION_INVALID_PAYMENT": "Invalid payment method",
   "VALIDATION_SLICE_COUNT_REQUIRED": "Slice count is required for slice sales",

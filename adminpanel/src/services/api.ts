@@ -194,22 +194,38 @@ export interface PlateAvailability {
 }
 
 export interface TodayPlateRow {
-  dish_id: number;
-  dish_name: string;
+  dish_id: number | null;
+  dish_name: string | null;
   date: string;
   produced_kg: number;
   produced_plates: number;
   sold_kg: number;
+  remaining_kg: number | null;
+}
+
+export interface TotalPlatePool {
+  produced_kg: number;
+  sold_kg: number;
+  available_kg: number;
   remaining_kg: number;
 }
 
 export interface TodayPlatesOverview {
   date: string;
   plates: TodayPlateRow[];
+  summary?: TotalPlatePool;
+}
+
+export interface PosDefaultPrices {
+  price_quarter: string | number | null;
+  price_half: string | number | null;
+  price_kilo: string | number | null;
+  price_per_slice: string | number | null;
 }
 
 export interface PlatesHistoryOverview {
   plates: TodayPlateRow[];
+  summary?: TotalPlatePool;
 }
 
 export interface DailySalesPayments {
@@ -251,6 +267,8 @@ export interface DailySalesOverview {
     sale_count: number;
     kilo_sold: number;
     payments: DailySalesPayments;
+    plate_pool: TotalPlatePool;
+    expected_income_from_sold_kilo: number | null;
   };
   by_dish: DailySalesDishRow[];
   by_seller: DailySalesSellerRow[];
@@ -266,6 +284,7 @@ export interface ReportSummary {
     salaries: number;
     electricity: number;
     other: number;
+    chief_expenses: number;
   };
   income: number;
   net_profit: number;
@@ -301,6 +320,31 @@ export interface ExpenseSummary {
     rental: number;
     salaries: number;
     electricity: number;
+    other: number;
+  };
+}
+
+export type ChiefExpenseCategory = 'food' | 'hotel' | 'other';
+
+export interface ChiefExpense {
+  id: number;
+  chief_id: number;
+  category: ChiefExpenseCategory;
+  amount: string | number;
+  description: string | null;
+  spent_at: string;
+  created_by: number;
+  created_at?: string;
+  chief?: { id: number; name: string; short_id: string };
+  creator?: { id: number; name: string; short_id: string };
+}
+
+export interface ChiefExpenseSummary {
+  total: number;
+  count: number;
+  by_category: {
+    food: number;
+    hotel: number;
     other: number;
   };
 }
@@ -365,6 +409,7 @@ export interface MonthlyAnalysis {
     salaries: number;
     electricity: number;
     other: number;
+    chief_expenses: number;
   };
   net_profit: number;
   sale_count: number;

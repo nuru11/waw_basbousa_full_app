@@ -22,6 +22,15 @@ import {
 } from "../../utils/expenseCategory";
 import { translateApiError } from "../../utils/translateApiError";
 
+function getSalaryDraft(
+  emp: PayrollEmployee,
+  salaryDrafts: Record<number, string>
+) {
+  const saved = emp.monthly_salary != null ? String(emp.monthly_salary) : "";
+  const draft = salaryDrafts[emp.id] ?? saved;
+  return { saved, draft, dirty: draft !== saved };
+}
+
 export default function SalariesPage() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
@@ -108,6 +117,74 @@ export default function SalariesPage() {
     }
   }
 
+  function renderSalaryControls(
+    emp: PayrollEmployee,
+    layout: "table" | "mobile" = "table"
+  ) {
+    const { draft, dirty } = getSalaryDraft(emp, salaryDrafts);
+    const isSaving = savingId === emp.id;
+
+    return (
+      <div
+        className={
+          layout === "mobile"
+            ? "flex flex-col gap-2"
+            : "flex items-center gap-2"
+        }
+      >
+        <Input
+          type="number"
+          step={0.01}
+          inputMode="decimal"
+          value={draft}
+          disabled={isSaving}
+          onChange={(e) =>
+            setSalaryDrafts((prev) => ({
+              ...prev,
+              [emp.id]: e.target.value,
+            }))
+          }
+          className={layout === "mobile" ? "w-full min-w-0" : "w-28"}
+        />
+        <Button
+          type="button"
+          size="sm"
+          disabled={!dirty || isSaving}
+          onClick={() => handleSaveSalary(emp)}
+          className={layout === "mobile" ? "w-full" : undefined}
+        >
+          {isSaving ? tCommon("actions.saving") : t("salaries.saveSalary")}
+        </Button>
+        {emp.payment && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t("salaries.paidPeriodAmount", {
+              amount: formatCurrency(emp.payment.amount),
+            })}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  function renderMarkPaidButton(emp: PayrollEmployee, fullWidth = false) {
+    const canPay =
+      emp.monthly_salary != null &&
+      emp.monthly_salary > 0 &&
+      !emp.payment;
+
+    return (
+      <Button
+        type="button"
+        size="sm"
+        disabled={!canPay || payingId === emp.id}
+        onClick={() => handleMarkPaid(emp)}
+        className={fullWidth ? "w-full" : undefined}
+      >
+        {payingId === emp.id ? t("salaries.paying") : t("salaries.markPaid")}
+      </Button>
+    );
+  }
+
   const columns: DataTableColumn<PayrollEmployee>[] = useMemo(
     () => [
       {
@@ -125,41 +202,7 @@ export default function SalariesPage() {
       {
         key: "salary",
         header: t("salaries.monthlySalary"),
-        render: (emp) => {
-          const saved =
-            emp.monthly_salary != null ? String(emp.monthly_salary) : "";
-          const draft = salaryDrafts[emp.id] ?? saved;
-          const dirty = draft !== saved;
-          const isPaid = !!emp.payment;
-
-          return (
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                step={0.01}
-                value={draft}
-                disabled={isPaid || savingId === emp.id}
-                onChange={(e) =>
-                  setSalaryDrafts((prev) => ({
-                    ...prev,
-                    [emp.id]: e.target.value,
-                  }))
-                }
-                className="w-28"
-              />
-              <Button
-                type="button"
-                size="sm"
-                disabled={!dirty || isPaid || savingId === emp.id}
-                onClick={() => handleSaveSalary(emp)}
-              >
-                {savingId === emp.id
-                  ? tCommon("actions.saving")
-                  : t("salaries.saveSalary")}
-              </Button>
-            </div>
-          );
-        },
+        render: (emp) => renderSalaryControls(emp, "table"),
       },
       {
         key: "status",
@@ -179,25 +222,7 @@ export default function SalariesPage() {
       {
         key: "action",
         header: tCommon("fields.action"),
-        render: (emp) => {
-          const canPay =
-            emp.monthly_salary != null &&
-            emp.monthly_salary > 0 &&
-            !emp.payment;
-
-          return (
-            <Button
-              type="button"
-              size="sm"
-              disabled={!canPay || payingId === emp.id}
-              onClick={() => handleMarkPaid(emp)}
-            >
-              {payingId === emp.id
-                ? t("salaries.paying")
-                : t("salaries.markPaid")}
-            </Button>
-          );
-        },
+        render: (emp) => renderMarkPaidButton(emp),
       },
     ],
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -268,12 +293,55 @@ export default function SalariesPage() {
               count: payroll.employees.length,
             })}
           >
-            <DataTable
-              columns={columns}
-              data={payroll.employees}
-              keyExtractor={(emp) => emp.id}
-              hoverRows
-            />
+            <div className="md:hidden space-y-4">
+              {payroll.employees.map((emp) => (
+                <div
+                  key={emp.id}
+                  className="rounded-xl border border-gray-200 p-4 dark:border-white/[0.08]"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-gray-800 dark:text-white/90">
+                        {emp.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                        {emp.short_id}
+                      </p>
+                    </div>
+                    <StatusBadge variant={emp.payment ? "received" : "pending"}>
+                      {emp.payment ? t("salaries.paid") : t("salaries.pending")}
+                    </StatusBadge>
+                  </div>
+
+                  <div className="mb-3">
+                    <Label>{t("salaries.monthlySalary")}</Label>
+                    {renderSalaryControls(emp, "mobile")}
+                  </div>
+
+                  <div className="mb-3 flex items-center justify-between gap-2 text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {t("salaries.paidOn")}
+                    </span>
+                    <span className="text-gray-800 dark:text-white/90">
+                      {emp.payment
+                        ? formatPaidDate(emp.payment.paid_at)
+                        : tCommon("emDash")}
+                    </span>
+                  </div>
+
+                  {renderMarkPaidButton(emp, true)}
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block">
+              <DataTable
+                columns={columns}
+                data={payroll.employees}
+                keyExtractor={(emp) => emp.id}
+                hoverRows
+              />
+            </div>
           </SectionCard>
         )
       )}

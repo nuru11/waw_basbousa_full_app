@@ -44,60 +44,54 @@ export const portionColors: Record<WeightType, ChoiceColors> = {
   },
 };
 
+const paymentIdleClasses =
+  "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600";
+
 export const paymentColors: Record<PaymentMethod, Omit<ChoiceColors, "pill">> = {
   cash: {
     selected:
       "border-pay-cash-500 bg-pay-cash-500 text-white shadow-theme-sm dark:bg-pay-cash-600 dark:border-pay-cash-500",
-    idle:
-      "border-pay-cash-300 bg-pay-cash-50 text-pay-cash-700 hover:bg-pay-cash-100 dark:border-pay-cash-700 dark:bg-pay-cash-500/15 dark:text-pay-cash-300",
+    idle: paymentIdleClasses,
   },
   cbe: {
     selected:
       "border-pay-cbe-500 bg-pay-cbe-500 text-white shadow-theme-sm dark:bg-pay-cbe-600 dark:border-pay-cbe-500",
-    idle:
-      "border-pay-cbe-300 bg-pay-cbe-50 text-pay-cbe-700 hover:bg-pay-cbe-100 dark:border-pay-cbe-700 dark:bg-pay-cbe-500/15 dark:text-pay-cbe-300",
+    idle: paymentIdleClasses,
   },
   telebirr: {
     selected:
       "border-pay-telebirr-500 bg-pay-telebirr-500 text-white shadow-theme-sm dark:bg-pay-telebirr-600 dark:border-pay-telebirr-500",
-    idle:
-      "border-pay-telebirr-300 bg-pay-telebirr-50 text-pay-telebirr-700 hover:bg-pay-telebirr-100 dark:border-pay-telebirr-700 dark:bg-pay-telebirr-500/15 dark:text-pay-telebirr-300",
+    idle: paymentIdleClasses,
   },
   awash: {
     selected:
       "border-pay-awash-500 bg-pay-awash-500 text-white shadow-theme-sm dark:bg-pay-awash-600 dark:border-pay-awash-500",
-    idle:
-      "border-pay-awash-300 bg-pay-awash-50 text-pay-awash-700 hover:bg-pay-awash-100 dark:border-pay-awash-700 dark:bg-pay-awash-500/15 dark:text-pay-awash-300",
+    idle: paymentIdleClasses,
   },
   dashen: {
     selected:
       "border-pay-dashen-500 bg-pay-dashen-500 text-white shadow-theme-sm dark:bg-pay-dashen-600 dark:border-pay-dashen-500",
-    idle:
-      "border-pay-dashen-300 bg-pay-dashen-50 text-pay-dashen-700 hover:bg-pay-dashen-100 dark:border-pay-dashen-700 dark:bg-pay-dashen-500/15 dark:text-pay-dashen-300",
+    idle: paymentIdleClasses,
   },
   abyssinia: {
     selected:
       "border-pay-abyssinia-600 bg-pay-abyssinia-500 text-gray-900 shadow-theme-sm ring-2 ring-pay-abyssinia-600/30 dark:text-gray-900",
-    idle:
-      "border-pay-abyssinia-300 bg-pay-abyssinia-50 text-pay-abyssinia-700 hover:bg-pay-abyssinia-100 dark:border-pay-abyssinia-700 dark:bg-pay-abyssinia-500/15 dark:text-pay-abyssinia-300",
+    idle: paymentIdleClasses,
   },
   nib: {
     selected:
       "border-pay-nib-500 bg-pay-nib-500 text-white shadow-theme-sm dark:bg-pay-nib-600 dark:border-pay-nib-500",
-    idle:
-      "border-pay-nib-300 bg-pay-nib-50 text-pay-nib-700 hover:bg-pay-nib-100 dark:border-pay-nib-700 dark:bg-pay-nib-500/15 dark:text-pay-nib-300",
+    idle: paymentIdleClasses,
   },
   coop: {
     selected:
       "border-pay-coop-500 bg-pay-coop-500 text-white shadow-theme-sm dark:bg-pay-coop-600 dark:border-pay-coop-500",
-    idle:
-      "border-pay-coop-300 bg-pay-coop-50 text-pay-coop-700 hover:bg-pay-coop-100 dark:border-pay-coop-700 dark:bg-pay-coop-500/15 dark:text-pay-coop-300",
+    idle: paymentIdleClasses,
   },
   other: {
     selected:
       "border-pay-other-500 bg-pay-other-500 text-white shadow-theme-sm dark:bg-pay-other-600 dark:border-pay-other-500",
-    idle:
-      "border-pay-other-300 bg-pay-other-50 text-pay-other-700 hover:bg-pay-other-100 dark:border-pay-other-700 dark:bg-pay-other-500/15 dark:text-pay-other-300",
+    idle: paymentIdleClasses,
   },
 };
 

@@ -1,9 +1,24 @@
 const express = require('express');
 const dishController = require('../controllers/dishController');
 const { authMiddleware, requireRole } = require('../middleware/auth');
-const { createDishValidation } = require('../middleware/validators');
+const { createDishValidation, updatePosDefaultPricesValidation } = require('../middleware/validators');
 
 const router = express.Router();
+
+router.get(
+  '/pos-default-prices',
+  authMiddleware,
+  requireRole('superAdmin', 'chief', 'employee'),
+  dishController.getPosDefaultPrices
+);
+
+router.put(
+  '/pos-default-prices',
+  authMiddleware,
+  requireRole('superAdmin'),
+  updatePosDefaultPricesValidation,
+  dishController.updatePosDefaultPrices
+);
 
 router.get(
   '/',

@@ -15,9 +15,6 @@ export default function PosPage() {
         <p className="mt-1 text-sm text-gray-500 md:text-base">{t("pos.subtitle")}</p>
         <div className="flex flex-wrap gap-2 mt-4">
           <span className="px-3 py-1.5 text-xs font-bold rounded-full md:text-sm bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
-            {t("pos.stepPickPlate")}
-          </span>
-          <span className="px-3 py-1.5 text-xs font-bold rounded-full md:text-sm bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
             {t("pos.stepAddItems")}
           </span>
           <span className="px-3 py-1.5 text-xs font-bold rounded-full md:text-sm bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">

@@ -12,6 +12,7 @@ const saleRoutes = require('./routes/saleRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const transferRoutes = require('./routes/transferRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const chiefExpenseRoutes = require('./routes/chiefExpenseRoutes');
 const salaryRoutes = require('./routes/salaryRoutes');
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/sales', saleRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/transfers', transferRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/chief-expenses', chiefExpenseRoutes);
 app.use('/api/salaries', salaryRoutes);
 
 app.use(errorHandler);

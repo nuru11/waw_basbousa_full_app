@@ -17,7 +17,8 @@ const AppSidebar: React.FC = () => {
   const { t: tc } = useTranslation("common");
   const { locale } = useLocale();
   const isRtl = locale === "ar";
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, closeMobileSidebar } =
+    useSidebar();
   const location = useLocation();
   const { user } = useAuth();
 
@@ -69,6 +70,11 @@ const AppSidebar: React.FC = () => {
       setOpenSubmenu(null);
     }
   }, [location, isActive, navItems]);
+
+  useEffect(() => {
+    closeMobileSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- close drawer only on route change
+  }, [location.pathname]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -206,7 +212,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 start-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-e border-gray-200 
+      className={`fixed top-16 bottom-0 flex flex-col lg:top-0 lg:bottom-auto lg:mt-0 lg:h-screen px-5 start-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 transition-all duration-300 ease-in-out z-50 border-e border-gray-200 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -244,7 +250,7 @@ const AppSidebar: React.FC = () => {
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex flex-col flex-1 min-h-0 overflow-y-auto overscroll-contain pb-6 duration-300 ease-linear lg:no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>

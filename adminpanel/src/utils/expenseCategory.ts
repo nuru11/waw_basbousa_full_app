@@ -28,9 +28,12 @@ export function expenseCategoryVariant(category: ExpenseCategory): StatusBadgeVa
 }
 
 export function expenseCategoryLabel(
-  category: ExpenseCategory,
+  category: ExpenseCategory | "chief_expenses",
   t: (key: string) => string
 ): string {
+  if (category === "chief_expenses") {
+    return t("chiefExpenses.breakdownLabel");
+  }
   return t(`expenses.categories.${category}`);
 }
 

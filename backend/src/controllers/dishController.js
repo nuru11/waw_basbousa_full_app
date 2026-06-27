@@ -1,4 +1,5 @@
 const dishService = require('../services/dishService');
+const posDefaultPriceService = require('../services/posDefaultPriceService');
 const { redactDish, redactDishes } = require('../utils/financialRedaction');
 
 async function list(req, res, next) {
@@ -58,4 +59,34 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { list, getOne, create, update, updateRecipe, remove };
+async function getPosDefaultPrices(req, res, next) {
+  try {
+    const data =
+      req.query.effective === 'true'
+        ? await posDefaultPriceService.getEffectivePricesForCashier()
+        : await posDefaultPriceService.getDefaultPrices();
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updatePosDefaultPrices(req, res, next) {
+  try {
+    const data = await posDefaultPriceService.updateDefaultPrices(req.body);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  list,
+  getOne,
+  create,
+  update,
+  updateRecipe,
+  remove,
+  getPosDefaultPrices,
+  updatePosDefaultPrices,
+};

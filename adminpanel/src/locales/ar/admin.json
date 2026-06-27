@@ -52,7 +52,11 @@
     "kiloCol": "كيلو",
     "sliceCol": "شريحة",
     "activeCol": "نشط",
-    "recipeCol": "الوصفة"
+    "recipeCol": "الوصفة",
+    "defaultCashierPrices": "أسعار أمين الصندوق الافتراضية",
+    "defaultCashierPricesHint": "تُستخدم عند البيع دون اختيار طبق.",
+    "saveDefaultPrices": "حفظ الأسعار الافتراضية",
+    "defaultPricesSaved": "تم حفظ أسعار أمين الصندوق الافتراضية"
   },
   "reports": {
     "metaTitle": "التقارير | المطعم",
@@ -112,6 +116,7 @@
     "metaDescription": "مخزون الطباخ وسجل إنتاج الأطباق",
     "chiefInventory": "مخزون الطباخ",
     "allPlatesMade": "جميع الأطباق المُعدّة",
+    "poolTotalsTitle": "ملخص إجمالي المبيعات",
     "plateRowCount": "{{count}} سجل",
     "noPlatesLogged": "لم يُسجَّل أطباق بعد"
   },
@@ -181,7 +186,8 @@
     "salaryRequired": "أدخل راتباً شهرياً صالحاً",
     "salarySaved": "تم حفظ راتب {{name}}",
     "payConfirm": "تسجيل دفع {{amount}} لـ {{name}} عن {{period}}؟",
-    "paidSuccess": "تم تسجيل دفع {{name}}"
+    "paidSuccess": "تم تسجيل دفع {{name}}",
+    "paidPeriodAmount": "تم دفع {{amount}} لهذه الفترة"
   },
   "monthlyAnalysis": {
     "metaTitle": "التحليل الشهري | المطعم",
@@ -204,5 +210,30 @@
     "noOperatingExpenses": "لا مصروفات تشغيلية هذا الشهر",
     "noSales": "لا مبيعات هذا الشهر",
     "noData": "لا بيانات لهذا الشهر"
+  },
+  "chiefExpenses": {
+    "metaTitle": "مصروفات الطباخ | المطعم",
+    "metaDescription": "تسجيل الأموال المُرسلة للطباخ",
+    "recordTitle": "تسجيل مصروف للطباخ",
+    "historyTitle": "سجل مصروفات الطباخ",
+    "historyEmpty": "لا مصروفات للطباخ في هذه الفترة",
+    "totalThisMonth": "إجمالي هذا الشهر",
+    "entryCount": "{{count}} سجل",
+    "spentDate": "تاريخ الصرف",
+    "toChief": "إلى (الطباخ)",
+    "recordedBy": "سجّله",
+    "descriptionPlaceholder": "سبب هذا المصروف",
+    "recordButton": "تسجيل المصروف",
+    "recordedSuccess": "تم تسجيل مصروف الطباخ بنجاح",
+    "amountRequired": "يجب أن يكون المبلغ أكبر من الصفر",
+    "chiefRequired": "يرجى اختيار طباخ",
+    "descriptionRequired": "الوصف مطلوب للمصروفات الأخرى",
+    "deleteConfirm": "حذف هذا المصروف؟ لا يمكن التراجع.",
+    "breakdownLabel": "مصروفات الطباخ",
+    "categories": {
+      "food": "طعام",
+      "hotel": "فندق",
+      "other": "أخرى"
+    }
   }
 }

@@ -8,10 +8,12 @@ const {
   Admin,
   ProductionLog,
   Expense,
+  ChiefExpense,
 } = require('../models');
 const { getDateRange, getMonthRange, formatPayPeriodLabel, formatDateYmd } = require('../utils/dateUtils');
 const stockService = require('./stockService');
 const salaryService = require('./salaryService');
+const posDefaultPriceService = require('./posDefaultPriceService');
 const { createEmptyPayments } = require('../constants/paymentMethods');
 
 function saleDateYmd(soldAt) {
@@ -45,6 +47,7 @@ async function getSummary() {
     saleCount,
     lowStock,
     operatingByCategoryRows,
+    chiefExpenseResult,
   ] = await Promise.all([
     Purchase.sum('total_price', { where: { status: 'received' } }),
     Expense.sum('amount'),
@@ -60,10 +63,12 @@ async function getSummary() {
       group: ['category'],
       raw: true,
     }),
+    ChiefExpense.sum('amount'),
   ]);
 
   const ingredient_expense = parseFloat(ingredientExpenseResult || 0);
-  const operating_expense = parseFloat(operatingExpenseResult || 0);
+  const chief_expenses_total = parseFloat(chiefExpenseResult || 0);
+  const operating_expense = parseFloat(operatingExpenseResult || 0) + chief_expenses_total;
   const expense = ingredient_expense + operating_expense;
   const income = parseFloat(incomeResult || 0);
 
@@ -72,6 +77,7 @@ async function getSummary() {
     salaries: 0,
     electricity: 0,
     other: 0,
+    chief_expenses: chief_expenses_total,
   };
   for (const row of operatingByCategoryRows) {
     expense_by_category[row.category] = parseFloat(row.total || 0);
@@ -211,7 +217,7 @@ async function getDailySalesOverview(dateInput) {
     if (!dishSalesMap.has(dishId)) {
       dishSalesMap.set(dishId, {
         dish_id: dishId,
-        dish_name: sale.dish?.name ?? `Plate #${dishId}`,
+        dish_name: sale.dish?.name ?? (dishId == null ? null : `Plate #${dishId}`),
         revenue: 0,
         sale_count: 0,
         sold_kg: 0,
@@ -253,8 +259,25 @@ async function getDailySalesOverview(dateInput) {
 
   const byDish = [];
   for (const dishId of dishIds) {
-    const stock = await stockService.getPlateAvailabilityForDate(dishId, date);
     const salesRow = dishSalesMap.get(dishId);
+
+    if (dishId == null) {
+      if (salesRow) {
+        byDish.push({
+          dish_id: null,
+          dish_name: salesRow.dish_name,
+          produced_kg: 0,
+          produced_plates: 0,
+          sold_kg: salesRow.sold_kg,
+          remaining_kg: null,
+          revenue: salesRow.revenue,
+          sale_count: salesRow.sale_count,
+        });
+      }
+      continue;
+    }
+
+    const stock = await stockService.getPlateAvailabilityForDate(dishId, date);
     const dish = await Dish.findByPk(dishId, { attributes: ['id', 'name'] });
 
     byDish.push({
@@ -269,11 +292,24 @@ async function getDailySalesOverview(dateInput) {
     });
   }
 
-  byDish.sort((a, b) => b.revenue - a.revenue || a.dish_name.localeCompare(b.dish_name));
+  byDish.sort(
+    (a, b) =>
+      b.revenue - a.revenue ||
+      (a.dish_name ?? '').localeCompare(b.dish_name ?? '')
+  );
 
   const bySeller = [...sellerMap.values()].sort(
     (a, b) => b.revenue - a.revenue || a.seller_name.localeCompare(b.seller_name)
   );
+
+  const platePool = await stockService.getTodayTotalPlatePool(date);
+  const prices = await posDefaultPriceService.getEffectivePricesForCashier();
+  const priceKilo =
+    prices.price_kilo != null && prices.price_kilo !== ''
+      ? parseFloat(prices.price_kilo)
+      : null;
+  const expectedIncomeFromSoldKilo =
+    priceKilo != null && priceKilo > 0 ? platePool.sold_kg * priceKilo : null;
 
   return {
     date,
@@ -282,6 +318,8 @@ async function getDailySalesOverview(dateInput) {
       sale_count: sales.length,
       kilo_sold: kiloSold,
       payments,
+      plate_pool: platePool,
+      expected_income_from_sold_kilo: expectedIncomeFromSoldKilo,
     },
     by_dish: byDish,
     by_seller: bySeller,
@@ -299,6 +337,9 @@ async function getMonthlyAnalysis(periodInput) {
   const expenseWhere = {
     spent_at: { [Op.between]: [fromYmd, toYmd] },
   };
+  const chiefExpenseWhere = {
+    spent_at: { [Op.between]: [fromYmd, toYmd] },
+  };
   const saleWhere = {
     sold_at: { [Op.between]: [start, end] },
   };
@@ -311,6 +352,7 @@ async function getMonthlyAnalysis(periodInput) {
     sales,
     purchases,
     expenses,
+    chiefExpenses,
     payrollData,
   ] = await Promise.all([
     Purchase.sum('total_price', { where: purchaseWhere }),
@@ -340,11 +382,20 @@ async function getMonthlyAnalysis(periodInput) {
       attributes: ['amount', 'spent_at'],
       raw: true,
     }),
+    ChiefExpense.findAll({
+      where: chiefExpenseWhere,
+      attributes: ['amount', 'spent_at'],
+      raw: true,
+    }),
     salaryService.listPayroll({ period }),
   ]);
 
   const ingredient_expense = parseFloat(ingredientExpenseResult || 0);
-  const operating_expense = parseFloat(operatingExpenseResult || 0);
+  const chief_expenses_total = chiefExpenses.reduce(
+    (sum, row) => sum + parseFloat(row.amount || 0),
+    0
+  );
+  const operating_expense = parseFloat(operatingExpenseResult || 0) + chief_expenses_total;
   const expense = ingredient_expense + operating_expense;
 
   const expense_by_category = {
@@ -352,6 +403,7 @@ async function getMonthlyAnalysis(periodInput) {
     salaries: 0,
     electricity: 0,
     other: 0,
+    chief_expenses: chief_expenses_total,
   };
   for (const row of operatingByCategoryRows) {
     expense_by_category[row.category] = parseFloat(row.total || 0);
@@ -377,7 +429,7 @@ async function getMonthlyAnalysis(periodInput) {
     if (!dishSalesMap.has(dishId)) {
       dishSalesMap.set(dishId, {
         dish_id: dishId,
-        dish_name: sale.dish?.name ?? `Plate #${dishId}`,
+        dish_name: sale.dish?.name ?? (dishId == null ? null : `Plate #${dishId}`),
         revenue: 0,
         sale_count: 0,
       });
@@ -420,13 +472,21 @@ async function getMonthlyAnalysis(periodInput) {
     byDayMap.get(date).operating_expense += parseFloat(exp.amount || 0);
   }
 
+  for (const exp of chiefExpenses) {
+    const date = typeof exp.spent_at === 'string' ? exp.spent_at.slice(0, 10) : saleDateYmd(exp.spent_at);
+    if (!date || !byDayMap.has(date)) continue;
+    byDayMap.get(date).operating_expense += parseFloat(exp.amount || 0);
+  }
+
   const by_day = [...byDayMap.values()].map((row) => ({
     ...row,
     net: row.income - row.operating_expense - row.ingredient_expense,
   }));
 
   const top_dishes = [...dishSalesMap.values()].sort(
-    (a, b) => b.revenue - a.revenue || a.dish_name.localeCompare(b.dish_name)
+    (a, b) =>
+      b.revenue - a.revenue ||
+      (a.dish_name ?? '').localeCompare(b.dish_name ?? '')
   );
 
   const by_seller = [...sellerMap.values()].sort(

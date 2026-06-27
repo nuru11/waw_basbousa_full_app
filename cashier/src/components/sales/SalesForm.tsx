@@ -6,9 +6,9 @@ import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { useAuth } from "../../context/AuthContext";
 import {
   api,
-  type Dish,
-  type PlateAvailability,
+  type PosDefaultPrices,
   type SaleBatchResponse,
+  type TotalPlatePool,
   type User,
 } from "../../services/api";
 import { paymentMethodLabel, weightTypeLabel } from "../../utils/labels";
@@ -16,7 +16,6 @@ import { formatNumber } from "../../utils/formatNumber";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { translateApiError } from "../../utils/translateApiError";
 import {
-  foodChoiceColors,
   paymentColors,
   portionColors,
   sectionAccentClasses,
@@ -27,11 +26,10 @@ import {
   type WeightType,
 } from "../../utils/posColors";
 import { PAYMENT_OPTIONS } from "../../utils/paymentMethods";
-import { DEFAULT_DISH_IMAGE, dishImageUrl } from "../../utils/dishImage";
 
 type CartLine = {
   id: string;
-  dish_id: number;
+  dish_id?: number;
   dish_name: string;
   weight_type: WeightType;
   quantity: number;
@@ -41,16 +39,75 @@ type CartLine = {
   kilo_consumed: number;
 };
 
+type PriceSource = PosDefaultPrices;
+
+const PRICE_FIELDS: Record<WeightType, keyof PriceSource> = {
+  quarter: "price_quarter",
+  half: "price_half",
+  kilo: "price_kilo",
+  slice: "price_per_slice",
+};
+
+function parsePositivePrice(value: string | number | null | undefined): number | null {
+  if (value == null || value === "") return null;
+  const n = parseFloat(String(value));
+  return n > 0 ? n : null;
+}
+
+function normalizePrices(data: unknown): PosDefaultPrices | null {
+  if (!data || typeof data !== "object") return null;
+  const row = data as Record<string, unknown>;
+  const prices: PosDefaultPrices = {
+    price_quarter: (row.price_quarter as PosDefaultPrices["price_quarter"]) ?? null,
+    price_half: (row.price_half as PosDefaultPrices["price_half"]) ?? null,
+    price_kilo: (row.price_kilo as PosDefaultPrices["price_kilo"]) ?? null,
+    price_per_slice: (row.price_per_slice as PosDefaultPrices["price_per_slice"]) ?? null,
+  };
+  const hasAny = Object.values(PRICE_FIELDS).some(
+    (field) => parsePositivePrice(prices[field]) != null
+  );
+  return hasAny ? prices : null;
+}
+
+async function loadCashierPrices(): Promise<PosDefaultPrices | null> {
+  try {
+    const defaults = await api.get<PosDefaultPrices>("/dishes/pos-default-prices");
+    const normalized = normalizePrices(defaults);
+    if (normalized) return normalized;
+  } catch {
+    // fall through to dish prices for employee
+  }
+
+  try {
+    const dishes = await api.get<
+      {
+        price_quarter: PosDefaultPrices["price_quarter"];
+        price_half: PosDefaultPrices["price_half"];
+        price_kilo: PosDefaultPrices["price_kilo"];
+        price_per_slice: PosDefaultPrices["price_per_slice"];
+      }[]
+    >("/dishes?active=true");
+    for (const dish of dishes) {
+      const normalized = normalizePrices(dish);
+      if (normalized) return normalized;
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
+}
+
 const WEIGHT_OPTIONS: WeightType[] = ["quarter", "half", "kilo", "slice"];
 
-function calcPrice(dish: Dish, weightType: WeightType, qty: number, slices: number) {
-  const map: Record<WeightType, number | null> = {
-    quarter: dish.price_quarter ? parseFloat(String(dish.price_quarter)) : null,
-    half: dish.price_half ? parseFloat(String(dish.price_half)) : null,
-    kilo: dish.price_kilo ? parseFloat(String(dish.price_kilo)) : null,
-    slice: dish.price_per_slice ? parseFloat(String(dish.price_per_slice)) : null,
-  };
-  const unit = map[weightType];
+function calcPrice(
+  source: PriceSource | null,
+  weightType: WeightType,
+  qty: number,
+  slices: number
+) {
+  if (!source) return 0;
+  const unit = parsePositivePrice(source[PRICE_FIELDS[weightType]]);
   if (unit === null) return 0;
   if (weightType === "slice") return unit * slices * qty;
   return unit * qty;
@@ -71,31 +128,17 @@ function calcKiloConsumed(weightType: WeightType, qty: number, slices: number) {
   }
 }
 
-function kiloInCart(cart: CartLine[], dishId: number) {
-  return cart
-    .filter((line) => line.dish_id === dishId)
-    .reduce((sum, line) => sum + line.kilo_consumed, 0);
+function totalKiloInCart(cart: CartLine[]) {
+  return cart.reduce((sum, line) => sum + line.kilo_consumed, 0);
 }
 
-function aggregateKiloByDish(cart: CartLine[]) {
-  const map = new Map<number, number>();
-  for (const line of cart) {
-    map.set(line.dish_id, (map.get(line.dish_id) || 0) + line.kilo_consumed);
-  }
-  return map;
+function cartExceedsPoolWarning(cart: CartLine[], pool: TotalPlatePool | undefined) {
+  if (!pool) return false;
+  return totalKiloInCart(cart) > pool.available_kg + 0.0001;
 }
 
-function cartHasStockIssues(
-  cart: CartLine[],
-  availabilityByDish: Record<number, PlateAvailability | undefined>
-) {
-  const kiloByDish = aggregateKiloByDish(cart);
-  for (const [dishId, kilo] of kiloByDish) {
-    const available = availabilityByDish[dishId]?.available_kg ?? 0;
-    if (kilo > available + 0.0001) return true;
-  }
-  return false;
-}
+const STOCK_WARNING_CLASSES =
+  "p-3 text-sm font-medium border-2 rounded-xl text-pos-amber-800 bg-pos-amber-50 border-pos-amber-200 dark:bg-pos-amber-500/15 dark:border-pos-amber-700 dark:text-pos-amber-300";
 
 function Section({
   title,
@@ -144,49 +187,6 @@ function ChoiceButton({
   );
 }
 
-function PlateChoiceButton({
-  dish,
-  selected,
-  onClick,
-}: {
-  dish: Dish;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  const [imgSrc, setImgSrc] = useState(() => dishImageUrl(dish.name));
-
-  useEffect(() => {
-    setImgSrc(dishImageUrl(dish.name));
-  }, [dish.name]);
-
-  function handleImageError() {
-    setImgSrc((current) => (current === DEFAULT_DISH_IMAGE ? current : DEFAULT_DISH_IMAGE));
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex h-full flex-col overflow-hidden rounded-xl border-2 text-left transition touch-manipulation ${
-        selected ? foodChoiceColors.selected : foodChoiceColors.idle
-      }`}
-    >
-      <div className="relative h-28 w-full shrink-0 overflow-hidden bg-white/60 dark:bg-gray-900/40 md:h-32">
-        <img
-          src={imgSrc}
-          alt={dish.name}
-          className="absolute inset-0 h-full w-full object-cover object-center"
-          onError={handleImageError}
-          loading="lazy"
-        />
-      </div>
-      <span className="flex min-h-[2.75rem] flex-1 items-center px-3 py-2.5 text-sm font-semibold leading-snug line-clamp-2 md:min-h-[3rem] md:py-3 md:text-base">
-        {dish.name}
-      </span>
-    </button>
-  );
-}
-
 function PortionPill({ weightType, label }: { weightType: WeightType; label: string }) {
   return (
     <span
@@ -199,15 +199,13 @@ function PortionPill({ weightType, label }: { weightType: WeightType; label: str
 
 export default function SalesForm() {
   const { t } = useTranslation("common");
-  const { user } = useAuth();
-  const [dishes, setDishes] = useState<Dish[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const [defaultPrices, setDefaultPrices] = useState<PosDefaultPrices | null>(null);
+  const [pricesLoading, setPricesLoading] = useState(true);
+  const [totalPool, setTotalPool] = useState<TotalPlatePool | undefined>();
   const [sellers, setSellers] = useState<User[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [availabilityByDish, setAvailabilityByDish] = useState<
-    Record<number, PlateAvailability>
-  >({});
   const [builder, setBuilder] = useState({
-    dish_id: "",
     weight_type: "kilo" as WeightType,
     quantity: "1",
     slice_count: "1",
@@ -221,8 +219,23 @@ export default function SalesForm() {
   const [success, setSuccess] = useState("");
   const { submitting, run } = useSubmitLock();
 
+  const refreshTotalPool = useCallback(async () => {
+    try {
+      const data = await api.get<TotalPlatePool>("/stock/plate-availability/today/total");
+      setTotalPool(data);
+    } catch {
+      setTotalPool(undefined);
+    }
+  }, []);
+
   useEffect(() => {
-    api.get<Dish[]>("/dishes?active=true").then(setDishes);
+    if (authLoading || !user) return;
+
+    setPricesLoading(true);
+    loadCashierPrices()
+      .then(setDefaultPrices)
+      .finally(() => setPricesLoading(false));
+
     api.get<User[]>("/sales/sellers").then((list) => {
       setSellers(list);
       if (user) {
@@ -232,59 +245,34 @@ export default function SalesForm() {
         }));
       }
     });
-  }, [user]);
+    refreshTotalPool();
+  }, [user, authLoading, refreshTotalPool]);
 
-  const dishId = parseInt(builder.dish_id);
-  const selectedDish = dishes.find((d) => d.id === dishId);
+  useEffect(() => {
+    refreshTotalPool();
+  }, [cart, success, refreshTotalPool]);
+
+  const priceSource = defaultPrices;
   const builderQty = parseInt(builder.quantity) || 1;
   const builderSlices = parseInt(builder.slice_count) || 1;
-  const builderLineTotal = selectedDish
-    ? calcPrice(selectedDish, builder.weight_type, builderQty, builderSlices)
+  const builderLineTotal = priceSource
+    ? calcPrice(priceSource, builder.weight_type, builderQty, builderSlices)
     : 0;
   const builderManualKilo = parseFloat(builder.manual_kg) || 0;
-  const builderAvailability = dishId > 0 ? availabilityByDish[dishId] : undefined;
-  const builderKiloInCart = dishId > 0 ? kiloInCart(cart, dishId) : 0;
-  const builderTotalKilo = builderKiloInCart + builderManualKilo;
+  const cartKilo = totalKiloInCart(cart);
+  const builderTotalKilo = cartKilo + builderManualKilo;
   const builderInsufficientStock =
-    dishId > 0 &&
-    builderAvailability !== undefined &&
-    builderTotalKilo > builderAvailability.available_kg + 0.0001;
+    totalPool !== undefined &&
+    builderTotalKilo > totalPool.available_kg + 0.0001;
+  const missingPortionPrice =
+    priceSource != null &&
+    parsePositivePrice(priceSource[PRICE_FIELDS[builder.weight_type]]) === null;
+  const noPricesConfigured =
+    priceSource == null ||
+    !Object.values(PRICE_FIELDS).some((field) => parsePositivePrice(priceSource[field]) != null);
 
   const orderTotal = cart.reduce((sum, line) => sum + line.line_total, 0);
-  const cartStockIssue = cartHasStockIssues(cart, availabilityByDish);
-
-  const refreshAvailability = useCallback(async (dishIds: number[]) => {
-    const unique = [...new Set(dishIds.filter((id) => id > 0))];
-    if (unique.length === 0) return;
-
-    const results = await Promise.all(
-      unique.map((id) =>
-        api
-          .get<PlateAvailability>(`/stock/plate-availability/today?dish_id=${id}`)
-          .then((data) => ({ id, data }))
-          .catch(() => null)
-      )
-    );
-
-    setAvailabilityByDish((prev) => {
-      const next = { ...prev };
-      for (const result of results) {
-        if (result) next[result.id] = result.data;
-      }
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!dishId) return;
-    refreshAvailability([dishId]);
-  }, [dishId, refreshAvailability]);
-
-  useEffect(() => {
-    const ids = cart.map((line) => line.dish_id);
-    if (dishId) ids.push(dishId);
-    refreshAvailability(ids);
-  }, [cart, dishId, refreshAvailability, success]);
+  const cartStockWarning = cartExceedsPoolWarning(cart, totalPool);
 
   useEffect(() => {
     const qty = parseInt(builder.quantity) || 1;
@@ -294,16 +282,14 @@ export default function SalesForm() {
   }, [builder.weight_type, builder.quantity, builder.slice_count]);
 
   const canAddToCart =
-    !!selectedDish &&
+    !pricesLoading &&
     builderLineTotal > 0 &&
     builderManualKilo > 0 &&
-    !builderInsufficientStock &&
     !(builder.weight_type === "slice" && builderSlices < 1);
 
   const canCompleteOrder =
     cart.length > 0 &&
     !!order.seller_id &&
-    !cartStockIssue &&
     !submitting;
 
   function adjustQuantity(delta: number) {
@@ -314,7 +300,7 @@ export default function SalesForm() {
   }
 
   function handleAddToCart() {
-    if (!selectedDish || !canAddToCart) return;
+    if (!canAddToCart) return;
 
     const unitPrice =
       builder.weight_type === "slice"
@@ -323,8 +309,7 @@ export default function SalesForm() {
 
     const line: CartLine = {
       id: crypto.randomUUID(),
-      dish_id: selectedDish.id,
-      dish_name: selectedDish.name,
+      dish_name: t("sales.generalSale"),
       weight_type: builder.weight_type,
       quantity: builderQty,
       slice_count: builder.weight_type === "slice" ? builderSlices : undefined,
@@ -335,7 +320,6 @@ export default function SalesForm() {
 
     setCart((prev) => [...prev, line]);
     setBuilder({
-      dish_id: "",
       weight_type: "kilo",
       quantity: "1",
       slice_count: "1",
@@ -360,7 +344,7 @@ export default function SalesForm() {
           seller_id: parseInt(order.seller_id),
           payment_method: order.payment_method,
           items: cart.map((line) => ({
-            dish_id: line.dish_id,
+            ...(line.dish_id != null ? { dish_id: line.dish_id } : {}),
             weight_type: line.weight_type,
             quantity: line.quantity,
             slice_count: line.weight_type === "slice" ? line.slice_count : undefined,
@@ -376,6 +360,7 @@ export default function SalesForm() {
           })
         );
         setCart([]);
+        refreshTotalPool();
       } catch (err: unknown) {
         setError(translateApiError(err));
       }
@@ -477,9 +462,11 @@ export default function SalesForm() {
         </div>
       </div>
 
-      {cartStockIssue && cart.length > 0 && (
-        <p className="p-3 text-sm font-medium border-2 rounded-xl text-error-600 bg-error-50 border-error-200 dark:bg-error-500/10">
-          {t("cart.stockIssue")}
+      {cartStockWarning && cart.length > 0 && (
+        <p className={STOCK_WARNING_CLASSES}>
+          {t("cart.stockIssue", {
+            amount: formatNumber(totalPool?.available_kg ?? 0),
+          })}
         </p>
       )}
 
@@ -510,36 +497,20 @@ export default function SalesForm() {
           </div>
         )}
 
-        <Section title={t("fields.plate")} accent="plate">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 auto-rows-fr">
-            {dishes.map((d) => (
-              <PlateChoiceButton
-                key={d.id}
-                dish={d}
-                selected={builder.dish_id === String(d.id)}
-                onClick={() => setBuilder({ ...builder, dish_id: String(d.id) })}
-              />
-            ))}
-          </div>
-          {dishes.length === 0 && (
-            <p className="text-sm text-gray-500">{t("loading")}</p>
-          )}
-        </Section>
-
-        {selectedDish && builderAvailability && (
+        {totalPool && (
           <div
-            className={`p-4 border-2 rounded-xl ${stockBannerClasses[stockStatusColor(builderAvailability.available_kg, builderTotalKilo)]}`}
+            className={`p-4 border-2 rounded-xl ${stockBannerClasses[stockStatusColor(totalPool.available_kg, builderTotalKilo)]}`}
           >
-            <p className="text-sm font-medium">{t("sales.todaysPlateStock")}</p>
+            <p className="text-sm font-medium">{t("sales.totalPlateStock")}</p>
             <p className="mt-1 text-xl font-bold md:text-2xl">
               {t("units.kgAvailable", {
-                amount: formatNumber(builderAvailability.available_kg),
+                amount: formatNumber(totalPool.available_kg),
               })}
             </p>
-            {builderKiloInCart > 0 && (
+            {cartKilo > 0 && (
               <p className="mt-1 text-xs opacity-80">
                 {t("units.kgUsed", {
-                  amount: formatNumber(builderKiloInCart),
+                  amount: formatNumber(cartKilo),
                 })}{" "}
                 ({t("cart.title").toLowerCase()})
               </p>
@@ -618,7 +589,7 @@ export default function SalesForm() {
           </p>
         </Section>
 
-        {selectedDish && (
+        {builderLineTotal > 0 && (
           <div className="p-4 text-center border rounded-xl bg-gray-50 border-gray-200 dark:bg-gray-900/50 dark:border-gray-700">
             <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
               {t("sales.totalPrice")}
@@ -630,9 +601,9 @@ export default function SalesForm() {
         )}
 
         {builderInsufficientStock && (
-          <p className="p-3 text-sm font-medium border-2 rounded-xl text-error-600 bg-error-50 border-error-200">
+          <p className={STOCK_WARNING_CLASSES}>
             {t("sales.notEnoughStock", {
-              amount: formatNumber(builderAvailability?.available_kg ?? 0),
+              amount: formatNumber(totalPool?.available_kg ?? 0),
             })}
           </p>
         )}
@@ -647,8 +618,16 @@ export default function SalesForm() {
         >
           {t("cart.addToOrder")}
         </Button>
-        {!builder.dish_id && (
-          <p className="text-xs text-center text-gray-400">{t("cart.selectPlateFirst")}</p>
+        {!canAddToCart && pricesLoading && (
+          <p className="text-xs text-center text-gray-400">{t("loading")}</p>
+        )}
+        {!canAddToCart && !pricesLoading && noPricesConfigured && (
+          <p className="text-xs text-center text-error-500">{t("sales.defaultPriceNotSet")}</p>
+        )}
+        {!canAddToCart && !pricesLoading && !noPricesConfigured && missingPortionPrice && (
+          <p className="text-xs text-center text-error-500">
+            {t("sales.portionPriceNotSet", { portion: weightTypeLabel(builder.weight_type) })}
+          </p>
         )}
       </div>
 

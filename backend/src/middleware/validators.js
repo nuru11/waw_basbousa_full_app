@@ -34,6 +34,16 @@ const createTransferValidation = [
   validate,
 ];
 
+const createChiefExpenseValidation = [
+  body('amount').isFloat({ gt: 0 }).withMessage('VALIDATION_AMOUNT_POSITIVE'),
+  body('chief_id').isInt().withMessage('VALIDATION_CHIEF_REQUIRED'),
+  body('category')
+    .isIn(['food', 'hotel', 'other'])
+    .withMessage('VALIDATION_INVALID_CHIEF_EXPENSE_CATEGORY'),
+  body('spent_at').isISO8601().withMessage('VALIDATION_SPENT_AT_REQUIRED'),
+  validate,
+];
+
 const createPurchaseValidation = [
   body('ingredient_id').isInt().withMessage('VALIDATION_INGREDIENT_REQUIRED'),
   body('quantity').isFloat({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
@@ -50,8 +60,19 @@ const createDishValidation = [
   validate,
 ];
 
+const updatePosDefaultPricesValidation = [
+  body('price_quarter').optional({ nullable: true }).isFloat({ min: 0 }),
+  body('price_half').optional({ nullable: true }).isFloat({ min: 0 }),
+  body('price_kilo').optional({ nullable: true }).isFloat({ min: 0 }),
+  body('price_per_slice').optional({ nullable: true }).isFloat({ min: 0 }),
+  validate,
+];
+
 const createSaleValidation = [
-  body('dish_id').isInt().withMessage('VALIDATION_DISH_REQUIRED'),
+  body('dish_id')
+    .optional({ values: 'falsy' })
+    .isInt({ gt: 0 })
+    .withMessage('VALIDATION_DISH_INVALID'),
   body('weight_type')
     .isIn(['quarter', 'half', 'kilo', 'slice'])
     .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
@@ -73,6 +94,13 @@ const productionValidation = [
   body('dish_id').isInt().withMessage('VALIDATION_DISH_REQUIRED'),
   body('plates_count').isInt({ gt: 0 }).withMessage('VALIDATION_PLATES_POSITIVE'),
   body('plate_weight_grams').isFloat({ gt: 0 }).withMessage('VALIDATION_PLATE_WEIGHT_REQUIRED'),
+  body('ingredient_usage').optional().isArray({ min: 1 }),
+  body('ingredient_usage.*.ingredient_id').isInt(),
+  body('ingredient_usage.*.quantity_used').isFloat({ gt: 0 }),
+  body('ingredient_usage.*.size')
+    .optional({ nullable: true })
+    .isIn(['small', 'large'])
+    .withMessage('VALIDATION_INVALID_SIZE'),
   validate,
 ];
 
@@ -83,7 +111,10 @@ const createSalesBatchValidation = [
     .withMessage('VALIDATION_INVALID_PAYMENT'),
   body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
   body('items').isArray({ min: 1 }).withMessage('VALIDATION_ITEMS_REQUIRED'),
-  body('items.*.dish_id').isInt().withMessage('VALIDATION_DISH_REQUIRED'),
+  body('items.*.dish_id')
+    .optional({ values: 'falsy' })
+    .isInt({ gt: 0 })
+    .withMessage('VALIDATION_DISH_INVALID'),
   body('items.*.weight_type')
     .isIn(['quarter', 'half', 'kilo', 'slice'])
     .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
@@ -107,9 +138,11 @@ module.exports = {
   createIngredientValidation,
   createPurchaseValidation,
   createDishValidation,
+  updatePosDefaultPricesValidation,
   createSaleValidation,
   createSalesBatchValidation,
   productionValidation,
   stockAdjustValidation,
   createTransferValidation,
+  createChiefExpenseValidation,
 };

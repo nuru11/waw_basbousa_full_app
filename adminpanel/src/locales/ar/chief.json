@@ -20,11 +20,32 @@
     "noRecipesHint": "لا أطباق لها وصفات محددة. اطلب من المشرف العام إعداد الوصفات.",
     "logProductionBtn": "تسجيل الإنتاج (يخصم من المخزون)",
     "recentProduction": "الإنتاج الأخير",
-    "maxPlatesFromStock": "يمكن طبخ حتى {{count}} طبق بالمخزون الحالي"
+    "maxPlatesFromStock": "يمكن طبخ حتى {{count}} طبق بالمخزون الحالي",
+    "ingredientsUsed": "المكوّنات المستخدمة",
+    "quantityUsed": "الكمية المستخدمة",
+    "recipeDefault": "الوصفة الافتراضية: {{amount}} {{unit}}",
+    "quantityMustBePositive": "يجب أن تكون الكمية أكبر من الصفر",
+    "adjustmentNote": "تعديلات المكوّنات",
+    "optionalNote": "ملاحظة (اختياري)",
+    "noAdjustments": "لا تغييرات عن الوصفة",
+    "adjustmentHint": "يُنشأ تلقائياً عند اختلاف الكميات عن الوصفة"
   },
   "todaysPlates": {
     "metaTitle": "أطباق اليوم | المطعم",
     "metaDescription": "مخزون أطباق اليوم المطبوخة والكميات المتبقية",
-    "title": "أطباق اليوم"
+    "title": "أطباق اليوم",
+    "sharedPoolTitle": "المخزون المشترك اليوم (جميع الأطباق)"
+  },
+  "chiefExpenses": {
+    "metaTitle": "مصروفاتي | المطعم",
+    "metaDescription": "الأموال المستلمة من المالك",
+    "title": "المصروفات المستلمة",
+    "periodTotal": "إجمالي الفترة",
+    "empty": "لا مصروفات مسجلة في هذه الفترة",
+    "categories": {
+      "food": "طعام",
+      "hotel": "فندق",
+      "other": "أخرى"
+    }
   }
 }

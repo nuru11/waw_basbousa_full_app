@@ -8,7 +8,7 @@
     "metaDescription": "Cashier point of sale",
     "title": "Cashier",
     "subtitle": "Record a sale",
-    "stepPickPlate": "1. Pick plate",
+    "stepPickPlate": "1. Pick plate (optional)",
     "stepAddItems": "2. Add items",
     "stepPay": "3. Pay"
   }

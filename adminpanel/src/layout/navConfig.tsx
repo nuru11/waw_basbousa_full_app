@@ -58,6 +58,7 @@ export function getNavForRole(role: User["role"]): NavItem[] {
           subItems: [
             { nameKey: "salaries", path: "/admin/salaries" },
             { nameKey: "recordExpense", path: "/admin/expenses" },
+            { nameKey: "chiefExpenses", path: "/admin/chief-expenses" },
             { nameKey: "expenseHistory", path: "/admin/expenses/history" },
           ],
         },
@@ -90,6 +91,7 @@ export function getNavForRole(role: User["role"]): NavItem[] {
         { icon: <TableIcon />, nameKey: "inventory", path: "/chief/inventory" },
         { icon: <TableIcon />, nameKey: "todaysPlates", path: "/chief/plates/today" },
         { icon: <PieChartIcon />, nameKey: "production", path: "/chief/production" },
+        { icon: <DollarLineIcon />, nameKey: "chiefExpenses", path: "/chief/expenses" },
       ];
     case "employee":
       return [

@@ -52,7 +52,11 @@
     "kiloCol": "Kilo",
     "sliceCol": "Slice",
     "activeCol": "Active",
-    "recipeCol": "Recipe"
+    "recipeCol": "Recipe",
+    "defaultCashierPrices": "Default cashier prices",
+    "defaultCashierPricesHint": "Used when the cashier sells without selecting a plate.",
+    "saveDefaultPrices": "Save default prices",
+    "defaultPricesSaved": "Default cashier prices saved"
   },
   "reports": {
     "metaTitle": "Reports | Restaurant",
@@ -112,6 +116,7 @@
     "metaDescription": "Chief inventory and plate production history",
     "chiefInventory": "Chief Inventory",
     "allPlatesMade": "All Plates Made",
+    "poolTotalsTitle": "Total sales summary",
     "plateRowCount": "{{count}} entries",
     "noPlatesLogged": "No plates logged yet"
   },
@@ -181,7 +186,8 @@
     "salaryRequired": "Enter a valid monthly salary",
     "salarySaved": "Salary saved for {{name}}",
     "payConfirm": "Mark {{name}} as paid {{amount}} for {{period}}?",
-    "paidSuccess": "{{name}} marked as paid"
+    "paidSuccess": "{{name}} marked as paid",
+    "paidPeriodAmount": "Paid {{amount}} for this period"
   },
   "monthlyAnalysis": {
     "metaTitle": "Monthly Analysis | Restaurant",
@@ -204,5 +210,30 @@
     "noOperatingExpenses": "No operating expenses this month",
     "noSales": "No sales this month",
     "noData": "No data for this month"
+  },
+  "chiefExpenses": {
+    "metaTitle": "Chief Expenses | Restaurant",
+    "metaDescription": "Record money sent to chiefs",
+    "recordTitle": "Record Chief Expense",
+    "historyTitle": "Chief Expense History",
+    "historyEmpty": "No chief expenses for this period",
+    "totalThisMonth": "Total This Month",
+    "entryCount": "{{count}} entries",
+    "spentDate": "Date Given",
+    "toChief": "To (Chief)",
+    "recordedBy": "Recorded By",
+    "descriptionPlaceholder": "Reason for this expense",
+    "recordButton": "Record Expense",
+    "recordedSuccess": "Chief expense recorded successfully",
+    "amountRequired": "Amount must be greater than zero",
+    "chiefRequired": "Please select a chief",
+    "descriptionRequired": "Description is required for other expenses",
+    "deleteConfirm": "Delete this chief expense? This cannot be undone.",
+    "breakdownLabel": "Chief Expenses",
+    "categories": {
+      "food": "Food",
+      "hotel": "Hotel",
+      "other": "Other"
+    }
   }
 }

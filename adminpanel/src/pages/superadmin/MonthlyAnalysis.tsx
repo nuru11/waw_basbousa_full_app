@@ -15,8 +15,8 @@ import {
   api,
   type MonthlyAnalysis,
   type MonthlyAnalysisDayRow,
-  type MonthlyAnalysisDishRow,
-  type MonthlyAnalysisSellerRow,
+  // type MonthlyAnalysisDishRow,
+  // type MonthlyAnalysisSellerRow,
 } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import {
@@ -51,47 +51,47 @@ export default function MonthlyAnalysisPage() {
     load();
   }, [load]);
 
-  const dishColumns: DataTableColumn<MonthlyAnalysisDishRow>[] = useMemo(
-    () => [
-      {
-        key: "dish",
-        header: tCommon("fields.plate"),
-        render: (row) => row.dish_name,
-      },
-      {
-        key: "sales",
-        header: tCommon("sales.sales"),
-        render: (row) => String(row.sale_count),
-      },
-      {
-        key: "revenue",
-        header: tCommon("sales.revenue"),
-        render: (row) => formatCurrency(row.revenue),
-      },
-    ],
-    [tCommon]
-  );
+  // const dishColumns: DataTableColumn<MonthlyAnalysisDishRow>[] = useMemo(
+  //   () => [
+  //     {
+  //       key: "dish",
+  //       header: tCommon("fields.plate"),
+  //       render: (row) => row.dish_name,
+  //     },
+  //     {
+  //       key: "sales",
+  //       header: tCommon("sales.sales"),
+  //       render: (row) => String(row.sale_count),
+  //     },
+  //     {
+  //       key: "revenue",
+  //       header: tCommon("sales.revenue"),
+  //       render: (row) => formatCurrency(row.revenue),
+  //     },
+  //   ],
+  //   [tCommon]
+  // );
 
-  const sellerColumns: DataTableColumn<MonthlyAnalysisSellerRow>[] = useMemo(
-    () => [
-      {
-        key: "seller",
-        header: tCommon("fields.seller"),
-        render: (row) => row.seller_name,
-      },
-      {
-        key: "sales",
-        header: tCommon("sales.sales"),
-        render: (row) => String(row.sale_count),
-      },
-      {
-        key: "revenue",
-        header: tCommon("sales.revenue"),
-        render: (row) => formatCurrency(row.revenue),
-      },
-    ],
-    [tCommon]
-  );
+  // const sellerColumns: DataTableColumn<MonthlyAnalysisSellerRow>[] = useMemo(
+  //   () => [
+  //     {
+  //       key: "seller",
+  //       header: tCommon("fields.seller"),
+  //       render: (row) => row.seller_name,
+  //     },
+  //     {
+  //       key: "sales",
+  //       header: tCommon("sales.sales"),
+  //       render: (row) => String(row.sale_count),
+  //     },
+  //     {
+  //       key: "revenue",
+  //       header: tCommon("sales.revenue"),
+  //       render: (row) => formatCurrency(row.revenue),
+  //     },
+  //   ],
+  //   [tCommon]
+  // );
 
   const dayColumns: DataTableColumn<MonthlyAnalysisDayRow>[] = useMemo(
     () => [
@@ -147,6 +147,7 @@ export default function MonthlyAnalysisPage() {
     { key: "rental" as const, accent: "warning" as const },
     { key: "electricity" as const, accent: "warning" as const },
     { key: "other" as const, accent: "warning" as const },
+    { key: "chief_expenses" as const, accent: "orange" as const },
   ];
 
   return (
@@ -236,7 +237,7 @@ export default function MonthlyAnalysisPage() {
               </SectionCard>
             </div>
 
-            <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
               <SectionCard
                 title={t("monthlyAnalysis.topDishes")}
                 count={tCommon("periodFilters.entryCount", {
@@ -264,7 +265,7 @@ export default function MonthlyAnalysisPage() {
                   emptyMessage={t("monthlyAnalysis.noSales")}
                 />
               </SectionCard>
-            </div>
+            </div> */}
 
             <SectionCard title={t("monthlyAnalysis.dailyBreakdown")}>
               <DataTable

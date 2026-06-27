@@ -64,6 +64,10 @@
   "EXPENSE_NOT_FOUND": "Expense not found",
   "RECEIPT_NOT_FOUND": "Receipt not found",
   "VALIDATION_INVALID_EXPENSE_CATEGORY": "Invalid expense category",
+  "VALIDATION_INVALID_CHIEF_EXPENSE_CATEGORY": "Invalid chief expense category",
+  "VALIDATION_CHIEF_REQUIRED": "Chief is required",
+  "INVALID_CHIEF": "Invalid chief",
+  "CHIEF_EXPENSE_NOT_FOUND": "Chief expense not found",
   "VALIDATION_DESCRIPTION_REQUIRED": "Description is required for other expenses",
   "VALIDATION_SPENT_AT_REQUIRED": "Spent date is required",
   "SALARY_NOT_SET": "Monthly salary is not set for this employee",
@@ -75,6 +79,7 @@
   "VALIDATION_INVALID_SIZE": "Invalid size. Use small or large",
   "RECIPE_SIZE_REQUIRED": "Recipe size is required for this ingredient (small or large)",
   "RECIPE_SIZE_NOT_ALLOWED": "Recipe size is not applicable for this ingredient",
+  "INVALID_INGREDIENT_USAGE": "Ingredient usage does not match dish recipe",
   "notFound": {
     "title": "ERROR",
     "message": "We can't seem to find the page you are looking for!",

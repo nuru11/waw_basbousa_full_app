@@ -8,7 +8,7 @@ import {
   StatCard,
   StatusBadge,
 } from "../../components/ui";
-import { api, type ExpenseSummary, type ReportSummary } from "../../services/api";
+import { api, type ChiefExpenseSummary, type ExpenseSummary, type ReportSummary } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
 import { translateApiError } from "../../utils/translateApiError";
@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const { t: tNav } = useTranslation("nav");
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [expenseMonth, setExpenseMonth] = useState<ExpenseSummary | null>(null);
+  const [chiefExpenseMonth, setChiefExpenseMonth] = useState<ChiefExpenseSummary | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -34,6 +35,10 @@ export default function AdminDashboard() {
     api
       .get<ExpenseSummary>("/expenses/summary?period=month")
       .then(setExpenseMonth)
+      .catch(() => {});
+    api
+      .get<ChiefExpenseSummary>("/chief-expenses/summary?period=month")
+      .then(setChiefExpenseMonth)
       .catch(() => {});
   }, []);
 
@@ -80,14 +85,14 @@ export default function AdminDashboard() {
             />
           </div>
           <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {expenseMonth && (
+            {(expenseMonth || chiefExpenseMonth) && (
               <SectionCard title={t("dashboard.operatingExpensesThisMonth")}>
-                {expenseMonth.total === 0 ? (
+                {!expenseMonth?.total && !chiefExpenseMonth?.total ? (
                   <EmptyState message={t("dashboard.noOperatingExpenses")} />
                 ) : (
                   <ul className="space-y-2">
                     {EXPENSE_CATEGORIES.map((cat) => {
-                      const amount = expenseMonth.by_category[cat];
+                      const amount = expenseMonth?.by_category[cat] ?? 0;
                       if (amount <= 0) return null;
                       return (
                         <li
@@ -103,6 +108,16 @@ export default function AdminDashboard() {
                         </li>
                       );
                     })}
+                    {(chiefExpenseMonth?.total ?? 0) > 0 && (
+                      <li className="flex items-center justify-between gap-4 text-sm text-gray-600 dark:text-gray-400">
+                        <StatusBadge variant="info">
+                          {expenseCategoryLabel("chief_expenses", t)}
+                        </StatusBadge>
+                        <span className="font-medium text-gray-800 dark:text-white/90">
+                          {formatCurrency(chiefExpenseMonth!.total)}
+                        </span>
+                      </li>
+                    )}
                   </ul>
                 )}
               </SectionCard>

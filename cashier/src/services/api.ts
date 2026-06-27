@@ -103,8 +103,22 @@ export interface PlateAvailability {
   available_kg: number;
 }
 
+export interface TotalPlatePool {
+  produced_kg: number;
+  sold_kg: number;
+  available_kg: number;
+  remaining_kg: number;
+}
+
+export interface PosDefaultPrices {
+  price_quarter: string | number | null;
+  price_half: string | number | null;
+  price_kilo: string | number | null;
+  price_per_slice: string | number | null;
+}
+
 export interface SaleBatchItem {
-  dish_id: number;
+  dish_id?: number;
   weight_type: "quarter" | "half" | "kilo" | "slice";
   quantity: number;
   slice_count?: number;

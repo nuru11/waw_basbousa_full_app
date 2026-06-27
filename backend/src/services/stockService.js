@@ -112,7 +112,123 @@ async function getTodayPlateAvailability(dishId, options = {}) {
   return getPlateAvailabilityForDate(dishId, undefined, options);
 }
 
-async function logProduction(chiefId, { dish_id, plates_count, plate_weight_grams, notes }) {
+async function getTodayTotalPlatePool(dateInput, { transaction } = {}) {
+  const { start, end } = getDateRange(dateInput);
+
+  const logs = await ProductionLog.findAll({
+    where: { logged_at: { [Op.between]: [start, end] } },
+    include: [{ model: Dish, as: 'dish', attributes: ['plate_weight_grams'] }],
+    transaction,
+  });
+
+  const producedKg = sumProducedKg(logs);
+
+  const soldKg = parseFloat(
+    (await Sale.sum('kilo_consumed', {
+      where: { sold_at: { [Op.between]: [start, end] } },
+      transaction,
+    })) || 0
+  );
+
+  const availableKg = producedKg - soldKg;
+
+  return {
+    produced_kg: producedKg,
+    sold_kg: soldKg,
+    remaining_kg: availableKg,
+    available_kg: availableKg,
+  };
+}
+
+function recipeUsageKey(ingredientId, size) {
+  return `${ingredientId}:${size ?? ''}`;
+}
+
+function buildUsageMap(ingredientUsage) {
+  const map = new Map();
+  for (const entry of ingredientUsage) {
+    const key = recipeUsageKey(entry.ingredient_id, entry.size ?? null);
+    if (map.has(key)) {
+      throw new AppError(
+        'INVALID_INGREDIENT_USAGE',
+        ERROR_CODES.INVALID_INGREDIENT_USAGE,
+        400
+      );
+    }
+    map.set(key, parseFloat(entry.quantity_used));
+  }
+  return map;
+}
+
+function resolveIngredientUsed(item, platesCount, usageMap) {
+  if (!usageMap) {
+    return parseFloat(item.quantity_per_plate) * platesCount;
+  }
+
+  const key = recipeUsageKey(item.ingredient_id, item.size ?? null);
+  if (!usageMap.has(key)) {
+    throw new AppError(
+      'INVALID_INGREDIENT_USAGE',
+      ERROR_CODES.INVALID_INGREDIENT_USAGE,
+      400
+    );
+  }
+
+  return usageMap.get(key);
+}
+
+function formatQtyForNote(value) {
+  const rounded = Math.round(parseFloat(value) * 1000) / 1000;
+  return String(rounded);
+}
+
+function ingredientDisplayName(name, size) {
+  if (size === 'small') return `${name} (Small)`;
+  if (size === 'large') return `${name} (Large)`;
+  return name;
+}
+
+function formatAdjustmentDelta(delta, ingredientName) {
+  if (Math.abs(delta) < 0.001) return null;
+  const qty = formatQtyForNote(Math.abs(delta));
+  if (delta > 0) return `${qty}+ ${ingredientName}`;
+  return `-${qty} ${ingredientName}`;
+}
+
+async function buildIngredientAdjustmentNotes(recipe, usageMap, platesCount, transaction) {
+  const ingredientIds = [...new Set(recipe.map((item) => item.ingredient_id))];
+  const ingredients = await Ingredient.findAll({
+    where: { id: ingredientIds },
+    transaction,
+  });
+  const nameById = new Map(ingredients.map((ingredient) => [ingredient.id, ingredient.name]));
+
+  const parts = [];
+  for (const item of recipe) {
+    const used = resolveIngredientUsed(item, platesCount, usageMap);
+    const defaultQty = parseFloat(item.quantity_per_plate) * platesCount;
+    const delta = used - defaultQty;
+    const baseName = nameById.get(item.ingredient_id) ?? `Ingredient #${item.ingredient_id}`;
+    const displayName = ingredientDisplayName(baseName, item.size ?? null);
+    const part = formatAdjustmentDelta(delta, displayName);
+    if (part) parts.push(part);
+  }
+
+  return parts.join(', ');
+}
+
+function mergeProductionNotes(adjustmentNotes, chiefNote) {
+  const trimmedChiefNote = chiefNote?.trim() || '';
+  if (adjustmentNotes) {
+    return trimmedChiefNote ? `${adjustmentNotes} | ${trimmedChiefNote}` : adjustmentNotes;
+  }
+  return trimmedChiefNote || null;
+}
+
+async function logProduction(
+  chiefId,
+  { dish_id, plates_count, plate_weight_grams, notes, ingredient_usage }
+) {
   const transaction = await sequelize.transaction();
 
   try {
@@ -127,12 +243,39 @@ async function logProduction(chiefId, { dish_id, plates_count, plate_weight_gram
       throw new AppError('DISH_NO_RECIPE', ERROR_CODES.DISH_NO_RECIPE, 400);
     }
 
+    const usageMap =
+      ingredient_usage && ingredient_usage.length > 0
+        ? buildUsageMap(ingredient_usage)
+        : null;
+
+    if (usageMap) {
+      const recipeKeys = new Set(
+        recipe.map((item) => recipeUsageKey(item.ingredient_id, item.size ?? null))
+      );
+      for (const key of usageMap.keys()) {
+        if (!recipeKeys.has(key)) {
+          throw new AppError(
+            'INVALID_INGREDIENT_USAGE',
+            ERROR_CODES.INVALID_INGREDIENT_USAGE,
+            400
+          );
+        }
+      }
+      if (usageMap.size !== recipe.length) {
+        throw new AppError(
+          'INVALID_INGREDIENT_USAGE',
+          ERROR_CODES.INVALID_INGREDIENT_USAGE,
+          400
+        );
+      }
+    }
+
     for (const item of recipe) {
       const ingredient = await Ingredient.findByPk(item.ingredient_id, {
         lock: transaction.LOCK.UPDATE,
         transaction,
       });
-      const used = parseFloat(item.quantity_per_plate) * plates_count;
+      const used = resolveIngredientUsed(item, plates_count, usageMap);
       const newStock = parseFloat(ingredient.current_stock) - used;
 
       if (newStock < 0) {
@@ -170,13 +313,26 @@ async function logProduction(chiefId, { dish_id, plates_count, plate_weight_gram
       await dish.update({ plate_weight_grams }, { transaction });
     }
 
+    let finalNotes = notes?.trim() || '';
+    if (usageMap) {
+      const adjustmentNotes = await buildIngredientAdjustmentNotes(
+        recipe,
+        usageMap,
+        plates_count,
+        transaction
+      );
+      finalNotes = mergeProductionNotes(adjustmentNotes, finalNotes);
+    } else {
+      finalNotes = finalNotes || null;
+    }
+
     const log = await ProductionLog.create(
       {
         dish_id,
         plates_count,
         plate_weight_grams: weightGrams,
         chief_id: chiefId,
-        notes: notes || null,
+        notes: finalNotes,
         logged_at: new Date(),
       },
       { transaction }
@@ -233,7 +389,7 @@ async function listTodayPlatesOverview(dateInput) {
 
   const dishIds = new Set([
     ...productionLogs.map((l) => l.dish_id),
-    ...sales.map((s) => s.dish_id),
+    ...sales.map((s) => s.dish_id).filter((id) => id != null),
   ]);
 
   const plates = [];
@@ -252,9 +408,15 @@ async function listTodayPlatesOverview(dateInput) {
     });
   }
 
-  plates.sort((a, b) => a.dish_name.localeCompare(b.dish_name));
+  plates.sort((a, b) => {
+    const nameA = a.dish_name ?? '';
+    const nameB = b.dish_name ?? '';
+    return nameA.localeCompare(nameB);
+  });
 
-  return { date, plates };
+  const pool = await getTodayTotalPlatePool(date);
+
+  return { date, plates, summary: pool };
 }
 
 function normalizeDateKey(day) {
@@ -286,12 +448,18 @@ async function listAllPlatesOverview() {
   const dates = [...dateSet].sort((a, b) => b.localeCompare(a));
 
   const plates = [];
+  const summary = { produced_kg: 0, sold_kg: 0, remaining_kg: 0, available_kg: 0 };
   for (const date of dates) {
     const { plates: dayPlates } = await listTodayPlatesOverview(date);
     plates.push(...dayPlates);
+    const pool = await getTodayTotalPlatePool(date);
+    summary.produced_kg += pool.produced_kg;
+    summary.sold_kg += pool.sold_kg;
+    summary.remaining_kg += pool.remaining_kg;
+    summary.available_kg += pool.available_kg;
   }
 
-  return { plates };
+  return { plates, summary };
 }
 
 module.exports = {
@@ -301,6 +469,7 @@ module.exports = {
   listProductionLogs,
   getPlateAvailabilityForDate,
   getTodayPlateAvailability,
+  getTodayTotalPlatePool,
   listTodayPlatesOverview,
   listAllPlatesOverview,
 };

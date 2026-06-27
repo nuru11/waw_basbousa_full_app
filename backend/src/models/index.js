@@ -24,6 +24,8 @@ const StockMovement = require('./StockMovement')(sequelize);
 const Transfer = require('./Transfer')(sequelize);
 const Expense = require('./Expense')(sequelize);
 const SalaryPayment = require('./SalaryPayment')(sequelize);
+const PosDefaultPrice = require('./PosDefaultPrice')(sequelize);
+const ChiefExpense = require('./ChiefExpense')(sequelize);
 
 Admin.hasMany(Purchase, { foreignKey: 'purchaser_id', as: 'purchasesMade' });
 Purchase.belongsTo(Admin, { foreignKey: 'purchaser_id', as: 'purchaser' });
@@ -81,6 +83,11 @@ SalaryPayment.belongsTo(Admin, { foreignKey: 'paid_by', as: 'payer' });
 Expense.hasOne(SalaryPayment, { foreignKey: 'expense_id', as: 'salaryPayment' });
 SalaryPayment.belongsTo(Expense, { foreignKey: 'expense_id', as: 'expense' });
 
+Admin.hasMany(ChiefExpense, { foreignKey: 'chief_id', as: 'chiefExpensesReceived' });
+ChiefExpense.belongsTo(Admin, { foreignKey: 'chief_id', as: 'chief' });
+Admin.hasMany(ChiefExpense, { foreignKey: 'created_by', as: 'chiefExpensesCreated' });
+ChiefExpense.belongsTo(Admin, { foreignKey: 'created_by', as: 'creator' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -95,4 +102,6 @@ module.exports = {
   Transfer,
   Expense,
   SalaryPayment,
+  PosDefaultPrice,
+  ChiefExpense,
 };

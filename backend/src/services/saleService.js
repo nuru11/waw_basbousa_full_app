@@ -2,31 +2,37 @@ const { sequelize, Sale, Dish, Admin } = require('../models');
 const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
-const stockService = require('./stockService');
+const posDefaultPriceService = require('./posDefaultPriceService');
 
-function calculateUnitPrice(dish, weightType) {
-  const priceMap = {
-    quarter: dish.price_quarter,
-    half: dish.price_half,
-    kilo: dish.price_kilo,
-    slice: dish.price_per_slice,
-  };
-  const price = priceMap[weightType];
+const WEIGHT_PRICE_FIELD = {
+  quarter: 'price_quarter',
+  half: 'price_half',
+  kilo: 'price_kilo',
+  slice: 'price_per_slice',
+};
+
+function getPriceFromSource(source, weightType) {
+  const field = WEIGHT_PRICE_FIELD[weightType];
+  const price = source[field];
   if (price === null || price === undefined) {
     throw new AppError('PRICE_NOT_SET', ERROR_CODES.PRICE_NOT_SET, 400, { weightType });
   }
   return parseFloat(price);
 }
 
-function calculateTotalPrice(dish, weightType, quantity, sliceCount) {
-  const unitPrice = calculateUnitPrice(dish, weightType);
+function calculateUnitPrice(dish, weightType) {
+  return getPriceFromSource(dish, weightType);
+}
+
+function calculateTotalPrice(unitPrice, weightType, quantity, sliceCount) {
+  const q = quantity || 1;
   if (weightType === 'slice') {
     if (!sliceCount || sliceCount < 1) {
       throw new AppError('SLICE_COUNT_REQUIRED', ERROR_CODES.SLICE_COUNT_REQUIRED, 422);
     }
-    return unitPrice * sliceCount * quantity;
+    return unitPrice * sliceCount * q;
   }
-  return unitPrice * quantity;
+  return unitPrice * q;
 }
 
 function calculateKiloConsumed(weightType, quantity, sliceCount) {
@@ -72,15 +78,26 @@ async function listSellers() {
 }
 
 async function resolveSaleLine(item, transaction) {
-  const dish = await Dish.findByPk(item.dish_id, { transaction });
-  if (!dish || !dish.is_active) {
-    throw new AppError('DISH_NOT_FOUND_OR_INACTIVE', ERROR_CODES.DISH_NOT_FOUND_OR_INACTIVE, 404);
+  const quantity = item.quantity || 1;
+  let dish = null;
+  let dishId = null;
+  let unitPrice;
+
+  if (item.dish_id != null && item.dish_id !== '') {
+    dishId = parseInt(item.dish_id, 10);
+    dish = await Dish.findByPk(dishId, { transaction });
+    if (!dish || !dish.is_active) {
+      throw new AppError('DISH_NOT_FOUND_OR_INACTIVE', ERROR_CODES.DISH_NOT_FOUND_OR_INACTIVE, 404);
+    }
+    unitPrice = calculateUnitPrice(dish, item.weight_type);
+  } else {
+    unitPrice = await posDefaultPriceService.resolveCashierUnitPrice(item.weight_type, {
+      transaction,
+    });
   }
 
-  const quantity = item.quantity || 1;
-  const unitPrice = calculateUnitPrice(dish, item.weight_type);
   const totalPrice = calculateTotalPrice(
-    dish,
+    unitPrice,
     item.weight_type,
     quantity,
     item.slice_count
@@ -91,7 +108,7 @@ async function resolveSaleLine(item, transaction) {
       : calculateKiloConsumed(item.weight_type, quantity, item.slice_count);
 
   return {
-    dish_id: item.dish_id,
+    dish_id: dishId,
     dish,
     weight_type: item.weight_type,
     slice_count: item.weight_type === 'slice' ? item.slice_count : null,
@@ -112,29 +129,6 @@ async function createSalesBatch(userId, data) {
     const lines = [];
     for (const item of data.items) {
       lines.push(await resolveSaleLine(item, transaction));
-    }
-
-    const kiloByDish = new Map();
-    for (const line of lines) {
-      const current = kiloByDish.get(line.dish_id) || 0;
-      kiloByDish.set(line.dish_id, current + line.kilo_consumed);
-    }
-
-    for (const [dishId, totalKilo] of kiloByDish) {
-      const availability = await stockService.getTodayPlateAvailability(dishId, {
-        transaction,
-      });
-      if (totalKilo > availability.available_kg + 0.0001) {
-        throw new AppError(
-          'INSUFFICIENT_PLATE_STOCK',
-          ERROR_CODES.INSUFFICIENT_PLATE_STOCK,
-          400,
-          {
-            available: availability.available_kg.toFixed(3),
-            needed: totalKilo.toFixed(3),
-          }
-        );
-      }
     }
 
     const soldAt = new Date();
@@ -187,50 +181,18 @@ async function createSale(userId, data) {
     const sellerId = data.seller_id ? parseInt(data.seller_id, 10) : userId;
     await validateSeller(sellerId);
 
-    const dish = await Dish.findByPk(data.dish_id, { transaction });
-    if (!dish || !dish.is_active) {
-      throw new AppError('DISH_NOT_FOUND_OR_INACTIVE', ERROR_CODES.DISH_NOT_FOUND_OR_INACTIVE, 404);
-    }
-
-    const quantity = data.quantity || 1;
-    const unitPrice = calculateUnitPrice(dish, data.weight_type);
-    const totalPrice = calculateTotalPrice(
-      dish,
-      data.weight_type,
-      quantity,
-      data.slice_count
-    );
-    const kiloConsumed =
-      data.kilo_consumed != null && parseFloat(data.kilo_consumed) > 0
-        ? parseFloat(data.kilo_consumed)
-        : calculateKiloConsumed(data.weight_type, quantity, data.slice_count);
-
-    const availability = await stockService.getTodayPlateAvailability(data.dish_id, {
-      transaction,
-    });
-
-    if (kiloConsumed > availability.available_kg + 0.0001) {
-      throw new AppError(
-        'INSUFFICIENT_PLATE_STOCK',
-        ERROR_CODES.INSUFFICIENT_PLATE_STOCK,
-        400,
-        {
-          available: availability.available_kg.toFixed(3),
-          needed: kiloConsumed.toFixed(3),
-        }
-      );
-    }
+    const line = await resolveSaleLine(data, transaction);
 
     const sale = await Sale.create(
       {
-        dish_id: data.dish_id,
+        dish_id: line.dish_id,
         seller_id: sellerId,
-        weight_type: data.weight_type,
-        slice_count: data.weight_type === 'slice' ? data.slice_count : null,
-        quantity,
-        unit_price: unitPrice,
-        total_price: totalPrice,
-        kilo_consumed: kiloConsumed,
+        weight_type: line.weight_type,
+        slice_count: line.slice_count,
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        total_price: line.total_price,
+        kilo_consumed: line.kilo_consumed,
         payment_method: data.payment_method || 'cash',
         sold_at: new Date(),
       },

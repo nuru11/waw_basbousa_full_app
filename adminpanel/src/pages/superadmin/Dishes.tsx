@@ -21,10 +21,26 @@ import {
 import type { DataTableColumn } from "../../components/ui";
 import { Modal } from "../../components/ui/modal";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
-import { api, type Dish, type Ingredient } from "../../services/api";
+import { api, type Dish, type Ingredient, type PosDefaultPrices } from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 import { plateWeightToKg } from "../../utils/plateWeight";
 import { translateApiError } from "../../utils/translateApiError";
+
+const emptyDefaultPricesForm = {
+  price_quarter: "",
+  price_half: "",
+  price_kilo: "",
+  price_per_slice: "",
+};
+
+function defaultPricesToForm(prices: PosDefaultPrices) {
+  return {
+    price_quarter: prices.price_quarter != null ? String(prices.price_quarter) : "",
+    price_half: prices.price_half != null ? String(prices.price_half) : "",
+    price_kilo: prices.price_kilo != null ? String(prices.price_kilo) : "",
+    price_per_slice: prices.price_per_slice != null ? String(prices.price_per_slice) : "",
+  };
+}
 
 const emptyForm = {
   name: "",
@@ -69,6 +85,8 @@ export default function DishesPage() {
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [editForm, setEditForm] = useState(emptyForm);
   const [editRecipeRows, setEditRecipeRows] = useState<RecipeRow[]>([]);
+  const [defaultPricesForm, setDefaultPricesForm] = useState(emptyDefaultPricesForm);
+  const [defaultPricesSuccess, setDefaultPricesSuccess] = useState("");
   const [error, setError] = useState("");
   const { submitting, run } = useSubmitLock();
 
@@ -81,6 +99,10 @@ export default function DishesPage() {
   useEffect(() => {
     load();
     api.get<Ingredient[]>("/ingredients").then(setIngredients).catch(() => {});
+    api
+      .get<PosDefaultPrices>("/dishes/pos-default-prices")
+      .then((prices) => setDefaultPricesForm(defaultPricesToForm(prices)))
+      .catch(() => {});
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -104,6 +126,32 @@ export default function DishesPage() {
           setError(tCommon("recipe.sizeQtyRequired"));
           return;
         }
+        setError(translateApiError(err, "common:failed"));
+      }
+    });
+  }
+
+  async function handleSaveDefaultPrices(e: FormEvent) {
+    e.preventDefault();
+    await run(async () => {
+      try {
+        setDefaultPricesSuccess("");
+        await api.put("/dishes/pos-default-prices", {
+          price_quarter: defaultPricesForm.price_quarter
+            ? parseFloat(defaultPricesForm.price_quarter)
+            : null,
+          price_half: defaultPricesForm.price_half
+            ? parseFloat(defaultPricesForm.price_half)
+            : null,
+          price_kilo: defaultPricesForm.price_kilo
+            ? parseFloat(defaultPricesForm.price_kilo)
+            : null,
+          price_per_slice: defaultPricesForm.price_per_slice
+            ? parseFloat(defaultPricesForm.price_per_slice)
+            : null,
+        });
+        setDefaultPricesSuccess(t("dishes.defaultPricesSaved"));
+      } catch (err: unknown) {
         setError(translateApiError(err, "common:failed"));
       }
     });
@@ -222,6 +270,64 @@ export default function DishesPage() {
       <PageMeta title={t("dishes.metaTitle")} description={t("dishes.metaDescription")} />
       <PageBreadcrumb pageTitle={tNav("platesMenu")} />
       {error && <p className="mb-4 text-error-500">{error}</p>}
+      <SectionCard
+        title={t("dishes.defaultCashierPrices")}
+        className="mb-6"
+      >
+        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+          {t("dishes.defaultCashierPricesHint")}
+        </p>
+        {defaultPricesSuccess && (
+          <p className="mb-4 text-sm text-success-600">{defaultPricesSuccess}</p>
+        )}
+        <form onSubmit={handleSaveDefaultPrices} className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <Label>{t("dishes.priceQuarter")}</Label>
+              <Input
+                type="number"
+                value={defaultPricesForm.price_quarter}
+                onChange={(e) =>
+                  setDefaultPricesForm({ ...defaultPricesForm, price_quarter: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("dishes.priceHalf")}</Label>
+              <Input
+                type="number"
+                value={defaultPricesForm.price_half}
+                onChange={(e) =>
+                  setDefaultPricesForm({ ...defaultPricesForm, price_half: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("dishes.priceKilo")}</Label>
+              <Input
+                type="number"
+                value={defaultPricesForm.price_kilo}
+                onChange={(e) =>
+                  setDefaultPricesForm({ ...defaultPricesForm, price_kilo: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("dishes.pricePerSlice")}</Label>
+              <Input
+                type="number"
+                value={defaultPricesForm.price_per_slice}
+                onChange={(e) =>
+                  setDefaultPricesForm({ ...defaultPricesForm, price_per_slice: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <Button type="submit" size="sm" disabled={submitting}>
+            {submitting ? tCommon("actions.saving") : t("dishes.saveDefaultPrices")}
+          </Button>
+        </form>
+      </SectionCard>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <SectionCard title={t("dishes.addPlate")}>
           <form onSubmit={handleSubmit} className="space-y-3">

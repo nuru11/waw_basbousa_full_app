@@ -64,6 +64,10 @@
   "EXPENSE_NOT_FOUND": "المصروف غير موجود",
   "RECEIPT_NOT_FOUND": "الإيصال غير موجود",
   "VALIDATION_INVALID_EXPENSE_CATEGORY": "فئة مصروف غير صالحة",
+  "VALIDATION_INVALID_CHIEF_EXPENSE_CATEGORY": "فئة مصروف الطباخ غير صالحة",
+  "VALIDATION_CHIEF_REQUIRED": "الطباخ مطلوب",
+  "INVALID_CHIEF": "طباخ غير صالح",
+  "CHIEF_EXPENSE_NOT_FOUND": "مصروف الطباخ غير موجود",
   "VALIDATION_DESCRIPTION_REQUIRED": "الوصف مطلوب للمصروفات الأخرى",
   "VALIDATION_SPENT_AT_REQUIRED": "تاريخ الصرف مطلوب",
   "SALARY_NOT_SET": "لم يُحدَّد الراتب الشهري لهذا الموظف",
@@ -75,6 +79,7 @@
   "VALIDATION_INVALID_SIZE": "حجم غير صالح. استخدم صغير أو كبير",
   "RECIPE_SIZE_REQUIRED": "حجم الوصفة مطلوب لهذا المكوّن (صغير أو كبير)",
   "RECIPE_SIZE_NOT_ALLOWED": "حجم الوصفة غير مطبق على هذا المكوّن",
+  "INVALID_INGREDIENT_USAGE": "كميات المكوّنات لا تطابق وصفة الطبق",
   "notFound": {
     "title": "خطأ",
     "message": "لا يمكننا العثور على الصفحة التي تبحث عنها!",

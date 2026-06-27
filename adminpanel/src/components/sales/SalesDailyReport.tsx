@@ -54,56 +54,6 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
     return label;
   }
 
-  const dishColumns: DataTableColumn<DailySalesOverview["by_dish"][number]>[] =
-    useMemo(
-      () => [
-        {
-          key: "plate",
-          header: t("fields.plate"),
-          render: (row) => (
-            <span className="font-medium text-gray-800 dark:text-white/90">
-              {row.dish_name}
-            </span>
-          ),
-        },
-        {
-          key: "producedKg",
-          header: t("sales.producedKg"),
-          render: (row) => formatNumber(row.produced_kg),
-        },
-        {
-          key: "platesCooked",
-          header: t("sales.platesCooked"),
-          render: (row) => row.produced_plates,
-        },
-        {
-          key: "soldKg",
-          header: t("sales.soldKgCol"),
-          render: (row) => formatNumber(row.sold_kg),
-        },
-        {
-          key: "remainingKg",
-          header: t("sales.remainingKg"),
-          render: (row) => (
-            <span className="font-medium text-brand-600 dark:text-brand-400">
-              {formatNumber(row.remaining_kg)}
-            </span>
-          ),
-        },
-        {
-          key: "revenue",
-          header: t("sales.revenue"),
-          render: (row) => formatCurrency(row.revenue),
-        },
-        {
-          key: "sales",
-          header: t("sales.sales"),
-          render: (row) => row.sale_count,
-        },
-      ],
-      [t]
-    );
-
   const salesColumns: DataTableColumn<DailySalesOverview["sales"][number]>[] =
     useMemo(
       () => [
@@ -158,6 +108,38 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
 
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title={t("sales.totalKilo")}
+          value={formatNumber(summary.plate_pool.produced_kg)}
+          accent="neutral"
+        />
+        <StatCard
+          title={t("sales.totalKiloSold")}
+          value={formatNumber(summary.plate_pool.sold_kg)}
+          accent="orange"
+        />
+        <StatCard
+          title={t("sales.remainingKg")}
+          value={formatNumber(summary.plate_pool.remaining_kg)}
+          accent="brand"
+        />
+        <StatCard
+          title={t("sales.expectedIncomeFromSoldKilo")}
+          value={
+            summary.expected_income_from_sold_kilo != null
+              ? formatCurrency(summary.expected_income_from_sold_kilo)
+              : t("emDash")
+          }
+          subtitle={
+            summary.expected_income_from_sold_kilo == null
+              ? t("sales.kiloPriceNotSet")
+              : undefined
+          }
+          accent="success"
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           title={t("sales.totalRevenue")}
@@ -180,7 +162,7 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
         />
       </div>
 
-      <SectionCard
+      {/* <SectionCard
         title={t("sales.plateStock")}
         count={t("units.plates", { count: data.by_dish.length })}
       >
@@ -190,7 +172,7 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
           keyExtractor={(row) => row.dish_id}
           emptyMessage={t("sales.noProductionOrSales")}
         />
-      </SectionCard>
+      </SectionCard> */}
 
       <SectionCard
         title={t("sales.allSales")}

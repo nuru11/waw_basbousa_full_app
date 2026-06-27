@@ -9,6 +9,7 @@ import {
   type Ingredient,
   type PlatesHistoryOverview,
   type TodayPlateRow,
+  type TotalPlatePool,
 } from "../../services/api";
 import { formatShortDate } from "../../utils/formatDate";
 import { formatNumber } from "../../utils/formatNumber";
@@ -21,6 +22,7 @@ export default function ProductionHistoryPage() {
   const { t: tNav } = useTranslation("nav");
   const [stock, setStock] = useState<Ingredient[]>([]);
   const [plates, setPlates] = useState<TodayPlateRow[]>([]);
+  const [summary, setSummary] = useState<TotalPlatePool | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,7 +33,7 @@ export default function ProductionHistoryPage() {
         header: tCommon("fields.plate"),
         render: (row) => (
           <span className="font-medium text-gray-800 dark:text-white/90">
-            {row.dish_name}
+            {row.dish_name ?? tCommon("plateFallback", { id: row.dish_id })}
           </span>
         ),
       },
@@ -51,20 +53,6 @@ export default function ProductionHistoryPage() {
         header: tCommon("sales.platesCooked"),
         render: (row) => row.produced_plates,
       },
-      {
-        key: "soldKg",
-        header: tCommon("sales.soldKgCol"),
-        render: (row) => formatNumber(row.sold_kg),
-      },
-      {
-        key: "remainingKg",
-        header: tCommon("sales.remainingKg"),
-        render: (row) => (
-          <span className="font-medium text-brand-600 dark:text-brand-400">
-            {formatNumber(row.remaining_kg)}
-          </span>
-        ),
-      },
     ],
     [tCommon]
   );
@@ -79,6 +67,7 @@ export default function ProductionHistoryPage() {
       .then(([stockData, platesData]) => {
         setStock(stockData);
         setPlates(platesData.plates);
+        setSummary(platesData.summary ?? null);
       })
       .catch((e) => setError(translateApiError(e)))
       .finally(() => setLoading(false));
@@ -116,6 +105,29 @@ export default function ProductionHistoryPage() {
               })}
             </div>
           </SectionCard>
+
+          {summary && (
+            <SectionCard title={t("productionHistory.poolTotalsTitle")}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {tCommon("sales.soldKgCol")}
+                  </p>
+                  <p className="text-xl font-bold text-gray-800 dark:text-white/90">
+                    {formatNumber(summary.sold_kg)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    {tCommon("sales.remainingKg")}
+                  </p>
+                  <p className="text-xl font-bold text-brand-600 dark:text-brand-400">
+                    {formatNumber(summary.remaining_kg)}
+                  </p>
+                </div>
+              </div>
+            </SectionCard>
+          )}
 
           <SectionCard
             title={t("productionHistory.allPlatesMade")}
