@@ -13,7 +13,6 @@ const {
 const { getDateRange, getMonthRange, formatPayPeriodLabel, formatDateYmd } = require('../utils/dateUtils');
 const stockService = require('./stockService');
 const salaryService = require('./salaryService');
-const posDefaultPriceService = require('./posDefaultPriceService');
 const { createEmptyPayments } = require('../constants/paymentMethods');
 
 function saleDateYmd(soldAt) {
@@ -303,13 +302,6 @@ async function getDailySalesOverview(dateInput) {
   );
 
   const platePool = await stockService.getTodayTotalPlatePool(date);
-  const prices = await posDefaultPriceService.getEffectivePricesForCashier();
-  const priceKilo =
-    prices.price_kilo != null && prices.price_kilo !== ''
-      ? parseFloat(prices.price_kilo)
-      : null;
-  const expectedIncomeFromSoldKilo =
-    priceKilo != null && priceKilo > 0 ? platePool.sold_kg * priceKilo : null;
 
   return {
     date,
@@ -319,7 +311,6 @@ async function getDailySalesOverview(dateInput) {
       kilo_sold: kiloSold,
       payments,
       plate_pool: platePool,
-      expected_income_from_sold_kilo: expectedIncomeFromSoldKilo,
     },
     by_dish: byDish,
     by_seller: bySeller,

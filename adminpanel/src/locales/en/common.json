@@ -209,8 +209,6 @@
     "remainingKg": "Remaining (kg)",
     "totalKilo": "Total kilo (kg)",
     "totalKiloSold": "Total kilo sold (kg)",
-    "expectedIncomeFromSoldKilo": "Expected income from sold kilo",
-    "kiloPriceNotSet": "Kilo price not configured",
     "revenue": "Revenue",
     "sales": "Sales",
     "allSales": "All sales",

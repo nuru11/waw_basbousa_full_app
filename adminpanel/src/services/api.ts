@@ -268,7 +268,6 @@ export interface DailySalesOverview {
     kilo_sold: number;
     payments: DailySalesPayments;
     plate_pool: TotalPlatePool;
-    expected_income_from_sold_kilo: number | null;
   };
   by_dish: DailySalesDishRow[];
   by_seller: DailySalesSellerRow[];

@@ -108,7 +108,7 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title={t("sales.totalKilo")}
           value={formatNumber(summary.plate_pool.produced_kg)}
@@ -123,20 +123,6 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
           title={t("sales.remainingKg")}
           value={formatNumber(summary.plate_pool.remaining_kg)}
           accent="brand"
-        />
-        <StatCard
-          title={t("sales.expectedIncomeFromSoldKilo")}
-          value={
-            summary.expected_income_from_sold_kilo != null
-              ? formatCurrency(summary.expected_income_from_sold_kilo)
-              : t("emDash")
-          }
-          subtitle={
-            summary.expected_income_from_sold_kilo == null
-              ? t("sales.kiloPriceNotSet")
-              : undefined
-          }
-          accent="success"
         />
       </div>
 

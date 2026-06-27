@@ -209,8 +209,6 @@
     "remainingKg": "المتبقي (كغ)",
     "totalKilo": "إجمالي الكيلو (كغ)",
     "totalKiloSold": "إجمالي الكيلو المباع (كغ)",
-    "expectedIncomeFromSoldKilo": "الدخل المتوقع من الكيلو المباع",
-    "kiloPriceNotSet": "سعر الكيلو غير مُعدّ",
     "revenue": "الإيرادات",
     "sales": "المبيعات",
     "allSales": "جميع المبيعات",
