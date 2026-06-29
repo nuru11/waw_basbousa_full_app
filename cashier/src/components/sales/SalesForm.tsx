@@ -20,8 +20,8 @@ import {
   portionColors,
   sectionAccentClasses,
   sectionTitleClasses,
-  stockBannerClasses,
-  stockStatusColor,
+  // stockBannerClasses,
+  // stockStatusColor,
   type SectionAccent,
   type WeightType,
 } from "../../utils/posColors";
@@ -497,7 +497,7 @@ export default function SalesForm() {
           </div>
         )}
 
-        {totalPool && (
+        {/* {totalPool && (
           <div
             className={`p-4 border-2 rounded-xl ${stockBannerClasses[stockStatusColor(totalPool.available_kg, builderTotalKilo)]}`}
           >
@@ -516,7 +516,7 @@ export default function SalesForm() {
               </p>
             )}
           </div>
-        )}
+        )} */}
 
         <Section title={t("sales.weightPortion")} accent="portion">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -584,9 +584,9 @@ export default function SalesForm() {
             onChange={(e) => setBuilder({ ...builder, manual_kg: e.target.value })}
             className="text-lg font-semibold border-gray-200"
           />
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {/* <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             {t("sales.manualKgHint")}
-          </p>
+          </p> */}
         </Section>
 
         {builderLineTotal > 0 && (
