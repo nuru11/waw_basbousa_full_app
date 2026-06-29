@@ -41,6 +41,7 @@ export function getNavForRole(role: User["role"]): NavItem[] {
           nameKey: "chief",
           subItems: [
             { nameKey: "platesMade", path: "/admin/production" },
+            { nameKey: "chiefStockAdjust", path: "/admin/chief/stock" },
             { nameKey: "chiefTodayActivity", path: "/admin/chief/today" },
           ],
         },

@@ -9,7 +9,13 @@
   "inventory": {
     "metaTitle": "Inventory | Restaurant",
     "metaDescription": "Remaining stock",
-    "lowStockAlert": "Low stock alert"
+    "lowStockAlert": "Low stock alert",
+    "manualReduceOnly": "Manual reduce",
+    "reduceStock": "Reduce stock",
+    "reduceQuantity": "Quantity to reduce",
+    "reduceNotes": "Note (optional)",
+    "reduceSuccess": "Stock reduced",
+    "reduceFailed": "Failed to reduce stock"
   },
   "production": {
     "metaTitle": "Production | Restaurant",
@@ -28,7 +34,8 @@
     "adjustmentNote": "Ingredient adjustments",
     "optionalNote": "Note (optional)",
     "noAdjustments": "No changes from recipe",
-    "adjustmentHint": "Auto-generated when quantities differ from recipe"
+    "adjustmentHint": "Auto-generated when quantities differ from recipe",
+    "manualReduceOnly": "Manual reduce only"
   },
   "todaysPlates": {
     "metaTitle": "Today's Plates | Restaurant",

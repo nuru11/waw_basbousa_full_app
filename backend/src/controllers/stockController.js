@@ -14,7 +14,8 @@ async function adjust(req, res, next) {
     const result = await stockService.adjustStock(
       req.body.ingredient_id,
       req.body,
-      req.user.id
+      req.user.id,
+      req.user.role
     );
     res.json({ success: true, data: result });
   } catch (err) {

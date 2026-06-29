@@ -116,6 +116,7 @@ export interface Ingredient {
   current_stock: string | number;
   min_stock: string | number;
   has_size: boolean;
+  auto_reduce: boolean;
 }
 
 export interface DishIngredient {

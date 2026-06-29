@@ -35,7 +35,10 @@
     "minStockAlert": "تنبيه الحد الأدنى للمخزون",
     "hasSize": "له أحجام (صغير / كبير)",
     "hasSizeCol": "أحجام",
-    "hasSizeYes": "نعم"
+    "hasSizeYes": "نعم",
+    "autoReduce": "خصم المخزون تلقائياً عند طبخ الطبق",
+    "autoReduceCol": "خصم تلقائي",
+    "autoReduceYes": "نعم"
   },
   "dishes": {
     "metaTitle": "الأطباق / القائمة | المطعم",
@@ -119,6 +122,23 @@
     "poolTotalsTitle": "ملخص إجمالي المبيعات",
     "plateRowCount": "{{count}} سجل",
     "noPlatesLogged": "لم يُسجَّل أطباق بعد"
+  },
+  "chiefStockAdjust": {
+    "metaTitle": "مخزون الطباخ | المطعم",
+    "metaDescription": "إضافة أو تقليل مخزون مطبخ الطباخ مباشرة",
+    "adjustTitle": "تعديل مخزون المطبخ",
+    "adjustHint": "أضف أو قلّل مخزون المطبخ مباشرة دون مسار المشتريات.",
+    "selectIngredient": "اختر مكوّناً",
+    "quantityDelta": "تغيير الكمية",
+    "quantityDeltaPlaceholder": "مثال: 10 أو -2",
+    "quantityDeltaHint": "استخدم رقماً موجباً للإضافة وسالباً للتقليل.",
+    "currentStock": "المخزون الحالي",
+    "newStock": "المخزون بعد التعديل",
+    "belowZero": "لا يمكن أن يكون المخزون أقل من الصفر.",
+    "notesPlaceholder": "سبب التعديل (اختياري)",
+    "adjustButton": "تطبيق التعديل",
+    "adjusting": "جارٍ التطبيق...",
+    "adjustedSuccess": "تم تحديث مخزون المطبخ بنجاح"
   },
   "chiefToday": {
     "metaTitle": "الطباخ اليوم | المطعم",

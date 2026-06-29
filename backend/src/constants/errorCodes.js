@@ -81,6 +81,7 @@ const ERROR_CODES = {
   RECIPE_SIZE_REQUIRED: 'Recipe size is required for this ingredient (small or large)',
   RECIPE_SIZE_NOT_ALLOWED: 'Recipe size is not applicable for this ingredient',
   INVALID_INGREDIENT_USAGE: 'Ingredient usage does not match dish recipe',
+  AUTO_REDUCE_MANUAL_ONLY: 'This ingredient is reduced automatically on production; manual reduction is not allowed',
 };
 
 module.exports = ERROR_CODES;

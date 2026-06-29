@@ -7,10 +7,14 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
-import { SectionCard, StatCard } from "../../components/ui";
+import IngredientStockGrid, {
+  isLowStock,
+} from "../../components/inventory/IngredientStockGrid";
+import { SectionCard, StatCard, StatusBadge } from "../../components/ui";
 import { api, type Ingredient, type TransferBalance } from "../../services/api";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { formatNumber } from "../../utils/formatNumber";
 import { translateApiError } from "../../utils/translateApiError";
 
 export default function PurchasesPage() {
@@ -60,6 +64,29 @@ export default function PurchasesPage() {
   );
 
   const requiresSize = selectedIngredient?.has_size ?? false;
+
+  const selectedLow = selectedIngredient ? isLowStock(selectedIngredient) : false;
+
+  const ingredientOptions = useMemo(
+    () =>
+      ingredients.map((i) => {
+        const low = isLowStock(i);
+        return {
+          value: String(i.id),
+          label: low
+            ? t("purchases.ingredientOptionLow", {
+                name: i.name,
+                unit: i.unit,
+              })
+            : t("purchases.ingredientOptionRemaining", {
+                name: i.name,
+                unit: i.unit,
+                amount: formatNumber(i.current_stock),
+              }),
+        };
+      }),
+    [ingredients, t]
+  );
 
   function handleIngredientChange(ingredient_id: string) {
     setForm({ ...form, ingredient_id, size: "" });
@@ -141,6 +168,19 @@ export default function PurchasesPage() {
         </div>
       )}
 
+      {ingredients.length > 0 && (
+        <SectionCard title={t("purchases.kitchenStockTitle")} className="mb-6">
+          <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+            {t("purchases.kitchenStockHint")}
+          </p>
+          <IngredientStockGrid
+            ingredients={ingredients}
+            highlightId={selectedIngredient?.id}
+            lowStockAlert={t("purchases.selectedStockLow")}
+          />
+        </SectionCard>
+      )}
+
       <SectionCard title={t("purchases.newPurchaseInvoice")} className="max-w-lg">
         <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-error-500">{error}</p>}
@@ -152,11 +192,30 @@ export default function PurchasesPage() {
             value={form.ingredient_id}
             onChange={handleIngredientChange}
             placeholder={t("common:fields.selectIngredient")}
-            options={ingredients.map((i) => ({
-              value: String(i.id),
-              label: `${i.name} (${i.unit})`,
-            }))}
+            options={ingredientOptions}
           />
+          {selectedIngredient && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <span>
+                {t("purchases.selectedStockCurrent", {
+                  amount: formatNumber(selectedIngredient.current_stock),
+                  unit: selectedIngredient.unit,
+                })}
+              </span>
+              <span className="text-gray-300 dark:text-gray-600">·</span>
+              <span>
+                {t("purchases.selectedStockMin", {
+                  amount: formatNumber(selectedIngredient.min_stock),
+                  unit: selectedIngredient.unit,
+                })}
+              </span>
+              {selectedLow && (
+                <StatusBadge variant="low_stock">
+                  {t("purchases.selectedStockLow")}
+                </StatusBadge>
+              )}
+            </div>
+          )}
         </div>
         {requiresSize && (
           <div>

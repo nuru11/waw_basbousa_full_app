@@ -35,7 +35,10 @@
     "minStockAlert": "Min Stock Alert",
     "hasSize": "Has size variants (small / large)",
     "hasSizeCol": "Size variants",
-    "hasSizeYes": "Yes"
+    "hasSizeYes": "Yes",
+    "autoReduce": "Reduce stock automatically when plate is made",
+    "autoReduceCol": "Auto reduce",
+    "autoReduceYes": "Yes"
   },
   "dishes": {
     "metaTitle": "Plates / Menu | Restaurant",
@@ -119,6 +122,23 @@
     "poolTotalsTitle": "Total sales summary",
     "plateRowCount": "{{count}} entries",
     "noPlatesLogged": "No plates logged yet"
+  },
+  "chiefStockAdjust": {
+    "metaTitle": "Chief Stock | Restaurant",
+    "metaDescription": "Add or reduce chief kitchen stock directly",
+    "adjustTitle": "Adjust Kitchen Stock",
+    "adjustHint": "Add or reduce kitchen stock directly, bypassing the purchase flow.",
+    "selectIngredient": "Select an ingredient",
+    "quantityDelta": "Quantity change",
+    "quantityDeltaPlaceholder": "e.g. 10 or -2",
+    "quantityDeltaHint": "Use a positive number to add stock, negative to reduce.",
+    "currentStock": "Current stock",
+    "newStock": "New stock after adjustment",
+    "belowZero": "Stock cannot go below zero.",
+    "notesPlaceholder": "Reason for this adjustment (optional)",
+    "adjustButton": "Apply adjustment",
+    "adjusting": "Applying...",
+    "adjustedSuccess": "Kitchen stock updated successfully"
   },
   "chiefToday": {
     "metaTitle": "Chief Today | Restaurant",

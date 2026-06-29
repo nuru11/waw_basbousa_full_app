@@ -20,7 +20,7 @@ async function listStock() {
   });
 }
 
-async function adjustStock(ingredientId, { quantity_delta, notes }, userId) {
+async function adjustStock(ingredientId, { quantity_delta, notes }, userId, userRole) {
   const transaction = await sequelize.transaction();
 
   try {
@@ -31,6 +31,14 @@ async function adjustStock(ingredientId, { quantity_delta, notes }, userId) {
     if (!ingredient) throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
 
     const delta = parseFloat(quantity_delta);
+    if (userRole === 'chief' && delta < 0 && ingredient.auto_reduce) {
+      throw new AppError(
+        'AUTO_REDUCE_MANUAL_ONLY',
+        ERROR_CODES.AUTO_REDUCE_MANUAL_ONLY,
+        400
+      );
+    }
+
     const newStock = parseFloat(ingredient.current_stock) + delta;
     if (newStock < 0) {
       throw new AppError('STOCK_BELOW_ZERO', ERROR_CODES.STOCK_BELOW_ZERO, 400);
@@ -243,6 +251,16 @@ async function logProduction(
       throw new AppError('DISH_NO_RECIPE', ERROR_CODES.DISH_NO_RECIPE, 400);
     }
 
+    const ingredientIds = [...new Set(recipe.map((item) => item.ingredient_id))];
+    const ingredients = await Ingredient.findAll({
+      where: { id: ingredientIds },
+      transaction,
+    });
+    const autoReduceById = new Map(
+      ingredients.map((ingredient) => [ingredient.id, ingredient.auto_reduce])
+    );
+    const autoRecipe = recipe.filter((item) => autoReduceById.get(item.ingredient_id) !== false);
+
     const usageMap =
       ingredient_usage && ingredient_usage.length > 0
         ? buildUsageMap(ingredient_usage)
@@ -250,7 +268,7 @@ async function logProduction(
 
     if (usageMap) {
       const recipeKeys = new Set(
-        recipe.map((item) => recipeUsageKey(item.ingredient_id, item.size ?? null))
+        autoRecipe.map((item) => recipeUsageKey(item.ingredient_id, item.size ?? null))
       );
       for (const key of usageMap.keys()) {
         if (!recipeKeys.has(key)) {
@@ -261,7 +279,7 @@ async function logProduction(
           );
         }
       }
-      if (usageMap.size !== recipe.length) {
+      if (usageMap.size !== autoRecipe.length) {
         throw new AppError(
           'INVALID_INGREDIENT_USAGE',
           ERROR_CODES.INVALID_INGREDIENT_USAGE,
@@ -271,6 +289,8 @@ async function logProduction(
     }
 
     for (const item of recipe) {
+      if (!autoReduceById.get(item.ingredient_id)) continue;
+
       const ingredient = await Ingredient.findByPk(item.ingredient_id, {
         lock: transaction.LOCK.UPDATE,
         transaction,
@@ -316,7 +336,7 @@ async function logProduction(
     let finalNotes = notes?.trim() || '';
     if (usageMap) {
       const adjustmentNotes = await buildIngredientAdjustmentNotes(
-        recipe,
+        autoRecipe,
         usageMap,
         plates_count,
         transaction

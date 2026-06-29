@@ -26,6 +26,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
+      auto_reduce: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
     },
     { tableName: 'ingredients', underscored: true }
   );

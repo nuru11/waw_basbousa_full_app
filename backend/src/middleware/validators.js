@@ -25,6 +25,7 @@ const createIngredientValidation = [
     .isIn(['bottle', 'kg', 'piece', 'liter', 'gram'])
     .withMessage('VALIDATION_INVALID_UNIT'),
   body('has_size').optional().isBoolean().withMessage('VALIDATION_FAILED'),
+  body('auto_reduce').optional().isBoolean().withMessage('VALIDATION_FAILED'),
   validate,
 ];
 

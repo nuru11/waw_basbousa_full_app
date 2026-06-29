@@ -9,7 +9,13 @@
   "inventory": {
     "metaTitle": "المخزون | المطعم",
     "metaDescription": "المخزون المتبقي",
-    "lowStockAlert": "تنبيه انخفاض المخزون"
+    "lowStockAlert": "تنبيه انخفاض المخزون",
+    "manualReduceOnly": "خصم يدوي",
+    "reduceStock": "خصم من المخزون",
+    "reduceQuantity": "الكمية المراد خصمها",
+    "reduceNotes": "ملاحظة (اختياري)",
+    "reduceSuccess": "تم خصم المخزون",
+    "reduceFailed": "فشل خصم المخزون"
   },
   "production": {
     "metaTitle": "الإنتاج | المطعم",
@@ -28,7 +34,8 @@
     "adjustmentNote": "تعديلات المكوّنات",
     "optionalNote": "ملاحظة (اختياري)",
     "noAdjustments": "لا تغييرات عن الوصفة",
-    "adjustmentHint": "يُنشأ تلقائياً عند اختلاف الكميات عن الوصفة"
+    "adjustmentHint": "يُنشأ تلقائياً عند اختلاف الكميات عن الوصفة",
+    "manualReduceOnly": "خصم يدوي فقط"
   },
   "todaysPlates": {
     "metaTitle": "أطباق اليوم | المطعم",

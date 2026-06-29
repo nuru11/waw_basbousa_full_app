@@ -18,6 +18,7 @@ import AllPurchasesPage from "./pages/superadmin/AllPurchases";
 import ProductionHistoryPage from "./pages/superadmin/ProductionHistory";
 import PurchaserTodayPage from "./pages/superadmin/PurchaserToday";
 import ChiefTodayPage from "./pages/superadmin/ChiefToday";
+import ChiefStockAdjustPage from "./pages/superadmin/ChiefStockAdjust";
 import SalesTodayPage from "./pages/superadmin/SalesToday";
 import SalesHistoryPage from "./pages/superadmin/SalesHistory";
 import RecordExpensePage from "./pages/superadmin/RecordExpense";
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/admin/purchases/history" element={<AllPurchasesPage />} />
               <Route path="/admin/purchaser/today" element={<PurchaserTodayPage />} />
               <Route path="/admin/production" element={<ProductionHistoryPage />} />
+              <Route path="/admin/chief/stock" element={<ChiefStockAdjustPage />} />
               <Route path="/admin/chief/today" element={<ChiefTodayPage />} />
               <Route path="/admin/sales/today" element={<SalesTodayPage />} />
               <Route path="/admin/sales/history" element={<SalesHistoryPage />} />

@@ -24,7 +24,14 @@
     "sizeLabel": "الحجم",
     "sizeSmall": "صغير",
     "sizeLarge": "كبير",
-    "sizeRequired": "يرجى اختيار الحجم لهذا المكوّن"
+    "sizeRequired": "يرجى اختيار الحجم لهذا المكوّن",
+    "kitchenStockTitle": "مخزون المطبخ (مع الطباخ)",
+    "kitchenStockHint": "المخزون الحالي في المطبخ — اشترِ المواد المنخفضة",
+    "selectedStockCurrent": "لدى الطباخ {{amount}} {{unit}}",
+    "selectedStockMin": "الحد الأدنى: {{amount}} {{unit}}",
+    "selectedStockLow": "مخزون منخفض — فكّر في شراء المزيد",
+    "ingredientOptionRemaining": "{{name}} ({{unit}}) — {{amount}} متبقي",
+    "ingredientOptionLow": "{{name}} ({{unit}}) — منخفض"
   },
   "purchaseHistory": {
     "metaTitle": "سجل المشتريات | المطعم",

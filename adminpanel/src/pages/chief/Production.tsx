@@ -31,6 +31,10 @@ function recipeUsageKey(ingredientId: number, size: string | null | undefined) {
   return `${ingredientId}:${size ?? ""}`;
 }
 
+function isAutoReduce(ingredient?: Ingredient): boolean {
+  return ingredient?.auto_reduce !== false;
+}
+
 export default function ProductionPage() {
   const { t } = useTranslation(["chief", "common", "nav"]);
   const [dishes, setDishes] = useState<Dish[]>([]);
@@ -70,6 +74,8 @@ export default function ProductionPage() {
     }
     const defaults: Record<string, string> = {};
     for (const item of selectedDish.recipe) {
+      const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
+      if (!isAutoReduce(ingredient)) continue;
       const key = recipeUsageKey(item.ingredient_id, item.size);
       const defaultQty = parseFloat(String(item.quantity_per_plate)) * PLATES_COUNT;
       defaults[key] = String(defaultQty);
@@ -85,6 +91,7 @@ export default function ProductionPage() {
       const used = parseFloat(ingredientUsage[key] ?? "");
       const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
       const available = ingredient ? parseFloat(String(ingredient.current_stock)) : 0;
+      const manual = !isAutoReduce(ingredient);
       const sizeLabel = item.size ? t(`common:fields.${item.size}`) : null;
       const baseName =
         ingredient?.name ??
@@ -100,7 +107,8 @@ export default function ProductionPage() {
         recipeDefault,
         used,
         available,
-        sufficient: used > 0 && available >= used,
+        isManual: manual,
+        sufficient: manual || (used > 0 && available >= used),
       };
     });
   }, [selectedDish, stock, ingredientUsage, t]);
@@ -108,30 +116,41 @@ export default function ProductionPage() {
   const adjustmentNote = useMemo(
     () =>
       buildAdjustmentNote(
-        preview.map((row) => ({
-          delta: row.used - row.recipeDefault,
-          name: row.displayName,
-        }))
+        preview
+          .filter((row) => !row.isManual)
+          .map((row) => ({
+            delta: row.used - row.recipeDefault,
+            name: row.displayName,
+          }))
       ),
+    [preview]
+  );
+
+  const autoPreview = useMemo(
+    () => preview.filter((row) => !row.isManual),
     [preview]
   );
 
   const maxPlates = useMemo(() => {
     if (!selectedDish?.recipe) return 0;
+    const autoRecipe = selectedDish.recipe.filter((item) => {
+      const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
+      return isAutoReduce(ingredient);
+    });
     const stockByIngredientId = new Map(
       stock.map((ingredient) => [
         ingredient.id,
         parseFloat(String(ingredient.current_stock)),
       ])
     );
-    return maxPlatesFromStock(selectedDish.recipe, stockByIngredientId, PLATES_COUNT);
+    return maxPlatesFromStock(autoRecipe, stockByIngredientId, PLATES_COUNT);
   }, [selectedDish, stock]);
 
   const canSubmit =
     form.dish_id &&
     plateWeightKg > 0 &&
     preview.length > 0 &&
-    preview.every((p) => p.sufficient);
+    (autoPreview.length === 0 || autoPreview.every((p) => p.sufficient));
 
   const load = () => {
     api.get<Dish[]>("/dishes").then(setDishes);
@@ -150,19 +169,36 @@ export default function ProductionPage() {
     await run(async () => {
       setError("");
       try {
-        await api.post("/stock/production", {
+        const autoRecipe = recipe.filter((item) => {
+          const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
+          return isAutoReduce(ingredient);
+        });
+        const payload: {
+          dish_id: number;
+          plates_count: number;
+          plate_weight_grams: number;
+          notes: string | null;
+          ingredient_usage?: {
+            ingredient_id: number;
+            size: string | null;
+            quantity_used: number;
+          }[];
+        } = {
           dish_id: parseInt(form.dish_id),
           plates_count: PLATES_COUNT,
           plate_weight_grams: kgToStoredGrams(plateWeightKg),
           notes: form.chiefNote.trim() || null,
-          ingredient_usage: recipe.map((item) => ({
+        };
+        if (autoRecipe.length > 0) {
+          payload.ingredient_usage = autoRecipe.map((item) => ({
             ingredient_id: item.ingredient_id,
             size: item.size ?? null,
             quantity_used: parseFloat(
               ingredientUsage[recipeUsageKey(item.ingredient_id, item.size)]
             ),
-          })),
-        });
+          }));
+        }
+        await api.post("/stock/production", payload);
         setForm(emptyForm);
         setIngredientUsage({});
         load();
@@ -243,37 +279,57 @@ export default function ProductionPage() {
                         {row.sizeLabel && (
                           <span className="ms-1 text-xs text-gray-500">({row.sizeLabel})</span>
                         )}
+                        {row.isManual && (
+                          <span className="mt-1 block">
+                            <StatusBadge variant="info">{t("production.manualReduceOnly")}</StatusBadge>
+                          </span>
+                        )}
                       </td>
                       <td className="p-2">
-                        <Input
-                          type="number"
-                          min="0.001"
-                          step={0.001}
-                          value={ingredientUsage[row.key] ?? ""}
-                          onChange={(e) =>
-                            setIngredientUsage((prev) => ({
-                              ...prev,
-                              [row.key]: e.target.value,
-                            }))
-                          }
-                          className="max-w-28"
-                        />
-                        <p className="mt-1 text-xs text-gray-500">
-                          {t("production.recipeDefault", {
-                            amount: formatNumber(row.recipeDefault),
-                            unit: row.unit,
-                          })}
-                        </p>
+                        {row.isManual ? (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {t("production.recipeDefault", {
+                              amount: formatNumber(row.recipeDefault),
+                              unit: row.unit,
+                            })}
+                          </p>
+                        ) : (
+                          <>
+                            <Input
+                              type="number"
+                              min="0.001"
+                              step={0.001}
+                              value={ingredientUsage[row.key] ?? ""}
+                              onChange={(e) =>
+                                setIngredientUsage((prev) => ({
+                                  ...prev,
+                                  [row.key]: e.target.value,
+                                }))
+                              }
+                              className="max-w-28"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                              {t("production.recipeDefault", {
+                                amount: formatNumber(row.recipeDefault),
+                                unit: row.unit,
+                              })}
+                            </p>
+                          </>
+                        )}
                       </td>
                       <td className="p-2">
                         {formatNumber(row.available)} {row.unit}
                       </td>
                       <td className="p-2">
-                        <StatusBadge variant={row.sufficient ? "active" : "low_stock"}>
-                          {row.sufficient
-                            ? t("common:status.ok")
-                            : t("common:status.insufficient")}
-                        </StatusBadge>
+                        {row.isManual ? (
+                          <StatusBadge variant="info">{t("production.manualReduceOnly")}</StatusBadge>
+                        ) : (
+                          <StatusBadge variant={row.sufficient ? "active" : "low_stock"}>
+                            {row.sufficient
+                              ? t("common:status.ok")
+                              : t("common:status.insufficient")}
+                          </StatusBadge>
+                        )}
                       </td>
                     </tr>
                   ))}

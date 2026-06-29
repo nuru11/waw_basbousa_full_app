@@ -23,7 +23,7 @@ export default function IngredientsPage() {
   const { t: tNav } = useTranslation("nav");
   const { t: tValidation } = useTranslation("validation");
   const [items, setItems] = useState<Ingredient[]>([]);
-  const [form, setForm] = useState({ name: "", unit: "kg", min_stock: "0", has_size: false });
+  const [form, setForm] = useState({ name: "", unit: "kg", min_stock: "0", has_size: false, auto_reduce: true });
   const [error, setError] = useState("");
   const { submitting, run } = useSubmitLock();
 
@@ -43,8 +43,9 @@ export default function IngredientsPage() {
           unit: form.unit,
           min_stock: parseFloat(form.min_stock),
           has_size: form.has_size,
+          auto_reduce: form.auto_reduce,
         });
-        setForm({ name: "", unit: "kg", min_stock: "0", has_size: false });
+        setForm({ name: "", unit: "kg", min_stock: "0", has_size: false, auto_reduce: true });
         load();
       } catch (err: unknown) {
         setError(translateApiError(err, "common:failed"));
@@ -75,6 +76,12 @@ export default function IngredientsPage() {
         header: t("ingredients.hasSizeCol"),
         render: (item) =>
           item.has_size ? t("ingredients.hasSizeYes") : tCommon("emDash"),
+      },
+      {
+        key: "auto_reduce",
+        header: t("ingredients.autoReduceCol"),
+        render: (item) =>
+          item.auto_reduce !== false ? t("ingredients.autoReduceYes") : tCommon("emDash"),
       },
       {
         key: "stock",
@@ -140,6 +147,11 @@ export default function IngredientsPage() {
             label={t("ingredients.hasSize")}
             checked={form.has_size}
             onChange={(has_size) => setForm({ ...form, has_size })}
+          />
+          <Checkbox
+            label={t("ingredients.autoReduce")}
+            checked={form.auto_reduce}
+            onChange={(auto_reduce) => setForm({ ...form, auto_reduce })}
           />
           <Button type="submit" size="sm" disabled={submitting}>
             {submitting ? tCommon("actions.adding") : tCommon("actions.add")}

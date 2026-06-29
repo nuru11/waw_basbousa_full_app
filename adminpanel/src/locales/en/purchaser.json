@@ -24,7 +24,14 @@
     "sizeLabel": "Size",
     "sizeSmall": "Small",
     "sizeLarge": "Large",
-    "sizeRequired": "Please select a size for this ingredient"
+    "sizeRequired": "Please select a size for this ingredient",
+    "kitchenStockTitle": "Kitchen stock (with chief)",
+    "kitchenStockHint": "Current stock at the kitchen — buy items that are low",
+    "selectedStockCurrent": "Chief has {{amount}} {{unit}}",
+    "selectedStockMin": "Minimum: {{amount}} {{unit}}",
+    "selectedStockLow": "Low stock — consider buying more",
+    "ingredientOptionRemaining": "{{name}} ({{unit}}) — {{amount}} remaining",
+    "ingredientOptionLow": "{{name}} ({{unit}}) — LOW"
   },
   "purchaseHistory": {
     "metaTitle": "Purchase History | Restaurant",
