@@ -45,6 +45,18 @@ npm run dev
 
 Admin panel proxies `/api` to the backend (see `adminpanel/vite.config.ts`). Default dev URL: `http://localhost:5173`
 
+For production, build and deploy to your admin hosting:
+
+```bash
+cd adminpanel
+# Set VITE_API_URL=https://your-api-domain.com/api in .env.production or CI
+npm run build
+```
+
+Upload the contents of `adminpanel/dist/` to your hosting document root (e.g. cPanel `public_html` or admin subdomain folder). The build includes `adminpanel/public/.htaccess`, which rewrites unknown paths to `index.html` so client-side routes work on refresh (Apache/cPanel). Ensure your FTP client uploads dotfiles.
+
+On Nginx, use SPA fallback instead: `try_files $uri /index.html`.
+
 ### 4. Cashier app (POS)
 
 ```bash

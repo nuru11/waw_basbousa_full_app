@@ -6,11 +6,12 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   "salaries",
   "electricity",
   "other",
+  "tips",
 ];
 
 export const RECORD_EXPENSE_CATEGORIES = EXPENSE_CATEGORIES.filter(
-  (c) => c !== "salaries"
-) as Exclude<ExpenseCategory, "salaries">[];
+  (c) => c !== "salaries" && c !== "tips"
+) as Exclude<ExpenseCategory, "salaries" | "tips">[];
 
 export function expenseCategoryVariant(category: ExpenseCategory): StatusBadgeVariant {
   switch (category) {
@@ -18,6 +19,8 @@ export function expenseCategoryVariant(category: ExpenseCategory): StatusBadgeVa
       return "cbe";
     case "salaries":
       return "active";
+    case "tips":
+      return "info";
     case "electricity":
       return "pending";
     case "other":

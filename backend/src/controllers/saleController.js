@@ -45,4 +45,22 @@ async function createBatch(req, res, next) {
   }
 }
 
-module.exports = { create, createBatch, list, mine, sellers };
+async function today(req, res, next) {
+  try {
+    const sales = await saleService.listTodaySales();
+    res.json({ success: true, data: sales });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function update(req, res, next) {
+  try {
+    const sale = await saleService.updateSale(req.params.id, req.body);
+    res.json({ success: true, data: sale });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, createBatch, list, mine, sellers, today, update };

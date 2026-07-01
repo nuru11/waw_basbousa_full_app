@@ -76,6 +76,7 @@ async function getSummary() {
     salaries: 0,
     electricity: 0,
     other: 0,
+    tips: 0,
     chief_expenses: chief_expenses_total,
   };
   for (const row of operatingByCategoryRows) {
@@ -194,22 +195,26 @@ async function getDailySalesOverview(dateInput) {
 
   const payments = createEmptyPayments();
   let totalRevenue = 0;
+  let totalTips = 0;
   let kiloSold = 0;
 
   const dishSalesMap = new Map();
   const sellerMap = new Map();
 
   for (const sale of sales) {
-    const revenue = parseFloat(sale.total_price || 0);
+    const tip = parseFloat(sale.tip_amount || 0);
+    const lineRevenue = parseFloat(sale.total_price || 0) + tip;
+    const dishRevenue = parseFloat(sale.total_price || 0);
     const kilo = parseFloat(sale.kilo_consumed || 0);
-    totalRevenue += revenue;
+    totalRevenue += lineRevenue;
+    totalTips += tip;
     kiloSold += kilo;
 
     const method = sale.payment_method || 'other';
     if (payments[method] !== undefined) {
-      payments[method] += revenue;
+      payments[method] += lineRevenue;
     } else {
-      payments.other += revenue;
+      payments.other += lineRevenue;
     }
 
     const dishId = sale.dish_id;
@@ -223,7 +228,7 @@ async function getDailySalesOverview(dateInput) {
       });
     }
     const dishRow = dishSalesMap.get(dishId);
-    dishRow.revenue += revenue;
+    dishRow.revenue += dishRevenue;
     dishRow.sale_count += 1;
     dishRow.sold_kg += kilo;
 
@@ -233,13 +238,17 @@ async function getDailySalesOverview(dateInput) {
         seller_id: sellerId,
         seller_name: sale.seller?.name ?? `Staff #${sellerId}`,
         role: sale.seller?.role ?? null,
+        sales_revenue: 0,
+        tips_total: 0,
         revenue: 0,
         sale_count: 0,
         kilo_sold: 0,
       });
     }
     const sellerRow = sellerMap.get(sellerId);
-    sellerRow.revenue += revenue;
+    sellerRow.sales_revenue += dishRevenue;
+    sellerRow.tips_total += tip;
+    sellerRow.revenue += lineRevenue;
     sellerRow.sale_count += 1;
     sellerRow.kilo_sold += kilo;
   }
@@ -307,6 +316,7 @@ async function getDailySalesOverview(dateInput) {
     date,
     summary: {
       total_revenue: totalRevenue,
+      total_tips: totalTips,
       sale_count: sales.length,
       kilo_sold: kiloSold,
       payments,
@@ -394,6 +404,7 @@ async function getMonthlyAnalysis(periodInput) {
     salaries: 0,
     electricity: 0,
     other: 0,
+    tips: 0,
     chief_expenses: chief_expenses_total,
   };
   for (const row of operatingByCategoryRows) {
@@ -406,14 +417,16 @@ async function getMonthlyAnalysis(periodInput) {
   let income = 0;
 
   for (const sale of sales) {
-    const revenue = parseFloat(sale.total_price || 0);
-    income += revenue;
+    const tip = parseFloat(sale.tip_amount || 0);
+    const lineRevenue = parseFloat(sale.total_price || 0) + tip;
+    const dishRevenue = parseFloat(sale.total_price || 0);
+    income += lineRevenue;
 
     const method = sale.payment_method || 'other';
     if (payments[method] !== undefined) {
-      payments[method] += revenue;
+      payments[method] += lineRevenue;
     } else {
-      payments.other += revenue;
+      payments.other += lineRevenue;
     }
 
     const dishId = sale.dish_id;
@@ -426,7 +439,7 @@ async function getMonthlyAnalysis(periodInput) {
       });
     }
     const dishRow = dishSalesMap.get(dishId);
-    dishRow.revenue += revenue;
+    dishRow.revenue += dishRevenue;
     dishRow.sale_count += 1;
 
     const sellerId = sale.seller_id;
@@ -439,7 +452,7 @@ async function getMonthlyAnalysis(periodInput) {
       });
     }
     const sellerRow = sellerMap.get(sellerId);
-    sellerRow.revenue += revenue;
+    sellerRow.revenue += lineRevenue;
     sellerRow.sale_count += 1;
   }
 
@@ -448,7 +461,8 @@ async function getMonthlyAnalysis(periodInput) {
   for (const sale of sales) {
     const date = saleDateYmd(sale.sold_at);
     if (!date || !byDayMap.has(date)) continue;
-    byDayMap.get(date).income += parseFloat(sale.total_price || 0);
+    const tip = parseFloat(sale.tip_amount || 0);
+    byDayMap.get(date).income += parseFloat(sale.total_price || 0) + tip;
   }
 
   for (const purchase of purchases) {

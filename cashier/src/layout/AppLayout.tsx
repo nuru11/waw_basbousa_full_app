@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import Button from "../components/ui/button/Button";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
@@ -10,6 +10,19 @@ export default function AppLayout() {
   const { t: tc } = useTranslation("common");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const navLinkClass = (path: string) => {
+    const active =
+      path === "/"
+        ? location.pathname === "/"
+        : location.pathname.startsWith(path);
+    return `touch-target rounded-lg px-3 py-2 text-sm font-semibold transition ${
+      active
+        ? "bg-white/25 text-white"
+        : "text-white/80 hover:bg-white/15 hover:text-white"
+    }`;
+  };
 
   function handleLogout() {
     logout();
@@ -40,6 +53,14 @@ export default function AppLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <nav className="items-center hidden gap-1 mr-1 sm:flex">
+              <Link to="/" className={navLinkClass("/")}>
+                {t("nav.pos")}
+              </Link>
+              <Link to="/sales" className={navLinkClass("/sales")}>
+                {t("nav.todaySales")}
+              </Link>
+            </nav>
             <LanguageToggleButton />
             <ThemeToggleButton />
             <Button
@@ -72,6 +93,28 @@ export default function AppLayout() {
           </div>
         </div>
       </header>
+      <nav className="flex gap-2 px-4 py-2 mx-auto border-b border-gray-200 sm:hidden max-w-6xl dark:border-gray-800 md:px-6">
+        <Link
+          to="/"
+          className={`flex-1 touch-target rounded-lg px-3 py-2 text-center text-sm font-semibold transition ${
+            location.pathname === "/"
+              ? "bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
+              : "text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+          }`}
+        >
+          {t("nav.pos")}
+        </Link>
+        <Link
+          to="/sales"
+          className={`flex-1 touch-target rounded-lg px-3 py-2 text-center text-sm font-semibold transition ${
+            location.pathname.startsWith("/sales")
+              ? "bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300"
+              : "text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+          }`}
+        >
+          {t("nav.todaySales")}
+        </Link>
+      </nav>
       <main className="flex-1 px-4 py-4 mx-auto w-full max-w-6xl md:px-6 md:py-6 lg:pb-6">
         <Outlet />
       </main>

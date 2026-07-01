@@ -10,7 +10,7 @@ module.exports = (sequelize) => {
       seller_id: { type: DataTypes.INTEGER, allowNull: false },
       kilo_consumed: { type: DataTypes.DECIMAL(10, 4), allowNull: false, defaultValue: 0 },
       weight_type: {
-        type: DataTypes.ENUM('quarter', 'half', 'kilo', 'slice'),
+        type: DataTypes.ENUM('quarter', 'half', 'kilo', 'slice', 'half_slice'),
         allowNull: false,
       },
       slice_count: { type: DataTypes.INTEGER, allowNull: true },
@@ -22,6 +22,7 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 'cash',
       },
+      tip_amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
       sold_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     },
     { tableName: 'sales', underscored: true }

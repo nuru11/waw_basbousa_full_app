@@ -72,6 +72,8 @@
   "VALIDATION_SPENT_AT_REQUIRED": "تاريخ الصرف مطلوب",
   "SALARY_NOT_SET": "لم يُحدَّد الراتب الشهري لهذا الموظف",
   "SALARY_ALREADY_PAID": "تم دفع الراتب لهذه الفترة مسبقاً",
+  "TIP_ALREADY_PAID": "تم دفع الإكراميات لهذه الفترة مسبقاً",
+  "NO_TIPS_TO_PAY": "لا توجد إكراميات للدفع في هذه الفترة",
   "NOT_AN_EMPLOYEE": "المستخدم المستهدف ليس موظفاً",
   "INVALID_PAY_PERIOD": "فترة دفع غير صالحة. استخدم YYYY-MM",
   "PURCHASE_SIZE_REQUIRED": "الحجم مطلوب لهذا المكوّن (صغير أو كبير)",

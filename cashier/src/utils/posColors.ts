@@ -2,7 +2,7 @@ import type { PaymentMethod } from "./paymentMethods";
 
 export type { PaymentMethod };
 export type SectionAccent = "plate" | "portion" | "payment" | "cart" | "default";
-export type WeightType = "quarter" | "half" | "kilo" | "slice";
+export type WeightType = "quarter" | "half" | "kilo" | "slice" | "half_slice";
 
 type ChoiceColors = { selected: string; idle: string; pill: string };
 
@@ -36,6 +36,13 @@ export const portionColors: Record<WeightType, ChoiceColors> = {
     pill: "bg-brand-100 text-brand-800 dark:bg-brand-500/25 dark:text-brand-300",
   },
   slice: {
+    selected:
+      "border-brand-600 bg-brand-600 text-white shadow-theme-sm dark:bg-brand-500 dark:border-brand-500",
+    idle:
+      "border-gray-200 bg-white text-gray-700 hover:border-brand-300 hover:bg-brand-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300",
+    pill: "bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300",
+  },
+  half_slice: {
     selected:
       "border-brand-600 bg-brand-600 text-white shadow-theme-sm dark:bg-brand-500 dark:border-brand-500",
     idle:

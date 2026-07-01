@@ -117,6 +117,7 @@ async function getSummary({ period = 'month' } = {}) {
     salaries: 0,
     electricity: 0,
     other: 0,
+    tips: 0,
   };
 
   for (const row of byCategoryRows) {

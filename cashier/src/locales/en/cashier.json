@@ -3,6 +3,10 @@
     "title": "Cashier Mode",
     "userLine": "{{name}} · #{{shortId}}"
   },
+  "nav": {
+    "pos": "POS",
+    "todaySales": "Today's Sales"
+  },
   "pos": {
     "metaTitle": "Cashier | Restaurant",
     "metaDescription": "Cashier point of sale",
@@ -11,5 +15,20 @@
     "stepPickPlate": "1. Pick plate (optional)",
     "stepAddItems": "2. Add items",
     "stepPay": "3. Pay"
+  },
+  "todaySales": {
+    "metaTitle": "Today's Sales | Cashier",
+    "metaDescription": "View and edit today's sales",
+    "title": "Today's Sales",
+    "subtitle": "Tap a sale to edit. Only today's sales can be changed.",
+    "transactions": "{{count}} sales today",
+    "empty": "No sales recorded today yet.",
+    "refresh": "Refresh",
+    "editTitle": "Edit sale",
+    "currentTotal": "Current total",
+    "priceRecalcHint": "Price will be recalculated when you save.",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "saved": "Sale updated successfully."
   }
 }

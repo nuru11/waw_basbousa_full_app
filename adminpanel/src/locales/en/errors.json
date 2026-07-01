@@ -72,6 +72,8 @@
   "VALIDATION_SPENT_AT_REQUIRED": "Spent date is required",
   "SALARY_NOT_SET": "Monthly salary is not set for this employee",
   "SALARY_ALREADY_PAID": "Salary already paid for this period",
+  "TIP_ALREADY_PAID": "Tips already paid for this period",
+  "NO_TIPS_TO_PAY": "No tips to pay for this period",
   "NOT_AN_EMPLOYEE": "Target user is not an employee",
   "INVALID_PAY_PERIOD": "Invalid pay period. Use YYYY-MM",
   "PURCHASE_SIZE_REQUIRED": "Size is required for this ingredient (small or large)",

@@ -22,7 +22,7 @@
     "metaDescription": "Log cooked plates",
     "logCookedPlates": "Log Cooked Plates",
     "plateWeightKg": "Plate Weight (kg)",
-    "plateWeightHint": "Weight of one cooked plate in kilograms (e.g. 1, 5, 28)",
+    "plateWeightHint": "Weight of one cooked plate in kilograms (e.g. 3.805, 1.250, 28)",
     "noRecipesHint": "No plates with recipes defined. Ask superadmin to set up recipes.",
     "logProductionBtn": "Log Production (deducts stock)",
     "recentProduction": "Recent Production",

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import SignInPage from "./pages/SignIn";
 import PosPage from "./pages/Pos";
+import TodaySalesPage from "./pages/TodaySales";
 import AppLayout from "./layout/AppLayout";
 import ProtectedRoute, { GuestRoute } from "./components/auth/ProtectedRoute";
 
@@ -15,6 +16,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<PosPage />} />
+            <Route path="sales" element={<TodaySalesPage />} />
           </Route>
         </Route>
 

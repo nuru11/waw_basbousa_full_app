@@ -11,6 +11,7 @@ module.exports = (sequelize) => {
       price_half: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       price_kilo: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       price_per_slice: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
+      price_half_slice: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     },
     { tableName: 'dishes', underscored: true }

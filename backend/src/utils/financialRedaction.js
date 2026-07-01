@@ -1,5 +1,5 @@
 const PURCHASE_FINANCIAL_FIELDS = ['unit_price', 'total_price', 'screenshot_path'];
-const DISH_PRICE_FIELDS = ['price_quarter', 'price_half', 'price_kilo', 'price_per_slice'];
+const DISH_PRICE_FIELDS = ['price_quarter', 'price_half', 'price_kilo', 'price_per_slice', 'price_half_slice'];
 
 function toPlainObject(record) {
   return typeof record?.toJSON === 'function' ? record.toJSON() : { ...record };

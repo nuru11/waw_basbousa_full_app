@@ -185,6 +185,7 @@
     "half": "Half",
     "kilo": "Kilo",
     "slice": "By Slice",
+    "half_slice": "Half Slice",
     "sliceCount": "Number of Slices"
   },
   "paymentMethods": {
@@ -201,6 +202,7 @@
   },
   "sales": {
     "totalRevenue": "Total Revenue",
+    "totalTips": "Total Tips",
     "salesCount": "Sales Count",
     "plateStock": "Plate stock",
     "producedKg": "Produced (kg)",
@@ -228,6 +230,10 @@
     "totalSold": "Total sold: ETB {{amount}}",
     "byDish": "By Dish",
     "bySeller": "By Seller",
+    "tipsBySeller": "Tips by Seller",
+    "tipCol": "Tip",
+    "salesRevenue": "Sales",
+    "noTipsRecorded": "No tips recorded for this day",
     "payments": "Payments"
   },
   "transfers": {

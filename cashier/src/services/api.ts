@@ -68,6 +68,8 @@ export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body: unknown) =>
     request<T>(path, { method: "POST", body: JSON.stringify(body) }),
+  patch: <T>(path: string, body: unknown) =>
+    request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
 };
 
 export interface User {
@@ -93,6 +95,7 @@ export interface Dish {
   price_half: string | number | null;
   price_kilo: string | number | null;
   price_per_slice: string | number | null;
+  price_half_slice: string | number | null;
   is_active: boolean;
 }
 
@@ -115,11 +118,12 @@ export interface PosDefaultPrices {
   price_half: string | number | null;
   price_kilo: string | number | null;
   price_per_slice: string | number | null;
+  price_half_slice: string | number | null;
 }
 
 export interface SaleBatchItem {
   dish_id?: number;
-  weight_type: "quarter" | "half" | "kilo" | "slice";
+  weight_type: "quarter" | "half" | "kilo" | "slice" | "half_slice";
   quantity: number;
   slice_count?: number;
   kilo_consumed?: number;
@@ -128,10 +132,38 @@ export interface SaleBatchItem {
 export interface SaleBatchRequest {
   seller_id: number;
   payment_method: string;
+  tip_amount?: number;
   items: SaleBatchItem[];
 }
 
 export interface SaleBatchResponse {
-  sales: unknown[];
+  sales: Sale[];
   order_total: number;
+}
+
+export interface Sale {
+  id: number;
+  dish_id: number | null;
+  seller_id: number;
+  weight_type: "quarter" | "half" | "kilo" | "slice" | "half_slice";
+  slice_count: number | null;
+  quantity: number;
+  unit_price: string | number;
+  total_price: string | number;
+  kilo_consumed: string | number;
+  payment_method: string;
+  tip_amount?: string | number;
+  sold_at: string;
+  dish?: Dish | null;
+  seller?: { id: number; name: string; short_id: string; role?: User["role"] };
+}
+
+export interface SaleUpdateRequest {
+  weight_type?: Sale["weight_type"];
+  quantity?: number;
+  slice_count?: number;
+  kilo_consumed?: number;
+  payment_method?: string;
+  tip_amount?: number;
+  seller_id?: number;
 }

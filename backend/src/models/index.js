@@ -24,6 +24,7 @@ const StockMovement = require('./StockMovement')(sequelize);
 const Transfer = require('./Transfer')(sequelize);
 const Expense = require('./Expense')(sequelize);
 const SalaryPayment = require('./SalaryPayment')(sequelize);
+const TipPayment = require('./TipPayment')(sequelize);
 const PosDefaultPrice = require('./PosDefaultPrice')(sequelize);
 const ChiefExpense = require('./ChiefExpense')(sequelize);
 
@@ -83,6 +84,13 @@ SalaryPayment.belongsTo(Admin, { foreignKey: 'paid_by', as: 'payer' });
 Expense.hasOne(SalaryPayment, { foreignKey: 'expense_id', as: 'salaryPayment' });
 SalaryPayment.belongsTo(Expense, { foreignKey: 'expense_id', as: 'expense' });
 
+Admin.hasMany(TipPayment, { foreignKey: 'seller_id', as: 'tipPayouts' });
+TipPayment.belongsTo(Admin, { foreignKey: 'seller_id', as: 'seller' });
+Admin.hasMany(TipPayment, { foreignKey: 'paid_by', as: 'tipPayoutsMade' });
+TipPayment.belongsTo(Admin, { foreignKey: 'paid_by', as: 'payer' });
+Expense.hasOne(TipPayment, { foreignKey: 'expense_id', as: 'tipPayment' });
+TipPayment.belongsTo(Expense, { foreignKey: 'expense_id', as: 'expense' });
+
 Admin.hasMany(ChiefExpense, { foreignKey: 'chief_id', as: 'chiefExpensesReceived' });
 ChiefExpense.belongsTo(Admin, { foreignKey: 'chief_id', as: 'chief' });
 Admin.hasMany(ChiefExpense, { foreignKey: 'created_by', as: 'chiefExpensesCreated' });
@@ -102,6 +110,7 @@ module.exports = {
   Transfer,
   Expense,
   SalaryPayment,
+  TipPayment,
   PosDefaultPrice,
   ChiefExpense,
 };

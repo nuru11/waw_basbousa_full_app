@@ -243,8 +243,8 @@ export default function ProductionPage() {
             <Label>{t("production.plateWeightKg")}</Label>
             <Input
               type="number"
-              min="0.01"
-              step={0.01}
+              min="0.001"
+              step={0.001}
               value={form.plate_weight_kg}
               onChange={(e) => setForm({ ...form, plate_weight_kg: e.target.value })}
             />

@@ -46,6 +46,7 @@ const PRICE_FIELDS: Record<WeightType, keyof PriceSource> = {
   half: "price_half",
   kilo: "price_kilo",
   slice: "price_per_slice",
+  half_slice: "price_half_slice",
 };
 
 function parsePositivePrice(value: string | number | null | undefined): number | null {
@@ -62,6 +63,7 @@ function normalizePrices(data: unknown): PosDefaultPrices | null {
     price_half: (row.price_half as PosDefaultPrices["price_half"]) ?? null,
     price_kilo: (row.price_kilo as PosDefaultPrices["price_kilo"]) ?? null,
     price_per_slice: (row.price_per_slice as PosDefaultPrices["price_per_slice"]) ?? null,
+    price_half_slice: (row.price_half_slice as PosDefaultPrices["price_half_slice"]) ?? null,
   };
   const hasAny = Object.values(PRICE_FIELDS).some(
     (field) => parsePositivePrice(prices[field]) != null
@@ -85,6 +87,7 @@ async function loadCashierPrices(): Promise<PosDefaultPrices | null> {
         price_half: PosDefaultPrices["price_half"];
         price_kilo: PosDefaultPrices["price_kilo"];
         price_per_slice: PosDefaultPrices["price_per_slice"];
+        price_half_slice: PosDefaultPrices["price_half_slice"];
       }[]
     >("/dishes?active=true");
     for (const dish of dishes) {
@@ -98,7 +101,7 @@ async function loadCashierPrices(): Promise<PosDefaultPrices | null> {
   return null;
 }
 
-const WEIGHT_OPTIONS: WeightType[] = ["quarter", "half", "kilo", "slice"];
+const WEIGHT_OPTIONS: WeightType[] = ["quarter", "half", "kilo", "slice", "half_slice"];
 
 function calcPrice(
   source: PriceSource | null,
@@ -113,19 +116,33 @@ function calcPrice(
   return unit * qty;
 }
 
+function roundKg(kg: number, decimals = 3) {
+  const factor = 10 ** decimals;
+  return Math.round(kg * factor) / factor;
+}
+
 function calcKiloConsumed(weightType: WeightType, qty: number, slices: number) {
+  let kg = 0;
   switch (weightType) {
     case "quarter":
-      return 0.25 * qty;
+      kg = 0.25 * qty;
+      break;
     case "half":
-      return 0.5 * qty;
+      kg = 0.5 * qty;
+      break;
     case "kilo":
-      return 1.0 * qty;
+      kg = 1.0 * qty;
+      break;
     case "slice":
-      return ((slices / 3) * 0.25) * qty;
+      kg = ((slices / 3) * 0.25) * qty;
+      break;
+    case "half_slice":
+      kg = 0.5 * (0.25 / 3) * qty;
+      break;
     default:
       return 0;
   }
+  return roundKg(kg);
 }
 
 function totalKiloInCart(cart: CartLine[]) {
@@ -214,6 +231,7 @@ export default function SalesForm() {
   const [order, setOrder] = useState({
     seller_id: "",
     payment_method: "cash",
+    tip_amount: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -252,6 +270,12 @@ export default function SalesForm() {
     refreshTotalPool();
   }, [cart, success, refreshTotalPool]);
 
+  useEffect(() => {
+    if (order.payment_method === "cash") {
+      setOrder((prev) => (prev.tip_amount === "" ? prev : { ...prev, tip_amount: "" }));
+    }
+  }, [order.payment_method]);
+
   const priceSource = defaultPrices;
   const builderQty = parseInt(builder.quantity) || 1;
   const builderSlices = parseInt(builder.slice_count) || 1;
@@ -272,6 +296,9 @@ export default function SalesForm() {
     !Object.values(PRICE_FIELDS).some((field) => parsePositivePrice(priceSource[field]) != null);
 
   const orderTotal = cart.reduce((sum, line) => sum + line.line_total, 0);
+  const tipValue =
+    order.payment_method !== "cash" ? parseFloat(order.tip_amount) || 0 : 0;
+  const grandTotal = orderTotal + tipValue;
   const cartStockWarning = cartExceedsPoolWarning(cart, totalPool);
 
   useEffect(() => {
@@ -343,6 +370,9 @@ export default function SalesForm() {
         const result = await api.post<SaleBatchResponse>("/sales/batch", {
           seller_id: parseInt(order.seller_id),
           payment_method: order.payment_method,
+          ...(order.payment_method !== "cash" && tipValue > 0
+            ? { tip_amount: tipValue }
+            : {}),
           items: cart.map((line) => ({
             ...(line.dish_id != null ? { dish_id: line.dish_id } : {}),
             weight_type: line.weight_type,
@@ -360,6 +390,7 @@ export default function SalesForm() {
           })
         );
         setCart([]);
+        setOrder((prev) => ({ ...prev, tip_amount: "" }));
         refreshTotalPool();
       } catch (err: unknown) {
         setError(translateApiError(err));
@@ -462,6 +493,22 @@ export default function SalesForm() {
         </div>
       </div>
 
+      {order.payment_method !== "cash" && (
+        <div>
+          <p className={`mb-2 text-sm font-semibold md:text-base ${sectionTitleClasses.payment}`}>
+            {t("fields.tip")}
+          </p>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={order.tip_amount}
+            onChange={(e) => setOrder({ ...order, tip_amount: e.target.value })}
+            className="text-lg font-semibold border-gray-200"
+          />
+        </div>
+      )}
+
       {cartStockWarning && cart.length > 0 && (
         <p className={STOCK_WARNING_CLASSES}>
           {t("cart.stockIssue", {
@@ -471,9 +518,14 @@ export default function SalesForm() {
       )}
 
       <div className="hidden p-5 text-center text-white rounded-2xl shadow-theme-sm bg-gradient-to-br from-brand-700 to-brand-500 lg:block">
+        {tipValue > 0 && (
+          <p className="text-xs font-medium text-white/70 md:text-sm">
+            {t("cart.subtotal")}: {formatCurrency(orderTotal)}
+          </p>
+        )}
         <p className="text-sm font-medium text-white/80 md:text-base">{t("cart.orderTotal")}</p>
         <p className="mt-1 text-3xl font-bold tracking-tight md:text-4xl">
-          {formatCurrency(orderTotal)}
+          {formatCurrency(grandTotal)}
         </p>
       </div>
     </div>
@@ -519,7 +571,7 @@ export default function SalesForm() {
         )} */}
 
         <Section title={t("sales.weightPortion")} accent="portion">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 md:gap-4">
             {WEIGHT_OPTIONS.map((opt) => (
               <ChoiceButton
                 key={opt}
@@ -652,9 +704,14 @@ export default function SalesForm() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95 lg:hidden">
         <div className="flex items-center gap-3 mx-auto max-w-6xl">
           <div className="flex-1 min-w-0">
+            {tipValue > 0 && (
+              <p className="text-xs text-gray-400">
+                {t("cart.subtotal")}: {formatCurrency(orderTotal)}
+              </p>
+            )}
             <p className="text-xs font-medium text-gray-500">{t("cart.orderTotal")}</p>
             <p className="text-2xl font-bold truncate text-brand-600 dark:text-brand-400">
-              {formatCurrency(orderTotal)}
+              {formatCurrency(grandTotal)}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t("cart.itemCount", { count: cart.length })}

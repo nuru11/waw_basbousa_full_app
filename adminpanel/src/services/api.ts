@@ -135,6 +135,7 @@ export interface Dish {
   price_half: string | number | null;
   price_kilo: string | number | null;
   price_per_slice: string | number | null;
+  price_half_slice: string | number | null;
   is_active: boolean;
   recipe?: DishIngredient[];
 }
@@ -175,13 +176,14 @@ export interface Sale {
   id: number;
   dish_id: number;
   seller_id: number;
-  weight_type: 'quarter' | 'half' | 'kilo' | 'slice';
+  weight_type: 'quarter' | 'half' | 'kilo' | 'slice' | 'half_slice';
   slice_count: number | null;
   quantity: number;
   unit_price: string | number;
   total_price: string | number;
   kilo_consumed: string | number;
   payment_method: string;
+  tip_amount?: string | number;
   sold_at: string;
   dish?: Dish;
   seller?: { id: number; name: string; short_id: string; role?: User['role'] };
@@ -222,6 +224,7 @@ export interface PosDefaultPrices {
   price_half: string | number | null;
   price_kilo: string | number | null;
   price_per_slice: string | number | null;
+  price_half_slice: string | number | null;
 }
 
 export interface PlatesHistoryOverview {
@@ -256,6 +259,8 @@ export interface DailySalesSellerRow {
   seller_id: number;
   seller_name: string;
   role: User['role'] | null;
+  sales_revenue: number;
+  tips_total: number;
   revenue: number;
   sale_count: number;
   kilo_sold: number;
@@ -265,6 +270,7 @@ export interface DailySalesOverview {
   date: string;
   summary: {
     total_revenue: number;
+    total_tips: number;
     sale_count: number;
     kilo_sold: number;
     payments: DailySalesPayments;
@@ -284,6 +290,7 @@ export interface ReportSummary {
     salaries: number;
     electricity: number;
     other: number;
+    tips: number;
     chief_expenses: number;
   };
   income: number;
@@ -300,7 +307,7 @@ export interface ReportSummary {
   }>;
 }
 
-export type ExpenseCategory = 'rental' | 'salaries' | 'electricity' | 'other';
+export type ExpenseCategory = 'rental' | 'salaries' | 'electricity' | 'other' | 'tips';
 
 export interface Expense {
   id: number;
@@ -321,6 +328,7 @@ export interface ExpenseSummary {
     salaries: number;
     electricity: number;
     other: number;
+    tips: number;
   };
 }
 
@@ -375,6 +383,32 @@ export interface PayrollOverview {
   employees: PayrollEmployee[];
 }
 
+export interface TipPayoutPayment {
+  paid_at: string;
+  amount: number;
+  expense_id: number;
+}
+
+export interface TipPayoutSeller {
+  seller_id: number;
+  name: string;
+  short_id: string;
+  role: User['role'];
+  tips_earned: number;
+  payment: TipPayoutPayment | null;
+}
+
+export interface TipPayoutOverview {
+  period: string;
+  summary: {
+    total_tips: number;
+    paid_count: number;
+    pending_count: number;
+    paid_amount: number;
+  };
+  sellers: TipPayoutSeller[];
+}
+
 export interface MonthlyAnalysisDishRow {
   dish_id: number;
   dish_name: string;
@@ -409,6 +443,7 @@ export interface MonthlyAnalysis {
     salaries: number;
     electricity: number;
     other: number;
+    tips: number;
     chief_expenses: number;
   };
   net_profit: number;

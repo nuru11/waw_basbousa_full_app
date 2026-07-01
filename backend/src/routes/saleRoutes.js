@@ -4,6 +4,7 @@ const { authMiddleware, requireRole } = require('../middleware/auth');
 const {
   createSaleValidation,
   createSalesBatchValidation,
+  updateSaleValidation,
 } = require('../middleware/validators');
 
 const router = express.Router();
@@ -31,6 +32,15 @@ router.post(
 );
 
 router.get('/mine', requireRole('employee', 'chief'), saleController.mine);
+
+router.get('/today', requireRole('employee', 'chief'), saleController.today);
+
+router.patch(
+  '/:id',
+  requireRole('employee', 'chief'),
+  updateSaleValidation,
+  saleController.update
+);
 
 router.get('/', requireRole('superAdmin'), saleController.list);
 

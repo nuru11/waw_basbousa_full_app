@@ -2,13 +2,14 @@ const { PosDefaultPrice, Dish } = require('../models');
 
 const SINGLETON_ID = 1;
 
-const PRICE_FIELDS = ['price_quarter', 'price_half', 'price_kilo', 'price_per_slice'];
+const PRICE_FIELDS = ['price_quarter', 'price_half', 'price_kilo', 'price_per_slice', 'price_half_slice'];
 
 const WEIGHT_PRICE_FIELD = {
   quarter: 'price_quarter',
   half: 'price_half',
   kilo: 'price_kilo',
   slice: 'price_per_slice',
+  half_slice: 'price_half_slice',
 };
 
 function parsePositivePrice(value) {
@@ -80,6 +81,9 @@ async function updateDefaultPrices(data) {
   }
   if (data.price_per_slice !== undefined) {
     updates.price_per_slice = data.price_per_slice;
+  }
+  if (data.price_half_slice !== undefined) {
+    updates.price_half_slice = data.price_half_slice;
   }
   await row.update(updates);
   return row;

@@ -2,6 +2,17 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { PAYMENT_METHODS } = require('../constants/paymentMethods');
 
+function tipNotAllowedForCash() {
+  return body('tip_amount').custom((value, { req }) => {
+    const tip = parseFloat(value);
+    const paymentMethod = req.body.payment_method || 'cash';
+    if (paymentMethod === 'cash' && !Number.isNaN(tip) && tip > 0) {
+      throw new Error('VALIDATION_TIP_NOT_ALLOWED_FOR_CASH');
+    }
+    return true;
+  });
+}
+
 const loginValidation = [
   body('username').trim().notEmpty().withMessage('VALIDATION_USERNAME_REQUIRED'),
   body('password').notEmpty().withMessage('VALIDATION_PASSWORD_REQUIRED'),
@@ -66,6 +77,7 @@ const updatePosDefaultPricesValidation = [
   body('price_half').optional({ nullable: true }).isFloat({ min: 0 }),
   body('price_kilo').optional({ nullable: true }).isFloat({ min: 0 }),
   body('price_per_slice').optional({ nullable: true }).isFloat({ min: 0 }),
+  body('price_half_slice').optional({ nullable: true }).isFloat({ min: 0 }),
   validate,
 ];
 
@@ -75,7 +87,7 @@ const createSaleValidation = [
     .isInt({ gt: 0 })
     .withMessage('VALIDATION_DISH_INVALID'),
   body('weight_type')
-    .isIn(['quarter', 'half', 'kilo', 'slice'])
+    .isIn(['quarter', 'half', 'kilo', 'slice', 'half_slice'])
     .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
   body('payment_method')
     .optional()
@@ -88,6 +100,8 @@ const createSaleValidation = [
     .withMessage('VALIDATION_SLICE_COUNT_REQUIRED'),
   body('kilo_consumed').optional().isFloat({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
   body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
+  body('tip_amount').optional().isFloat({ min: 0 }).withMessage('VALIDATION_FAILED'),
+  tipNotAllowedForCash(),
   validate,
 ];
 
@@ -117,19 +131,57 @@ const createSalesBatchValidation = [
     .isInt({ gt: 0 })
     .withMessage('VALIDATION_DISH_INVALID'),
   body('items.*.weight_type')
-    .isIn(['quarter', 'half', 'kilo', 'slice'])
+    .isIn(['quarter', 'half', 'kilo', 'slice', 'half_slice'])
     .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
   body('items.*.quantity').optional().isInt({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
   body('items.*.kilo_consumed')
     .optional()
     .isFloat({ gt: 0 })
     .withMessage('VALIDATION_QUANTITY_POSITIVE'),
+  body('tip_amount').optional().isFloat({ min: 0 }).withMessage('VALIDATION_FAILED'),
+  tipNotAllowedForCash(),
   validate,
 ];
 
 const stockAdjustValidation = [
   body('ingredient_id').isInt().withMessage('VALIDATION_INGREDIENT_REQUIRED'),
   body('quantity_delta').isFloat().withMessage('VALIDATION_QUANTITY_DELTA_REQUIRED'),
+  validate,
+];
+
+const updateSaleValidation = [
+  body('weight_type')
+    .optional()
+    .isIn(['quarter', 'half', 'kilo', 'slice', 'half_slice'])
+    .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
+  body('payment_method')
+    .optional()
+    .isIn(PAYMENT_METHODS)
+    .withMessage('VALIDATION_INVALID_PAYMENT'),
+  body('quantity').optional().isInt({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
+  body('slice_count')
+    .if((value, { req }) => req.body.weight_type === 'slice')
+    .isInt({ gt: 0 })
+    .withMessage('VALIDATION_SLICE_COUNT_REQUIRED'),
+  body('kilo_consumed').optional().isFloat({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
+  body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
+  body('tip_amount').optional().isFloat({ min: 0 }).withMessage('VALIDATION_FAILED'),
+  tipNotAllowedForCash(),
+  body().custom((value) => {
+    const keys = [
+      'weight_type',
+      'payment_method',
+      'quantity',
+      'slice_count',
+      'kilo_consumed',
+      'seller_id',
+      'tip_amount',
+    ];
+    if (!keys.some((key) => value[key] !== undefined)) {
+      throw new Error('VALIDATION_FAILED');
+    }
+    return true;
+  }),
   validate,
 ];
 
@@ -142,6 +194,7 @@ module.exports = {
   updatePosDefaultPricesValidation,
   createSaleValidation,
   createSalesBatchValidation,
+  updateSaleValidation,
   productionValidation,
   stockAdjustValidation,
   createTransferValidation,

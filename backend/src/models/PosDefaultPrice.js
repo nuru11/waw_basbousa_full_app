@@ -9,6 +9,7 @@ module.exports = (sequelize) => {
       price_half: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       price_kilo: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       price_per_slice: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
+      price_half_slice: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
     },
     { tableName: 'pos_default_prices', underscored: true }
   );

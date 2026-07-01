@@ -39,6 +39,8 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
   const { t } = useTranslation("common");
   const { summary } = data;
 
+  const sellersWithTips = data.by_seller.filter((row) => row.tips_total > 0);
+
   function formatPortion(
     weightType: string,
     sliceCount: number | null,
@@ -53,6 +55,37 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
     }
     return label;
   }
+
+  const tipsBySellerColumns: DataTableColumn<DailySalesOverview["by_seller"][number]>[] =
+    useMemo(
+      () => [
+        {
+          key: "seller",
+          header: t("fields.seller"),
+          render: (row) => row.seller_name,
+        },
+        {
+          key: "salesRevenue",
+          header: t("sales.salesRevenue"),
+          render: (row) => formatCurrency(row.sales_revenue),
+        },
+        {
+          key: "tips",
+          header: t("sales.tipCol"),
+          render: (row) => (
+            <span className="font-medium text-gray-800 dark:text-white/90">
+              {formatCurrency(row.tips_total)}
+            </span>
+          ),
+        },
+        {
+          key: "transactions",
+          header: t("sales.salesCount"),
+          render: (row) => String(row.sale_count),
+        },
+      ],
+      [t]
+    );
 
   const salesColumns: DataTableColumn<DailySalesOverview["sales"][number]>[] =
     useMemo(
@@ -94,6 +127,14 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
           ),
         },
         {
+          key: "tip",
+          header: t("sales.tipCol"),
+          render: (sale) => {
+            const tip = parseFloat(String(sale.tip_amount ?? 0)) || 0;
+            return tip > 0 ? formatCurrency(tip) : t("emDash");
+          },
+        },
+        {
           key: "total",
           header: t("fields.total"),
           render: (sale) => (
@@ -132,6 +173,13 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
           value={formatCurrency(summary.total_revenue)}
           accent="brand"
         />
+        {summary.total_tips > 0 && (
+          <StatCard
+            title={t("sales.totalTips")}
+            value={formatCurrency(summary.total_tips)}
+            accent="info"
+          />
+        )}
         {PAYMENT_OPTIONS.map((method) => (
           <StatCard
             key={method}
@@ -148,17 +196,20 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
         />
       </div>
 
-      {/* <SectionCard
-        title={t("sales.plateStock")}
-        count={t("units.plates", { count: data.by_dish.length })}
-      >
-        <DataTable
-          columns={dishColumns}
-          data={data.by_dish}
-          keyExtractor={(row) => row.dish_id}
-          emptyMessage={t("sales.noProductionOrSales")}
-        />
-      </SectionCard> */}
+      {sellersWithTips.length > 0 && (
+        <SectionCard
+          title={t("sales.tipsBySeller")}
+          count={t("periodFilters.entryCount", { count: sellersWithTips.length })}
+        >
+          <DataTable
+            columns={tipsBySellerColumns}
+            data={sellersWithTips}
+            keyExtractor={(row) => row.seller_id}
+            emptyMessage={t("sales.noTipsRecorded")}
+            hoverRows
+          />
+        </SectionCard>
+      )}
 
       <SectionCard
         title={t("sales.allSales")}

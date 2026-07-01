@@ -144,6 +144,7 @@ export default function MonthlyAnalysisPage() {
 
   const spendCategories = [
     { key: "salaries" as const, accent: "warning" as const },
+    { key: "tips" as const, accent: "info" as const },
     { key: "rental" as const, accent: "warning" as const },
     { key: "electricity" as const, accent: "warning" as const },
     { key: "other" as const, accent: "warning" as const },

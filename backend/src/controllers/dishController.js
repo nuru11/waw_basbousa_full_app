@@ -1,13 +1,11 @@
 const dishService = require('../services/dishService');
 const posDefaultPriceService = require('../services/posDefaultPriceService');
-const { redactDish, redactDishes } = require('../utils/financialRedaction');
 
 async function list(req, res, next) {
   try {
     const activeOnly = req.query.active === 'true';
     const dishes = await dishService.listDishes({ activeOnly });
-    const data = req.user.role === 'chief' ? redactDishes(dishes) : dishes;
-    res.json({ success: true, data });
+    res.json({ success: true, data: dishes });
   } catch (err) {
     next(err);
   }
@@ -16,8 +14,7 @@ async function list(req, res, next) {
 async function getOne(req, res, next) {
   try {
     const dish = await dishService.getDish(req.params.id);
-    const data = req.user.role === 'chief' ? redactDish(dish) : dish;
-    res.json({ success: true, data });
+    res.json({ success: true, data: dish });
   } catch (err) {
     next(err);
   }

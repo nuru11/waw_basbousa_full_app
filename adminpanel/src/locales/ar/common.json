@@ -185,6 +185,7 @@
     "half": "نصف",
     "kilo": "كيلو",
     "slice": "بالشريحة",
+    "half_slice": "نصف شريحة",
     "sliceCount": "عدد الشرائح"
   },
   "paymentMethods": {
@@ -201,6 +202,7 @@
   },
   "sales": {
     "totalRevenue": "إجمالي الإيرادات",
+    "totalTips": "إجمالي الإكراميات",
     "salesCount": "عدد المبيعات",
     "plateStock": "مخزون الأطباق",
     "producedKg": "المُنتَج (كغ)",
@@ -228,6 +230,10 @@
     "totalSold": "إجمالي المبيعات: {{amount}} ب.إ",
     "byDish": "حسب الطبق",
     "bySeller": "حسب البائع",
+    "tipsBySeller": "الإكراميات حسب البائع",
+    "tipCol": "إكرامية",
+    "salesRevenue": "المبيعات",
+    "noTipsRecorded": "لا توجد إكراميات مسجلة لهذا اليوم",
     "payments": "المدفوعات"
   },
   "transfers": {

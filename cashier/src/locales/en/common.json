@@ -124,6 +124,7 @@
     "item": "Item",
     "type": "Type",
     "payment": "Payment",
+    "tip": "Tip (ETB)",
     "seller": "Seller",
     "plate": "Plate",
     "ingredient": "Ingredient",
@@ -173,6 +174,7 @@
     "half": "Half",
     "kilo": "Kilo",
     "slice": "By Slice",
+    "half_slice": "Half Slice",
     "sliceCount": "Number of Slices"
   },
   "paymentMethods": {
@@ -230,6 +232,7 @@
     "empty": "No items yet. Add an item to start the order.",
     "removeItem": "Remove",
     "orderTotal": "Order total",
+    "subtotal": "Subtotal",
     "orderRecorded": "Order recorded ({{count}} items) for {{name}}",
     "itemCount_one": "{{count}} item",
     "itemCount_other": "{{count}} items",

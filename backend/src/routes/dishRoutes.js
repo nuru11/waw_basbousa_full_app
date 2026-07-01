@@ -15,7 +15,7 @@ router.get(
 router.put(
   '/pos-default-prices',
   authMiddleware,
-  requireRole('superAdmin'),
+  requireRole('superAdmin', 'chief'),
   updatePosDefaultPricesValidation,
   dishController.updatePosDefaultPrices
 );
@@ -37,14 +37,14 @@ router.get(
 router.put(
   '/:id/recipe',
   authMiddleware,
-  requireRole('superAdmin'),
+  requireRole('superAdmin', 'chief'),
   dishController.updateRecipe
 );
 
 router.post(
   '/',
   authMiddleware,
-  requireRole('superAdmin'),
+  requireRole('superAdmin', 'chief'),
   createDishValidation,
   dishController.create
 );
@@ -52,14 +52,14 @@ router.post(
 router.put(
   '/:id',
   authMiddleware,
-  requireRole('superAdmin'),
+  requireRole('superAdmin', 'chief'),
   dishController.update
 );
 
 router.delete(
   '/:id',
   authMiddleware,
-  requireRole('superAdmin'),
+  requireRole('superAdmin', 'chief'),
   dishController.remove
 );
 

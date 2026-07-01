@@ -1,4 +1,4 @@
-const EXPENSE_CATEGORIES = ['rental', 'salaries', 'electricity', 'other'];
+const EXPENSE_CATEGORIES = ['rental', 'salaries', 'electricity', 'other', 'tips'];
 
 function isValidExpenseCategory(category) {
   return EXPENSE_CATEGORIES.includes(category);

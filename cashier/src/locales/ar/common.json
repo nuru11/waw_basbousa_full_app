@@ -124,6 +124,7 @@
     "item": "العنصر",
     "type": "النوع",
     "payment": "الدفع",
+    "tip": "إكرامية (بير)",
     "seller": "البائع",
     "plate": "الطبق",
     "ingredient": "المكوّن",
@@ -173,6 +174,7 @@
     "half": "نصف",
     "kilo": "كيلو",
     "slice": "بالشريحة",
+    "half_slice": "نصف شريحة",
     "sliceCount": "عدد الشرائح"
   },
   "paymentMethods": {
@@ -230,6 +232,7 @@
     "empty": "لا توجد عناصر بعد. أضف عنصراً لبدء الطلب.",
     "removeItem": "إزالة",
     "orderTotal": "إجمالي الطلب",
+    "subtotal": "المجموع الفرعي",
     "orderRecorded": "تم تسجيل الطلب ({{count}} عناصر) لـ {{name}}",
     "itemCount_one": "{{count}} عنصر",
     "itemCount_other": "{{count}} عناصر",

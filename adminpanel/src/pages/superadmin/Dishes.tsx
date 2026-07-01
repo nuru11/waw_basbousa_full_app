@@ -31,6 +31,7 @@ const emptyDefaultPricesForm = {
   price_half: "",
   price_kilo: "",
   price_per_slice: "",
+  price_half_slice: "",
 };
 
 function defaultPricesToForm(prices: PosDefaultPrices) {
@@ -39,6 +40,7 @@ function defaultPricesToForm(prices: PosDefaultPrices) {
     price_half: prices.price_half != null ? String(prices.price_half) : "",
     price_kilo: prices.price_kilo != null ? String(prices.price_kilo) : "",
     price_per_slice: prices.price_per_slice != null ? String(prices.price_per_slice) : "",
+    price_half_slice: prices.price_half_slice != null ? String(prices.price_half_slice) : "",
   };
 }
 
@@ -48,6 +50,7 @@ const emptyForm = {
   price_half: "",
   price_kilo: "",
   price_per_slice: "",
+  price_half_slice: "",
 };
 
 function dishToForm(dish: Dish) {
@@ -57,6 +60,7 @@ function dishToForm(dish: Dish) {
     price_half: dish.price_half != null ? String(dish.price_half) : "",
     price_kilo: dish.price_kilo != null ? String(dish.price_kilo) : "",
     price_per_slice: dish.price_per_slice != null ? String(dish.price_per_slice) : "",
+    price_half_slice: dish.price_half_slice != null ? String(dish.price_half_slice) : "",
   };
 }
 
@@ -116,6 +120,7 @@ export default function DishesPage() {
           price_half: form.price_half ? parseFloat(form.price_half) : null,
           price_kilo: form.price_kilo ? parseFloat(form.price_kilo) : null,
           price_per_slice: form.price_per_slice ? parseFloat(form.price_per_slice) : null,
+          price_half_slice: form.price_half_slice ? parseFloat(form.price_half_slice) : null,
           ...(recipe.length > 0 ? { recipe } : {}),
         });
         setForm(emptyForm);
@@ -148,6 +153,9 @@ export default function DishesPage() {
             : null,
           price_per_slice: defaultPricesForm.price_per_slice
             ? parseFloat(defaultPricesForm.price_per_slice)
+            : null,
+          price_half_slice: defaultPricesForm.price_half_slice
+            ? parseFloat(defaultPricesForm.price_half_slice)
             : null,
         });
         setDefaultPricesSuccess(t("dishes.defaultPricesSaved"));
@@ -183,6 +191,7 @@ export default function DishesPage() {
           price_half: editForm.price_half ? parseFloat(editForm.price_half) : null,
           price_kilo: editForm.price_kilo ? parseFloat(editForm.price_kilo) : null,
           price_per_slice: editForm.price_per_slice ? parseFloat(editForm.price_per_slice) : null,
+          price_half_slice: editForm.price_half_slice ? parseFloat(editForm.price_half_slice) : null,
           recipe: parseRecipeRows(editRecipeRows, ingredients),
         });
         closeEditModal();
@@ -239,6 +248,11 @@ export default function DishesPage() {
         render: (d) => d.price_per_slice ?? tCommon("emDash"),
       },
       {
+        key: "half_slice",
+        header: t("dishes.halfSliceCol"),
+        render: (d) => d.price_half_slice ?? tCommon("emDash"),
+      },
+      {
         key: "active",
         header: t("dishes.activeCol"),
         render: (d) => (
@@ -281,7 +295,7 @@ export default function DishesPage() {
           <p className="mb-4 text-sm text-success-600">{defaultPricesSuccess}</p>
         )}
         <form onSubmit={handleSaveDefaultPrices} className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div>
               <Label>{t("dishes.priceQuarter")}</Label>
               <Input
@@ -319,6 +333,16 @@ export default function DishesPage() {
                 value={defaultPricesForm.price_per_slice}
                 onChange={(e) =>
                   setDefaultPricesForm({ ...defaultPricesForm, price_per_slice: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("dishes.priceHalfSlice")}</Label>
+              <Input
+                type="number"
+                value={defaultPricesForm.price_half_slice}
+                onChange={(e) =>
+                  setDefaultPricesForm({ ...defaultPricesForm, price_half_slice: e.target.value })
                 }
               />
             </div>
@@ -365,6 +389,14 @@ export default function DishesPage() {
               type="number"
               value={form.price_per_slice}
               onChange={(e) => setForm({ ...form, price_per_slice: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{t("dishes.priceHalfSlice")}</Label>
+            <Input
+              type="number"
+              value={form.price_half_slice}
+              onChange={(e) => setForm({ ...form, price_half_slice: e.target.value })}
             />
           </div>
           <RecipeEditor
@@ -429,6 +461,14 @@ export default function DishesPage() {
               type="number"
               value={editForm.price_per_slice}
               onChange={(e) => setEditForm({ ...editForm, price_per_slice: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{t("dishes.priceHalfSlice")}</Label>
+            <Input
+              type="number"
+              value={editForm.price_half_slice}
+              onChange={(e) => setEditForm({ ...editForm, price_half_slice: e.target.value })}
             />
           </div>
           <RecipeEditor
