@@ -87,6 +87,15 @@ const ERROR_CODES = {
   RECIPE_SIZE_NOT_ALLOWED: 'Recipe size is not applicable for this ingredient',
   INVALID_INGREDIENT_USAGE: 'Ingredient usage does not match dish recipe',
   AUTO_REDUCE_MANUAL_ONLY: 'This ingredient is reduced automatically on production; manual reduction is not allowed',
+  COFFEE_NOT_ACTIVE: 'Coffee sales are not enabled',
+  COFFEE_INGREDIENT_NOT_SET: 'Coffee ingredient is not configured',
+  COFFEE_PRICE_NOT_SET: 'Coffee price per cup is not set',
+  COFFEE_CUPS_PER_KG_INVALID: 'Cups per kg must be a positive number',
+  COFFEE_SALE_NOT_EDITABLE: 'Coffee sales cannot be edited',
+  INGREDIENT_LINKED_TO_COFFEE: 'Ingredient is linked to coffee settings and cannot be deleted',
+  WATER_NOT_ACTIVE: 'Water sales are not enabled',
+  WATER_PRICE_NOT_SET: 'Water price per bottle is not set',
+  WATER_SALE_NOT_EDITABLE: 'Water sales cannot be edited',
 };
 
 module.exports = ERROR_CODES;

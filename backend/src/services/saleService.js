@@ -1,8 +1,10 @@
-const { sequelize, Sale, Dish, Admin } = require('../models');
+const { sequelize, Sale, Dish, Admin, Ingredient, StockMovement } = require('../models');
 const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
 const posDefaultPriceService = require('./posDefaultPriceService');
+const coffeeService = require('./coffeeService');
+const waterService = require('./waterService');
 const { getDateRange } = require('../utils/dateUtils');
 
 const WEIGHT_PRICE_FIELD = {
@@ -81,7 +83,116 @@ async function listSellers() {
   });
 }
 
+async function deductIngredientOnSale(ingredientId, amountUsed, saleId, userId, transaction, notes) {
+  const ingredient = await Ingredient.findByPk(ingredientId, {
+    lock: transaction.LOCK.UPDATE,
+    transaction,
+  });
+  if (!ingredient) {
+    throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
+  }
+
+  const newStock = parseFloat(ingredient.current_stock) - amountUsed;
+  if (newStock < 0) {
+    throw new AppError('INSUFFICIENT_STOCK', ERROR_CODES.INSUFFICIENT_STOCK, 400);
+  }
+
+  await ingredient.update({ current_stock: newStock }, { transaction });
+
+  await StockMovement.create(
+    {
+      ingredient_id: ingredientId,
+      type: 'sale',
+      quantity_delta: -amountUsed,
+      reference_id: saleId,
+      notes,
+      created_by: userId,
+    },
+    { transaction }
+  );
+}
+
+async function resolveCoffeeSaleLine(item, transaction) {
+  const quantity = item.quantity || 1;
+  const { settings, ingredient } = await coffeeService.getSettingsForSale({ transaction });
+  const cupsPerKg = parseFloat(settings.cups_per_kg);
+  const kgUsed = quantity / cupsPerKg;
+  const unitPrice = parseFloat(settings.price_per_cup);
+  const totalPrice = unitPrice * quantity;
+
+  return {
+    sale_type: 'coffee',
+    dish_id: null,
+    weight_type: null,
+    slice_count: null,
+    quantity,
+    unit_price: unitPrice,
+    total_price: totalPrice,
+    kilo_consumed: kgUsed,
+    ingredient_id: ingredient.id,
+    kg_to_deduct: kgUsed,
+  };
+}
+
+async function resolveWaterSaleLine(item, transaction) {
+  const quantity = item.quantity || 1;
+  const bottleSize = item.water_bottle_size === 'large' ? 'large' : 'small';
+  const { settings, unitPrice } = await waterService.getSettingsForSale({
+    transaction,
+    bottleSize,
+  });
+  const bottlesUsed = quantity;
+  const totalPrice = unitPrice * quantity;
+  const stockBottles = waterService.getStockForSize(settings, bottleSize);
+  if (stockBottles < bottlesUsed) {
+    throw new AppError('INSUFFICIENT_STOCK', ERROR_CODES.INSUFFICIENT_STOCK, 400);
+  }
+
+  return {
+    sale_type: 'water',
+    dish_id: null,
+    weight_type: null,
+    slice_count: null,
+    water_bottle_size: bottleSize,
+    quantity,
+    unit_price: unitPrice,
+    total_price: totalPrice,
+    kilo_consumed: bottlesUsed,
+    stock_to_deduct: bottlesUsed,
+  };
+}
+
+async function deductBeverageStock(line, saleId, userId, transaction) {
+  if (line.sale_type === 'coffee') {
+    await deductIngredientOnSale(
+      line.ingredient_id,
+      line.kg_to_deduct,
+      saleId,
+      userId,
+      transaction,
+      'Coffee sale'
+    );
+    return;
+  }
+  if (line.sale_type === 'water') {
+    await waterService.deductStockOnSale(
+      line.stock_to_deduct,
+      line.water_bottle_size ?? 'small',
+      saleId,
+      userId,
+      transaction
+    );
+  }
+}
+
 async function resolveSaleLine(item, transaction) {
+  if (item.sale_type === 'coffee') {
+    return resolveCoffeeSaleLine(item, transaction);
+  }
+  if (item.sale_type === 'water') {
+    return resolveWaterSaleLine(item, transaction);
+  }
+
   const quantity = item.quantity || 1;
   let dish = null;
   let dishId = null;
@@ -112,6 +223,7 @@ async function resolveSaleLine(item, transaction) {
       : calculateKiloConsumed(item.weight_type, quantity, item.slice_count);
 
   return {
+    sale_type: 'plate',
     dish_id: dishId,
     dish,
     weight_type: item.weight_type,
@@ -149,9 +261,11 @@ async function createSalesBatch(userId, data) {
       const sale = await Sale.create(
         {
           dish_id: line.dish_id,
+          sale_type: line.sale_type || 'plate',
           seller_id: sellerId,
           weight_type: line.weight_type,
           slice_count: line.slice_count,
+          water_bottle_size: line.water_bottle_size ?? null,
           quantity: line.quantity,
           unit_price: line.unit_price,
           total_price: line.total_price,
@@ -162,6 +276,11 @@ async function createSalesBatch(userId, data) {
         },
         { transaction }
       );
+
+      if (line.sale_type === 'coffee' || line.sale_type === 'water') {
+        await deductBeverageStock(line, sale.id, sellerId, transaction);
+      }
+
       saleIds.push(sale.id);
       orderTotal += parseFloat(line.total_price);
     }
@@ -204,9 +323,11 @@ async function createSale(userId, data) {
     const sale = await Sale.create(
       {
         dish_id: line.dish_id,
+        sale_type: line.sale_type || 'plate',
         seller_id: sellerId,
         weight_type: line.weight_type,
         slice_count: line.slice_count,
+        water_bottle_size: line.water_bottle_size ?? null,
         quantity: line.quantity,
         unit_price: line.unit_price,
         total_price: line.total_price,
@@ -217,6 +338,10 @@ async function createSale(userId, data) {
       },
       { transaction }
     );
+
+    if (line.sale_type === 'coffee' || line.sale_type === 'water') {
+      await deductBeverageStock(line, sale.id, sellerId, transaction);
+    }
 
     await transaction.commit();
 
@@ -277,6 +402,12 @@ async function updateSale(saleId, data) {
     }
     if (!isSaleEditableToday(sale.sold_at)) {
       throw new AppError('SALE_NOT_EDITABLE', ERROR_CODES.SALE_NOT_EDITABLE, 403);
+    }
+    if (sale.sale_type === 'coffee') {
+      throw new AppError('COFFEE_SALE_NOT_EDITABLE', ERROR_CODES.COFFEE_SALE_NOT_EDITABLE, 403);
+    }
+    if (sale.sale_type === 'water') {
+      throw new AppError('WATER_SALE_NOT_EDITABLE', ERROR_CODES.WATER_SALE_NOT_EDITABLE, 403);
     }
 
     const weightType = data.weight_type ?? sale.weight_type;

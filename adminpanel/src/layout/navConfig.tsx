@@ -24,6 +24,7 @@ export function getNavForRole(role: User["role"]): NavItem[] {
         { icon: <GridIcon />, nameKey: "dashboard", path: "/admin/dashboard" },
         { icon: <UserCircleIcon />, nameKey: "staff", path: "/admin/staff" },
         { icon: <ListIcon />, nameKey: "ingredients", path: "/admin/ingredients" },
+        { icon: <TableIcon />, nameKey: "beverages", path: "/admin/beverages" },
         { icon: <TableIcon />, nameKey: "platesMenu", path: "/admin/dishes" },
         {
           icon: <DollarLineIcon />,

@@ -15,7 +15,10 @@
     "reduceQuantity": "الكمية المراد خصمها",
     "reduceNotes": "ملاحظة (اختياري)",
     "reduceSuccess": "تم خصم المخزون",
-    "reduceFailed": "فشل خصم المخزون"
+    "reduceFailed": "فشل خصم المخزون",
+    "waterTitle": "الماء",
+    "waterSmallAvailable": "صغيرة: {{count}} زجاجة متاحة",
+    "waterLargeAvailable": "كبيرة: {{count}} زجاجة متاحة"
   },
   "production": {
     "metaTitle": "الإنتاج | المطعم",

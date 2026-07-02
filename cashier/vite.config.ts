@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       "/api": {
-        target: "https://wowbapi.lyanethiopia.com",
+        target: "http://localhost:3001",
         changeOrigin: true,
       },
     },

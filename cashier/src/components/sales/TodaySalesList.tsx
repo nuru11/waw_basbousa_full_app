@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import Button from "../ui/button/Button";
 import SaleEditSheet from "./SaleEditSheet";
 import { api, type Sale, type User } from "../../services/api";
-import { paymentMethodLabel, weightTypeLabel } from "../../utils/labels";
+import { paymentMethodLabel, formatSaleItemName, formatSalePortion, salePortionPillClass } from "../../utils/labels";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { translateApiError } from "../../utils/translateApiError";
 import { portionColors, type WeightType } from "../../utils/posColors";
@@ -13,17 +13,6 @@ function formatSaleTime(soldAt: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function formatPortion(sale: Sale, t: (key: string, opts?: Record<string, unknown>) => string) {
-  const label =
-    sale.weight_type === "slice" && sale.slice_count
-      ? t("common:units.slices", { count: sale.slice_count })
-      : weightTypeLabel(sale.weight_type);
-  if (sale.quantity > 1) {
-    return `${label} × ${sale.quantity}`;
-  }
-  return label;
 }
 
 export default function TodaySalesList() {
@@ -93,7 +82,13 @@ export default function TodaySalesList() {
           {sales.map((sale) => {
             const tip = parseFloat(String(sale.tip_amount ?? 0));
             const total = parseFloat(String(sale.total_price)) + tip;
-            const weightType = sale.weight_type as WeightType;
+            const weightType = sale.weight_type as WeightType | null;
+            const portionPillClass =
+              sale.sale_type === "coffee" || sale.sale_type === "water"
+                ? salePortionPillClass(sale)
+                : weightType
+                  ? portionColors[weightType].pill
+                  : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
 
             return (
               <li key={sale.id}>
@@ -109,13 +104,13 @@ export default function TodaySalesList() {
                           {formatSaleTime(sale.sold_at)}
                         </span>
                         <span
-                          className={`inline-block px-2 py-0.5 text-xs font-bold rounded-md ${portionColors[weightType].pill}`}
+                          className={`inline-block px-2 py-0.5 text-xs font-bold rounded-md ${portionPillClass}`}
                         >
-                          {formatPortion(sale, t)}
+                          {formatSalePortion(sale)}
                         </span>
                       </div>
                       <p className="font-semibold text-gray-900 truncate dark:text-white">
-                        {sale.dish?.name ?? t("common:sales.generalSale")}
+                        {formatSaleItemName(sale)}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {sale.seller?.name ?? t("common:emDash")} ·{" "}

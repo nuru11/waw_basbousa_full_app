@@ -2,6 +2,31 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { PAYMENT_METHODS } = require('../constants/paymentMethods');
 
+const PLATE_WEIGHT_TYPES = ['quarter', 'half', 'kilo', 'slice', 'half_slice'];
+
+function validateSaleItems(items) {
+  if (!Array.isArray(items)) return true;
+  for (const item of items) {
+    const saleType = item.sale_type || 'plate';
+    if (saleType === 'coffee' || saleType === 'water') {
+      const qty = parseInt(item.quantity, 10);
+      if (!qty || qty < 1) {
+        throw new Error('VALIDATION_QUANTITY_POSITIVE');
+      }
+      if (saleType === 'water' && item.water_bottle_size != null) {
+        if (!['small', 'large'].includes(item.water_bottle_size)) {
+          throw new Error('VALIDATION_FAILED');
+        }
+      }
+      continue;
+    }
+    if (!PLATE_WEIGHT_TYPES.includes(item.weight_type)) {
+      throw new Error('VALIDATION_INVALID_WEIGHT_TYPE');
+    }
+  }
+  return true;
+}
+
 function tipNotAllowedForCash() {
   return body('tip_amount').custom((value, { req }) => {
     const tip = parseFloat(value);
@@ -82,12 +107,14 @@ const updatePosDefaultPricesValidation = [
 ];
 
 const createSaleValidation = [
+  body('sale_type').optional().isIn(['plate', 'coffee', 'water']).withMessage('VALIDATION_FAILED'),
   body('dish_id')
     .optional({ values: 'falsy' })
     .isInt({ gt: 0 })
     .withMessage('VALIDATION_DISH_INVALID'),
   body('weight_type')
-    .isIn(['quarter', 'half', 'kilo', 'slice', 'half_slice'])
+    .if((value, { req }) => !['coffee', 'water'].includes(req.body.sale_type || 'plate'))
+    .isIn(PLATE_WEIGHT_TYPES)
     .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
   body('payment_method')
     .optional()
@@ -126,13 +153,12 @@ const createSalesBatchValidation = [
     .withMessage('VALIDATION_INVALID_PAYMENT'),
   body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
   body('items').isArray({ min: 1 }).withMessage('VALIDATION_ITEMS_REQUIRED'),
+  body('items').custom(validateSaleItems),
+  body('items.*.sale_type').optional().isIn(['plate', 'coffee', 'water']).withMessage('VALIDATION_FAILED'),
   body('items.*.dish_id')
     .optional({ values: 'falsy' })
     .isInt({ gt: 0 })
     .withMessage('VALIDATION_DISH_INVALID'),
-  body('items.*.weight_type')
-    .isIn(['quarter', 'half', 'kilo', 'slice', 'half_slice'])
-    .withMessage('VALIDATION_INVALID_WEIGHT_TYPE'),
   body('items.*.quantity').optional().isInt({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
   body('items.*.kilo_consumed')
     .optional()
@@ -185,6 +211,35 @@ const updateSaleValidation = [
   validate,
 ];
 
+const updateCoffeeSettingsValidation = [
+  body('ingredient_id').optional({ nullable: true }).isInt({ gt: 0 }).withMessage('VALIDATION_INGREDIENT_REQUIRED'),
+  body('price_per_cup').optional({ nullable: true }).isFloat({ min: 0 }),
+  body('cups_per_kg').optional().isFloat({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
+  body('is_active').optional().isBoolean().withMessage('VALIDATION_FAILED'),
+  validate,
+];
+
+const updateWaterSettingsValidation = [
+  body('price_per_bottle').optional({ nullable: true }).isFloat({ min: 0 }),
+  body('price_large_bottle').optional({ nullable: true }).isFloat({ min: 0 }),
+  body('min_stock_bottles').optional().isFloat({ min: 0 }),
+  body('is_active').optional().isBoolean().withMessage('VALIDATION_FAILED'),
+  validate,
+];
+
+const waterStockAdjustValidation = [
+  body('bottle_size').isIn(['small', 'large']).withMessage('VALIDATION_FAILED'),
+  body('quantity_delta').isFloat().withMessage('VALIDATION_QUANTITY_DELTA_REQUIRED').custom((value) => {
+    const delta = parseFloat(value);
+    if (delta === 0 || Number.isNaN(delta)) {
+      throw new Error('VALIDATION_QUANTITY_DELTA_REQUIRED');
+    }
+    return true;
+  }),
+  body('notes').optional().isString(),
+  validate,
+];
+
 module.exports = {
   loginValidation,
   createAdminValidation,
@@ -199,4 +254,7 @@ module.exports = {
   stockAdjustValidation,
   createTransferValidation,
   createChiefExpenseValidation,
+  updateCoffeeSettingsValidation,
+  updateWaterSettingsValidation,
+  waterStockAdjustValidation,
 };

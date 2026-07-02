@@ -7,19 +7,28 @@ import Input from "../../components/form/input/InputField";
 import IngredientStockGrid from "../../components/inventory/IngredientStockGrid";
 import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
-import { api, type Ingredient } from "../../services/api";
+import { api, type Ingredient, type WaterSettings } from "../../services/api";
+import { formatNumber } from "../../utils/formatNumber";
 import { translateApiError } from "../../utils/translateApiError";
 
 export default function InventoryPage() {
   const { t } = useTranslation(["chief", "nav", "common"]);
   const [stock, setStock] = useState<Ingredient[]>([]);
+  const [waterSettings, setWaterSettings] = useState<WaterSettings | null>(null);
   const [reduceTarget, setReduceTarget] = useState<Ingredient | null>(null);
   const [reduceQty, setReduceQty] = useState("");
   const [reduceNotes, setReduceNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const load = () => api.get<Ingredient[]>("/stock").then(setStock);
+  const load = async () => {
+    const [stockData, water] = await Promise.all([
+      api.get<Ingredient[]>("/stock"),
+      api.get<WaterSettings>("/water/settings").catch(() => null),
+    ]);
+    setStock(stockData);
+    setWaterSettings(water?.is_active ? water : null);
+  };
 
   useEffect(() => {
     load();
@@ -69,6 +78,23 @@ export default function InventoryPage() {
         description={t("inventory.metaDescription")}
       />
       <PageBreadcrumb pageTitle={t("nav:inventoryRemainingFood")} />
+
+      {waterSettings && (
+        <div className="mb-6 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+          <p className="text-xs font-medium uppercase text-gray-500">{t("inventory.waterTitle")}</p>
+          <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
+            {t("inventory.waterSmallAvailable", {
+              count: formatNumber(waterSettings.available_small_bottles),
+            })}
+          </p>
+          <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
+            {t("inventory.waterLargeAvailable", {
+              count: formatNumber(waterSettings.available_large_bottles),
+            })}
+          </p>
+        </div>
+      )}
+
       <IngredientStockGrid
         ingredients={stock}
         lowStockAlert={t("inventory.lowStockAlert")}

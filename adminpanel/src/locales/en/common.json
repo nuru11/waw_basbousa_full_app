@@ -159,6 +159,13 @@
     "small": "Small",
     "large": "Large"
   },
+  "saleItems": {
+    "coffee": "Coffee",
+    "water": "Water",
+    "waterSmall": "Water (small bottle)",
+    "waterLarge": "Water (large bottle)",
+    "bottlesUsed": "{{count}} bottles"
+  },
   "units": {
     "bottle": "Bottle",
     "kg": "Kilogram",

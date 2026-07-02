@@ -169,6 +169,32 @@
     "slicesInSale": " ({{count}} شرائح)",
     "sliceStockRule": "المخزون: كل 3 شرائح = ربع (0.25 كغ)"
   },
+  "coffee": {
+    "title": "القهوة",
+    "itemName": "قهوة",
+    "cups": "أكواب",
+    "cupsCount": "{{count}} أكواب",
+    "availableCups": "الأكواب المتاحة",
+    "pricePerCup": "السعر لكل كوب",
+    "addToOrder": "إضافة قهوة للطلب",
+    "notEnoughStock": "مخزون القهوة غير كافٍ ({{count}} كوب متاح)",
+    "kgUsed": "يستخدم {{amount}} كغ قهوة"
+  },
+  "water": {
+    "title": "الماء",
+    "itemName": "ماء",
+    "smallBottle": "زجاجة صغيرة",
+    "largeBottle": "زجاجة كبيرة",
+    "bottleSize": "حجم الزجاجة",
+    "selectedPrice": "السعر المحدد",
+    "bottles": "زجاجات",
+    "bottlesCount": "{{count}} زجاجات",
+    "availableBottles": "الزجاجات المتاحة",
+    "pricePerBottle": "السعر لكل زجاجة",
+    "addToOrder": "إضافة ماء للطلب",
+    "notEnoughStock": "مخزون الماء غير كافٍ ({{count}} زجاجة متاحة)",
+    "bottlesUsed": "{{count}} زجاجات"
+  },
   "weightTypes": {
     "quarter": "ربع",
     "half": "نصف",

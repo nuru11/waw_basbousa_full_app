@@ -7,13 +7,22 @@ module.exports = (sequelize) => {
     {
       id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       dish_id: { type: DataTypes.INTEGER, allowNull: true },
+      sale_type: {
+        type: DataTypes.ENUM('plate', 'coffee', 'water'),
+        allowNull: false,
+        defaultValue: 'plate',
+      },
       seller_id: { type: DataTypes.INTEGER, allowNull: false },
       kilo_consumed: { type: DataTypes.DECIMAL(10, 4), allowNull: false, defaultValue: 0 },
       weight_type: {
         type: DataTypes.ENUM('quarter', 'half', 'kilo', 'slice', 'half_slice'),
-        allowNull: false,
+        allowNull: true,
       },
       slice_count: { type: DataTypes.INTEGER, allowNull: true },
+      water_bottle_size: {
+        type: DataTypes.ENUM('small', 'large'),
+        allowNull: true,
+      },
       quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
       unit_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },

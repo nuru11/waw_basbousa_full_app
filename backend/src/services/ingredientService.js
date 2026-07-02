@@ -1,6 +1,7 @@
 const { Ingredient } = require('../models');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
+const coffeeService = require('./coffeeService');
 
 async function listIngredients() {
   return Ingredient.findAll({ order: [['name', 'ASC']] });
@@ -24,6 +25,13 @@ async function updateIngredient(id, data) {
 
 async function deleteIngredient(id) {
   const ingredient = await getIngredient(id);
+  if (await coffeeService.isIngredientLinked(id)) {
+    throw new AppError(
+      'INGREDIENT_LINKED_TO_COFFEE',
+      ERROR_CODES.INGREDIENT_LINKED_TO_COFFEE,
+      400
+    );
+  }
   await ingredient.destroy();
 }
 

@@ -27,6 +27,9 @@ const SalaryPayment = require('./SalaryPayment')(sequelize);
 const TipPayment = require('./TipPayment')(sequelize);
 const PosDefaultPrice = require('./PosDefaultPrice')(sequelize);
 const ChiefExpense = require('./ChiefExpense')(sequelize);
+const CoffeeSetting = require('./CoffeeSetting')(sequelize);
+const WaterSetting = require('./WaterSetting')(sequelize);
+const WaterStockMovement = require('./WaterStockMovement')(sequelize);
 
 Admin.hasMany(Purchase, { foreignKey: 'purchaser_id', as: 'purchasesMade' });
 Purchase.belongsTo(Admin, { foreignKey: 'purchaser_id', as: 'purchaser' });
@@ -96,6 +99,12 @@ ChiefExpense.belongsTo(Admin, { foreignKey: 'chief_id', as: 'chief' });
 Admin.hasMany(ChiefExpense, { foreignKey: 'created_by', as: 'chiefExpensesCreated' });
 ChiefExpense.belongsTo(Admin, { foreignKey: 'created_by', as: 'creator' });
 
+CoffeeSetting.belongsTo(Ingredient, { foreignKey: 'ingredient_id', as: 'ingredient' });
+Ingredient.hasOne(CoffeeSetting, { foreignKey: 'ingredient_id', as: 'coffeeSetting' });
+
+Admin.hasMany(WaterStockMovement, { foreignKey: 'created_by', as: 'waterStockMovements' });
+WaterStockMovement.belongsTo(Admin, { foreignKey: 'created_by', as: 'creator' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -113,4 +122,7 @@ module.exports = {
   TipPayment,
   PosDefaultPrice,
   ChiefExpense,
+  CoffeeSetting,
+  WaterSetting,
+  WaterStockMovement,
 };

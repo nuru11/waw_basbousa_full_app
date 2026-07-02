@@ -9,6 +9,7 @@ import RoleRedirect from "./components/auth/RoleRedirect";
 import AdminDashboard from "./pages/superadmin/Dashboard";
 import StaffPage from "./pages/superadmin/Staff";
 import IngredientsPage from "./pages/superadmin/Ingredients";
+import BeveragesSettingsPage from "./pages/superadmin/BeveragesSettings";
 import DishesPage from "./pages/superadmin/Dishes";
 import ReportsPage from "./pages/superadmin/Reports";
 import TransfersPage from "./pages/superadmin/Transfers";
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/staff" element={<StaffPage />} />
               <Route path="/admin/ingredients" element={<IngredientsPage />} />
+              <Route path="/admin/beverages" element={<BeveragesSettingsPage />} />
               <Route path="/admin/dishes" element={<DishesPage />} />
               <Route path="/admin/reports" element={<ReportsPage />} />
               <Route path="/admin/reports/monthly" element={<MonthlyAnalysisPage />} />

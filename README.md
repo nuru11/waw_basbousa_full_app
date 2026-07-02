@@ -75,7 +75,9 @@ cd cashier
 npm run build
 ```
 
-Serve the `cashier/dist` folder with SPA fallback (`try_files $uri /index.html`).
+Upload the contents of `cashier/dist/` to your cashier subdomain document root. The build includes `cashier/public/.htaccess`, which rewrites unknown paths to `index.html` so client-side routes work on refresh (Apache/cPanel). Ensure your FTP client uploads dotfiles.
+
+On Nginx, use SPA fallback instead: `try_files $uri /index.html`.
 
 ## Role Views
 

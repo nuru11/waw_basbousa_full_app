@@ -15,6 +15,8 @@ const expenseRoutes = require('./routes/expenseRoutes');
 const chiefExpenseRoutes = require('./routes/chiefExpenseRoutes');
 const salaryRoutes = require('./routes/salaryRoutes');
 const tipRoutes = require('./routes/tipRoutes');
+const coffeeRoutes = require('./routes/coffeeRoutes');
+const waterRoutes = require('./routes/waterRoutes');
 
 const app = express();
 
@@ -38,6 +40,8 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/chief-expenses', chiefExpenseRoutes);
 app.use('/api/salaries', salaryRoutes);
 app.use('/api/tips', tipRoutes);
+app.use('/api/coffee', coffeeRoutes);
+app.use('/api/water', waterRoutes);
 
 app.use(errorHandler);
 

@@ -12,7 +12,7 @@ import {
 import type { DataTableColumn } from "../../components/ui";
 import { api, type Sale } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { paymentMethodLabel, weightTypeLabel } from "../../utils/purchaseStatus";
+import { paymentMethodLabel, formatSaleItemName, formatSalePortion } from "../../utils/purchaseStatus";
 
 export default function MySalesPage() {
   const { t } = useTranslation(["employee", "common", "nav"]);
@@ -29,17 +29,12 @@ export default function MySalesPage() {
       {
         key: "plate",
         header: t("common:fields.plate"),
-        render: (s) => s.dish?.name ?? t("common:emDash"),
+        render: (s) => formatSaleItemName(s),
       },
       {
         key: "type",
         header: t("common:fields.type"),
-        render: (s) =>
-          `${weightTypeLabel(s.weight_type)}${
-            s.slice_count
-              ? t("common:units.slicesInSale", { count: s.slice_count })
-              : ""
-          }`,
+        render: (s) => formatSalePortion(s),
       },
       {
         key: "qty",

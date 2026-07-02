@@ -159,6 +159,13 @@
     "small": "صغير",
     "large": "كبير"
   },
+  "saleItems": {
+    "coffee": "قهوة",
+    "water": "ماء",
+    "waterSmall": "ماء (زجاجة صغيرة)",
+    "waterLarge": "ماء (زجاجة كبيرة)",
+    "bottlesUsed": "{{count}} زجاجات"
+  },
   "units": {
     "bottle": "علبة",
     "kg": "كيلوغرام",

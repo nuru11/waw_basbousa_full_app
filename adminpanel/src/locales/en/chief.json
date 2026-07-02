@@ -15,7 +15,10 @@
     "reduceQuantity": "Quantity to reduce",
     "reduceNotes": "Note (optional)",
     "reduceSuccess": "Stock reduced",
-    "reduceFailed": "Failed to reduce stock"
+    "reduceFailed": "Failed to reduce stock",
+    "waterTitle": "Water",
+    "waterSmallAvailable": "Small: {{count}} bottles available",
+    "waterLargeAvailable": "Large: {{count}} bottles available"
   },
   "production": {
     "metaTitle": "Production | Restaurant",

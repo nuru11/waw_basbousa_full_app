@@ -121,9 +121,39 @@ export interface PosDefaultPrices {
   price_half_slice: string | number | null;
 }
 
+export interface CoffeeSettings {
+  id: number;
+  ingredient_id: number | null;
+  price_per_cup: string | number | null;
+  cups_per_kg: string | number;
+  is_active: boolean;
+  current_stock_kg: number;
+  available_cups: number;
+  ingredient?: { id: number; name: string; unit: string; current_stock: string | number } | null;
+}
+
+export interface WaterSettings {
+  id: number;
+  price_per_bottle: string | number | null;
+  price_large_bottle: string | number | null;
+  is_active: boolean;
+  current_stock_small_bottles: number;
+  available_small_bottles: number;
+  current_stock_large_bottles: number;
+  available_large_bottles: number;
+  current_stock_bottles: number;
+  available_bottles: number;
+  min_stock_bottles?: number;
+  low_stock?: boolean;
+  low_stock_small?: boolean;
+  low_stock_large?: boolean;
+}
+
 export interface SaleBatchItem {
+  sale_type?: "plate" | "coffee" | "water";
   dish_id?: number;
-  weight_type: "quarter" | "half" | "kilo" | "slice" | "half_slice";
+  weight_type?: "quarter" | "half" | "kilo" | "slice" | "half_slice";
+  water_bottle_size?: "small" | "large";
   quantity: number;
   slice_count?: number;
   kilo_consumed?: number;
@@ -144,8 +174,10 @@ export interface SaleBatchResponse {
 export interface Sale {
   id: number;
   dish_id: number | null;
+  sale_type?: "plate" | "coffee" | "water";
   seller_id: number;
-  weight_type: "quarter" | "half" | "kilo" | "slice" | "half_slice";
+  weight_type: "quarter" | "half" | "kilo" | "slice" | "half_slice" | null;
+  water_bottle_size?: "small" | "large" | null;
   slice_count: number | null;
   quantity: number;
   unit_price: string | number;

@@ -14,7 +14,7 @@ import type { DataTableColumn } from "../../components/ui";
 import { api, type Expense, type Purchase, type ReportSummary, type Sale } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatNumber } from "../../utils/formatNumber";
-import { purchaseStatusLabel, weightTypeLabel } from "../../utils/purchaseStatus";
+import { purchaseStatusLabel, formatSaleItemName, formatSalePortion } from "../../utils/purchaseStatus";
 
 export default function ReportsPage() {
   const { t } = useTranslation("admin");
@@ -77,7 +77,7 @@ export default function ReportsPage() {
       {
         key: "plate",
         header: tCommon("fields.plate"),
-        render: (s) => s.dish?.name ?? tCommon("emDash"),
+        render: (s) => formatSaleItemName(s),
       },
       {
         key: "seller",
@@ -87,7 +87,7 @@ export default function ReportsPage() {
       {
         key: "type",
         header: tCommon("fields.type"),
-        render: (s) => weightTypeLabel(s.weight_type),
+        render: (s) => formatSalePortion(s),
       },
       {
         key: "total",

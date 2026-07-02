@@ -169,6 +169,32 @@
     "slicesInSale": " ({{count}} slices)",
     "sliceStockRule": "Stock: every 3 slices = 1 quarter (0.25 kg)"
   },
+  "coffee": {
+    "title": "Coffee",
+    "itemName": "Coffee",
+    "cups": "Cups",
+    "cupsCount": "{{count}} cups",
+    "availableCups": "Available cups",
+    "pricePerCup": "Price per cup",
+    "addToOrder": "Add coffee to order",
+    "notEnoughStock": "Not enough coffee stock ({{count}} cups available)",
+    "kgUsed": "Uses {{amount}} kg coffee"
+  },
+  "water": {
+    "title": "Water",
+    "itemName": "Water",
+    "smallBottle": "Small bottle",
+    "largeBottle": "Large bottle",
+    "bottleSize": "Bottle size",
+    "selectedPrice": "Selected price",
+    "bottles": "Bottles",
+    "bottlesCount": "{{count}} bottles",
+    "availableBottles": "Available bottles",
+    "pricePerBottle": "Price per bottle",
+    "addToOrder": "Add water to order",
+    "notEnoughStock": "Not enough water stock ({{count}} bottles available)",
+    "bottlesUsed": "{{count}} bottles"
+  },
   "weightTypes": {
     "quarter": "Quarter",
     "half": "Half",

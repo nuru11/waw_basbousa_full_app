@@ -14,7 +14,9 @@ import { formatCurrency } from "../../utils/formatCurrency";
 import { formatTime } from "../../utils/formatDate";
 import {
   paymentMethodLabel,
-  weightTypeLabel,
+  formatSaleItemName,
+  formatSalePortion,
+  formatSaleQuantityUsed,
 } from "../../utils/purchaseStatus";
 import { PAYMENT_OPTIONS, type PaymentMethod } from "../../utils/paymentMethods";
 import type { StatCardAccent } from "../../components/ui/stat-card/StatCard";
@@ -40,21 +42,6 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
   const { summary } = data;
 
   const sellersWithTips = data.by_seller.filter((row) => row.tips_total > 0);
-
-  function formatPortion(
-    weightType: string,
-    sliceCount: number | null,
-    quantity: number
-  ) {
-    const label =
-      weightType === "slice" && sliceCount
-        ? t("units.slices", { count: sliceCount })
-        : weightTypeLabel(weightType);
-    if (quantity > 1) {
-      return `${label} × ${quantity}`;
-    }
-    return label;
-  }
 
   const tipsBySellerColumns: DataTableColumn<DailySalesOverview["by_seller"][number]>[] =
     useMemo(
@@ -104,18 +91,20 @@ export default function SalesDailyReport({ data }: SalesDailyReportProps) {
         {
           key: "plate",
           header: t("fields.plate"),
-          render: (sale) => sale.dish?.name ?? t("emDash"),
+          render: (sale) => formatSaleItemName(sale),
         },
         {
           key: "portion",
           header: t("sales.portion"),
-          render: (sale) =>
-            formatPortion(sale.weight_type, sale.slice_count, sale.quantity),
+          render: (sale) => formatSalePortion(sale),
         },
         {
           key: "kgUsed",
           header: t("sales.kgUsed"),
-          render: (sale) => formatNumber(sale.kilo_consumed),
+          render: (sale) =>
+            sale.sale_type === "water"
+              ? formatSaleQuantityUsed(sale)
+              : formatNumber(sale.kilo_consumed),
         },
         {
           key: "payment",
