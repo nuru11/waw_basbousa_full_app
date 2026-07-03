@@ -17,6 +17,10 @@ import {
   ingredientDisplayName,
 } from "../../utils/productionAdjustmentNote";
 import { maxPlatesFromStock } from "../../utils/productionStock";
+import {
+  recipeUsageKey,
+  resolveProductionRecipe,
+} from "../../utils/resolveProductionRecipe";
 import { translateApiError } from "../../utils/translateApiError";
 
 const PLATES_COUNT = 1;
@@ -26,10 +30,6 @@ const emptyForm = {
   plate_weight_kg: "",
   chiefNote: "",
 };
-
-function recipeUsageKey(ingredientId: number, size: string | null | undefined) {
-  return `${ingredientId}:${size ?? ""}`;
-}
 
 function isAutoReduce(ingredient?: Ingredient): boolean {
   return ingredient?.auto_reduce !== false;
@@ -57,6 +57,73 @@ export default function ProductionPage() {
 
   const plateWeightKg = parseFloat(form.plate_weight_kg) || 0;
 
+  const stockByIngredientId = useMemo(
+    () =>
+      new Map(
+        stock.map((ingredient) => [
+          ingredient.id,
+          parseFloat(String(ingredient.current_stock)),
+        ])
+      ),
+    [stock]
+  );
+
+  const hasSizeByIngredientId = useMemo(() => {
+    const map = new Map<number, boolean>();
+    for (const ingredient of stock) {
+      map.set(ingredient.id, ingredient.has_size);
+    }
+    for (const dish of dishes) {
+      for (const item of dish.recipe ?? []) {
+        if (item.ingredient?.has_size != null) {
+          map.set(item.ingredient_id, item.ingredient.has_size);
+        }
+      }
+    }
+    return map;
+  }, [stock, dishes]);
+
+  const usageByKey = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const [key, value] of Object.entries(ingredientUsage)) {
+      const parsed = parseFloat(value);
+      if (!Number.isNaN(parsed)) {
+        map.set(key, parsed);
+      }
+    }
+    return map;
+  }, [ingredientUsage]);
+
+  const autoRecipe = useMemo(() => {
+    if (!selectedDish?.recipe) return [];
+    return selectedDish.recipe.filter((item) => {
+      const ingredient =
+        stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
+      return isAutoReduce(ingredient);
+    });
+  }, [selectedDish, stock]);
+
+  const effectiveAutoRecipe = useMemo(
+    () =>
+      resolveProductionRecipe(
+        autoRecipe,
+        stockByIngredientId,
+        hasSizeByIngredientId,
+        PLATES_COUNT,
+        usageByKey
+      ),
+    [autoRecipe, stockByIngredientId, hasSizeByIngredientId, usageByKey]
+  );
+
+  const effectiveUsageKeySignature = useMemo(
+    () =>
+      effectiveAutoRecipe
+        .map((item) => recipeUsageKey(item.ingredient_id, item.size))
+        .sort()
+        .join(","),
+    [effectiveAutoRecipe]
+  );
+
   useEffect(() => {
     if (!selectedDish) return;
     setForm((prev) => ({
@@ -72,20 +139,50 @@ export default function ProductionPage() {
       setIngredientUsage({});
       return;
     }
-    const defaults: Record<string, string> = {};
-    for (const item of selectedDish.recipe) {
-      const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
-      if (!isAutoReduce(ingredient)) continue;
-      const key = recipeUsageKey(item.ingredient_id, item.size);
-      const defaultQty = parseFloat(String(item.quantity_per_plate)) * PLATES_COUNT;
-      defaults[key] = String(defaultQty);
-    }
-    setIngredientUsage(defaults);
-  }, [selectedDish?.id]);
+    if (effectiveAutoRecipe.length === 0) return;
+
+    setIngredientUsage((prev) => {
+      const effectiveKeys = new Set(
+        effectiveAutoRecipe.map((item) =>
+          recipeUsageKey(item.ingredient_id, item.size)
+        )
+      );
+      const prevKeys = Object.keys(prev);
+      const keysMatch =
+        prevKeys.length === effectiveKeys.size &&
+        prevKeys.every((key) => effectiveKeys.has(key));
+      if (keysMatch) return prev;
+
+      const defaults: Record<string, string> = {};
+      for (const item of effectiveAutoRecipe) {
+        const key = recipeUsageKey(item.ingredient_id, item.size);
+        const defaultQty =
+          parseFloat(String(item.quantity_per_plate)) * PLATES_COUNT;
+        defaults[key] = String(defaultQty);
+      }
+      return defaults;
+    });
+  }, [selectedDish?.id, effectiveUsageKeySignature, effectiveAutoRecipe]);
 
   const preview = useMemo(() => {
     if (!selectedDish?.recipe) return [];
-    return selectedDish.recipe.map((item) => {
+
+    const effectiveKeys = new Set(
+      effectiveAutoRecipe.map((item) =>
+        recipeUsageKey(item.ingredient_id, item.size)
+      )
+    );
+
+    return selectedDish.recipe
+      .filter((item) => {
+        const ingredient =
+          stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
+        const manual = !isAutoReduce(ingredient);
+        if (manual) return true;
+        const key = recipeUsageKey(item.ingredient_id, item.size);
+        return effectiveKeys.has(key);
+      })
+      .map((item) => {
       const key = recipeUsageKey(item.ingredient_id, item.size);
       const recipeDefault = parseFloat(String(item.quantity_per_plate)) * PLATES_COUNT;
       const used = parseFloat(ingredientUsage[key] ?? "");
@@ -111,7 +208,7 @@ export default function ProductionPage() {
         sufficient: manual || (used > 0 && available >= used),
       };
     });
-  }, [selectedDish, stock, ingredientUsage, t]);
+  }, [selectedDish, stock, ingredientUsage, effectiveAutoRecipe, t]);
 
   const adjustmentNote = useMemo(
     () =>
@@ -132,19 +229,14 @@ export default function ProductionPage() {
   );
 
   const maxPlates = useMemo(() => {
-    if (!selectedDish?.recipe) return 0;
-    const autoRecipe = selectedDish.recipe.filter((item) => {
-      const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
-      return isAutoReduce(ingredient);
-    });
-    const stockByIngredientId = new Map(
-      stock.map((ingredient) => [
-        ingredient.id,
-        parseFloat(String(ingredient.current_stock)),
-      ])
+    if (!autoRecipe.length) return 0;
+    return maxPlatesFromStock(
+      autoRecipe,
+      stockByIngredientId,
+      hasSizeByIngredientId,
+      PLATES_COUNT
     );
-    return maxPlatesFromStock(autoRecipe, stockByIngredientId, PLATES_COUNT);
-  }, [selectedDish, stock]);
+  }, [autoRecipe, stockByIngredientId, hasSizeByIngredientId]);
 
   const canSubmit =
     form.dish_id &&
@@ -169,10 +261,6 @@ export default function ProductionPage() {
     await run(async () => {
       setError("");
       try {
-        const autoRecipe = recipe.filter((item) => {
-          const ingredient = stock.find((s) => s.id === item.ingredient_id) ?? item.ingredient;
-          return isAutoReduce(ingredient);
-        });
         const payload: {
           dish_id: number;
           plates_count: number;
@@ -189,8 +277,8 @@ export default function ProductionPage() {
           plate_weight_grams: kgToStoredGrams(plateWeightKg),
           notes: form.chiefNote.trim() || null,
         };
-        if (autoRecipe.length > 0) {
-          payload.ingredient_usage = autoRecipe.map((item) => ({
+        if (effectiveAutoRecipe.length > 0) {
+          payload.ingredient_usage = effectiveAutoRecipe.map((item) => ({
             ingredient_id: item.ingredient_id,
             size: item.size ?? null,
             quantity_used: parseFloat(

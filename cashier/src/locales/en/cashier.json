@@ -26,6 +26,7 @@
     "refresh": "Refresh",
     "editTitle": "Edit sale",
     "currentTotal": "Current total",
+    "newTotal": "New total",
     "priceRecalcHint": "Price will be recalculated when you save.",
     "save": "Save changes",
     "saving": "Saving...",

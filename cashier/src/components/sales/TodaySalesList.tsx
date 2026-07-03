@@ -5,6 +5,7 @@ import SaleEditSheet from "./SaleEditSheet";
 import { api, type Sale, type User } from "../../services/api";
 import { paymentMethodLabel, formatSaleItemName, formatSalePortion, salePortionPillClass } from "../../utils/labels";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { formatNumber } from "../../utils/formatNumber";
 import { translateApiError } from "../../utils/translateApiError";
 import { portionColors, type WeightType } from "../../utils/posColors";
 
@@ -115,6 +116,15 @@ export default function TodaySalesList() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {sale.seller?.name ?? t("common:emDash")} ·{" "}
                         {paymentMethodLabel(sale.payment_method)}
+                        {(!sale.sale_type || sale.sale_type === "plate") &&
+                          parseFloat(String(sale.kilo_consumed)) > 0 && (
+                            <>
+                              {" · "}
+                              {t("common:units.kgUsed", {
+                                amount: formatNumber(parseFloat(String(sale.kilo_consumed))),
+                              })}
+                            </>
+                          )}
                       </p>
                     </div>
                     <div className="text-right shrink-0">

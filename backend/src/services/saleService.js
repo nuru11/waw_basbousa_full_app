@@ -112,6 +112,59 @@ async function deductIngredientOnSale(ingredientId, amountUsed, saleId, userId, 
   );
 }
 
+async function restoreIngredientOnSale(ingredientId, amountRestored, saleId, userId, transaction, notes) {
+  const ingredient = await Ingredient.findByPk(ingredientId, {
+    lock: transaction.LOCK.UPDATE,
+    transaction,
+  });
+  if (!ingredient) {
+    throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
+  }
+
+  const newStock = parseFloat(ingredient.current_stock) + amountRestored;
+  await ingredient.update({ current_stock: newStock }, { transaction });
+
+  await StockMovement.create(
+    {
+      ingredient_id: ingredientId,
+      type: 'adjustment',
+      quantity_delta: amountRestored,
+      reference_id: saleId,
+      notes,
+      created_by: userId,
+    },
+    { transaction }
+  );
+}
+
+async function restoreCoffeeStockForEdit(sale, saleId, userId, transaction) {
+  const oldKg = parseFloat(sale.kilo_consumed) || 0;
+  if (oldKg <= 0) return;
+
+  const { ingredient } = await coffeeService.getSettingsForSale({ transaction });
+  await restoreIngredientOnSale(
+    ingredient.id,
+    oldKg,
+    saleId,
+    userId,
+    transaction,
+    'Coffee sale edit reversal'
+  );
+}
+
+async function restoreWaterStockForEdit(sale, saleId, userId, transaction) {
+  const oldQty = sale.quantity || 0;
+  if (oldQty <= 0) return;
+
+  await waterService.restoreStockOnSaleEdit(
+    oldQty,
+    sale.water_bottle_size ?? 'small',
+    saleId,
+    userId,
+    transaction
+  );
+}
+
 async function resolveCoffeeSaleLine(item, transaction) {
   const quantity = item.quantity || 1;
   const { settings, ingredient } = await coffeeService.getSettingsForSale({ transaction });
@@ -403,21 +456,7 @@ async function updateSale(saleId, data) {
     if (!isSaleEditableToday(sale.sold_at)) {
       throw new AppError('SALE_NOT_EDITABLE', ERROR_CODES.SALE_NOT_EDITABLE, 403);
     }
-    if (sale.sale_type === 'coffee') {
-      throw new AppError('COFFEE_SALE_NOT_EDITABLE', ERROR_CODES.COFFEE_SALE_NOT_EDITABLE, 403);
-    }
-    if (sale.sale_type === 'water') {
-      throw new AppError('WATER_SALE_NOT_EDITABLE', ERROR_CODES.WATER_SALE_NOT_EDITABLE, 403);
-    }
 
-    const weightType = data.weight_type ?? sale.weight_type;
-    const quantity = data.quantity != null ? parseInt(data.quantity, 10) : sale.quantity;
-    const sliceCount =
-      weightType === 'slice'
-        ? data.slice_count != null
-          ? parseInt(data.slice_count, 10)
-          : sale.slice_count
-        : null;
     const paymentMethod = data.payment_method ?? sale.payment_method;
     const tipAmount =
       paymentMethod === 'cash'
@@ -430,30 +469,84 @@ async function updateSale(saleId, data) {
       data.seller_id != null ? parseInt(data.seller_id, 10) : sale.seller_id;
     await validateSeller(sellerId);
 
-    const lineInput = {
-      dish_id: sale.dish_id,
-      weight_type: weightType,
-      quantity,
-      slice_count: sliceCount,
-      kilo_consumed: data.kilo_consumed,
-    };
+    if (sale.sale_type === 'coffee') {
+      const quantity = data.quantity != null ? parseInt(data.quantity, 10) : sale.quantity;
 
-    const line = await resolveSaleLine(lineInput, transaction);
+      await restoreCoffeeStockForEdit(sale, saleId, sellerId, transaction);
+      const line = await resolveCoffeeSaleLine({ quantity }, transaction);
+      await deductBeverageStock(line, saleId, sellerId, transaction);
 
-    await sale.update(
-      {
-        seller_id: sellerId,
-        weight_type: line.weight_type,
-        slice_count: line.slice_count,
-        quantity: line.quantity,
-        unit_price: line.unit_price,
-        total_price: line.total_price,
-        kilo_consumed: line.kilo_consumed,
-        payment_method: paymentMethod,
-        tip_amount: tipAmount,
-      },
-      { transaction }
-    );
+      await sale.update(
+        {
+          seller_id: sellerId,
+          quantity: line.quantity,
+          unit_price: line.unit_price,
+          total_price: line.total_price,
+          kilo_consumed: line.kilo_consumed,
+          payment_method: paymentMethod,
+          tip_amount: tipAmount,
+        },
+        { transaction }
+      );
+    } else if (sale.sale_type === 'water') {
+      const quantity = data.quantity != null ? parseInt(data.quantity, 10) : sale.quantity;
+      const waterBottleSize = data.water_bottle_size ?? sale.water_bottle_size ?? 'small';
+
+      await restoreWaterStockForEdit(sale, saleId, sellerId, transaction);
+      const line = await resolveWaterSaleLine(
+        { quantity, water_bottle_size: waterBottleSize },
+        transaction
+      );
+      await deductBeverageStock(line, saleId, sellerId, transaction);
+
+      await sale.update(
+        {
+          seller_id: sellerId,
+          quantity: line.quantity,
+          water_bottle_size: line.water_bottle_size,
+          unit_price: line.unit_price,
+          total_price: line.total_price,
+          kilo_consumed: line.kilo_consumed,
+          payment_method: paymentMethod,
+          tip_amount: tipAmount,
+        },
+        { transaction }
+      );
+    } else {
+      const weightType = data.weight_type ?? sale.weight_type;
+      const quantity = data.quantity != null ? parseInt(data.quantity, 10) : sale.quantity;
+      const sliceCount =
+        weightType === 'slice'
+          ? data.slice_count != null
+            ? parseInt(data.slice_count, 10)
+            : sale.slice_count
+          : null;
+
+      const lineInput = {
+        dish_id: sale.dish_id,
+        weight_type: weightType,
+        quantity,
+        slice_count: sliceCount,
+        kilo_consumed: data.kilo_consumed,
+      };
+
+      const line = await resolveSaleLine(lineInput, transaction);
+
+      await sale.update(
+        {
+          seller_id: sellerId,
+          weight_type: line.weight_type,
+          slice_count: line.slice_count,
+          quantity: line.quantity,
+          unit_price: line.unit_price,
+          total_price: line.total_price,
+          kilo_consumed: line.kilo_consumed,
+          payment_method: paymentMethod,
+          tip_amount: tipAmount,
+        },
+        { transaction }
+      );
+    }
 
     await transaction.commit();
 

@@ -200,12 +200,25 @@ async function deductStockOnSale(bottlesUsed, bottleSize, saleId, userId, transa
   });
 }
 
+async function restoreStockOnSaleEdit(bottles, bottleSize, saleId, userId, transaction) {
+  const settings = await getSettingsRow({ transaction, lock: true });
+  await applyStockDelta(settings, bottles, {
+    type: 'adjustment',
+    bottleSize,
+    referenceId: saleId,
+    notes: `Water ${normalizeBottleSize(bottleSize)} bottle sale edit reversal`,
+    userId,
+    transaction,
+  });
+}
+
 module.exports = {
   getSettingsWithAvailability,
   getSettingsForSale,
   updateSettings,
   adjustStockBottles,
   deductStockOnSale,
+  restoreStockOnSaleEdit,
   computeAvailability,
   getPriceForSize,
   getStockForSize,

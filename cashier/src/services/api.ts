@@ -195,6 +195,7 @@ export interface SaleUpdateRequest {
   quantity?: number;
   slice_count?: number;
   kilo_consumed?: number;
+  water_bottle_size?: "small" | "large";
   payment_method?: string;
   tip_amount?: number;
   seller_id?: number;

@@ -13,6 +13,7 @@ const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
 const { getTodayRange, getDateRange, formatDateYmd } = require('../utils/dateUtils');
 const { plateWeightToKg } = require('../utils/plateWeight');
+const { resolveProductionRecipe } = require('../utils/resolveProductionRecipe');
 
 async function listStock() {
   return Ingredient.findAll({
@@ -259,6 +260,15 @@ async function logProduction(
     const autoReduceById = new Map(
       ingredients.map((ingredient) => [ingredient.id, ingredient.auto_reduce])
     );
+    const hasSizeById = new Map(
+      ingredients.map((ingredient) => [ingredient.id, ingredient.has_size])
+    );
+    const stockById = new Map(
+      ingredients.map((ingredient) => [
+        ingredient.id,
+        parseFloat(ingredient.current_stock),
+      ])
+    );
     const autoRecipe = recipe.filter((item) => autoReduceById.get(item.ingredient_id) !== false);
 
     const usageMap =
@@ -266,9 +276,22 @@ async function logProduction(
         ? buildUsageMap(ingredient_usage)
         : null;
 
+    const effectiveAutoRecipe = resolveProductionRecipe(
+      autoRecipe,
+      stockById,
+      hasSizeById,
+      plates_count,
+      usageMap
+    );
+
     if (usageMap) {
       const recipeKeys = new Set(
         autoRecipe.map((item) => recipeUsageKey(item.ingredient_id, item.size ?? null))
+      );
+      const effectiveKeys = new Set(
+        effectiveAutoRecipe.map((item) =>
+          recipeUsageKey(item.ingredient_id, item.size ?? null)
+        )
       );
       for (const key of usageMap.keys()) {
         if (!recipeKeys.has(key)) {
@@ -279,7 +302,16 @@ async function logProduction(
           );
         }
       }
-      if (usageMap.size !== autoRecipe.length) {
+      for (const key of effectiveKeys) {
+        if (!usageMap.has(key)) {
+          throw new AppError(
+            'INVALID_INGREDIENT_USAGE',
+            ERROR_CODES.INVALID_INGREDIENT_USAGE,
+            400
+          );
+        }
+      }
+      if (usageMap.size !== effectiveAutoRecipe.length) {
         throw new AppError(
           'INVALID_INGREDIENT_USAGE',
           ERROR_CODES.INVALID_INGREDIENT_USAGE,
@@ -288,9 +320,7 @@ async function logProduction(
       }
     }
 
-    for (const item of recipe) {
-      if (!autoReduceById.get(item.ingredient_id)) continue;
-
+    for (const item of effectiveAutoRecipe) {
       const ingredient = await Ingredient.findByPk(item.ingredient_id, {
         lock: transaction.LOCK.UPDATE,
         transaction,
@@ -336,7 +366,7 @@ async function logProduction(
     let finalNotes = notes?.trim() || '';
     if (usageMap) {
       const adjustmentNotes = await buildIngredientAdjustmentNotes(
-        autoRecipe,
+        effectiveAutoRecipe,
         usageMap,
         plates_count,
         transaction

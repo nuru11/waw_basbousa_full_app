@@ -190,6 +190,10 @@ const updateSaleValidation = [
     .isInt({ gt: 0 })
     .withMessage('VALIDATION_SLICE_COUNT_REQUIRED'),
   body('kilo_consumed').optional().isFloat({ gt: 0 }).withMessage('VALIDATION_QUANTITY_POSITIVE'),
+  body('water_bottle_size')
+    .optional()
+    .isIn(['small', 'large'])
+    .withMessage('VALIDATION_FAILED'),
   body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
   body('tip_amount').optional().isFloat({ min: 0 }).withMessage('VALIDATION_FAILED'),
   tipNotAllowedForCash(),
@@ -200,6 +204,7 @@ const updateSaleValidation = [
       'quantity',
       'slice_count',
       'kilo_consumed',
+      'water_bottle_size',
       'seller_id',
       'tip_amount',
     ];
