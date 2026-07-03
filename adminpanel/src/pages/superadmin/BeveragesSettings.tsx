@@ -210,7 +210,7 @@ export default function BeveragesSettingsPage() {
               <Input
                 type="number"
                 min="0"
-                step="0.01"
+                step={0.01}
                 value={coffeeForm.price_per_cup}
                 onChange={(e) => setCoffeeForm({ ...coffeeForm, price_per_cup: e.target.value })}
               />
@@ -221,7 +221,7 @@ export default function BeveragesSettingsPage() {
               <Input
                 type="number"
                 min="1"
-                step="1"
+                step={1}
                 value={coffeeForm.cups_per_kg}
                 onChange={(e) => setCoffeeForm({ ...coffeeForm, cups_per_kg: e.target.value })}
               />
@@ -290,7 +290,7 @@ export default function BeveragesSettingsPage() {
               <Input
                 type="number"
                 min="0"
-                step="0.01"
+                step={0.01}
                 value={waterForm.price_per_bottle}
                 onChange={(e) => setWaterForm({ ...waterForm, price_per_bottle: e.target.value })}
               />
@@ -301,7 +301,7 @@ export default function BeveragesSettingsPage() {
               <Input
                 type="number"
                 min="0"
-                step="0.01"
+                step={0.01}
                 value={waterForm.price_large_bottle}
                 onChange={(e) => setWaterForm({ ...waterForm, price_large_bottle: e.target.value })}
               />
@@ -312,7 +312,7 @@ export default function BeveragesSettingsPage() {
               <Input
                 type="number"
                 min="0"
-                step="1"
+                step={1}
                 value={waterForm.min_stock_bottles}
                 onChange={(e) => setWaterForm({ ...waterForm, min_stock_bottles: e.target.value })}
               />
@@ -352,7 +352,7 @@ export default function BeveragesSettingsPage() {
               <Label>{t("water.quantityDelta")}</Label>
               <Input
                 type="number"
-                step="1"
+                step={1}
                 value={stockAdjustForm.quantity_delta}
                 onChange={(e) =>
                   setStockAdjustForm({ ...stockAdjustForm, quantity_delta: e.target.value })

@@ -293,7 +293,7 @@
     "operatingCost": "Operating Cost",
     "netProfit": "Net Profit",
     "saleCount": "{{count}} sales",
-    "purchaseCount": "{{count}} purchases received",
+    "purchaseCount": "{{count}} purchases",
     "operatingByCategory": "Operating Expenses by Category",
     "paymentMethods": "Income by Payment Method",
     "topDishes": "Top Dishes",

@@ -69,7 +69,7 @@ export default function SaleEditSheet({
   useEffect(() => {
     if (!sale) return;
     setForm({
-      weight_type: sale.weight_type,
+      weight_type: sale.weight_type ?? "kilo",
       quantity: String(sale.quantity),
       slice_count: String(sale.slice_count ?? 1),
       seller_id: String(sale.seller_id),

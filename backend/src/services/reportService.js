@@ -15,6 +15,8 @@ const stockService = require('./stockService');
 const salaryService = require('./salaryService');
 const { createEmptyPayments } = require('../constants/paymentMethods');
 
+const COMMITTED_PURCHASE_STATUSES = ['in_inventory', 'handed', 'received'];
+
 function saleDateYmd(soldAt) {
   if (!soldAt) return null;
   if (typeof soldAt === 'string') return soldAt.slice(0, 10);
@@ -48,10 +50,10 @@ async function getSummary() {
     operatingByCategoryRows,
     chiefExpenseResult,
   ] = await Promise.all([
-    Purchase.sum('total_price', { where: { status: 'received' } }),
+    Purchase.sum('total_price', { where: { status: { [Op.in]: COMMITTED_PURCHASE_STATUSES } } }),
     Expense.sum('amount'),
     Sale.sum('total_price'),
-    Purchase.count({ where: { status: 'received' } }),
+    Purchase.count({ where: { status: { [Op.in]: COMMITTED_PURCHASE_STATUSES } } }),
     Sale.count(),
     Ingredient.findAll({
       where: literal('current_stock <= min_stock'),
@@ -332,8 +334,8 @@ async function getMonthlyAnalysis(periodInput) {
   const { period, start, end, fromYmd, toYmd } = getMonthRange(periodInput);
 
   const purchaseWhere = {
-    status: 'received',
-    received_at: { [Op.between]: [start, end] },
+    status: { [Op.in]: COMMITTED_PURCHASE_STATUSES },
+    created_at: { [Op.between]: [start, end] },
   };
   const expenseWhere = {
     spent_at: { [Op.between]: [fromYmd, toYmd] },
@@ -375,7 +377,7 @@ async function getMonthlyAnalysis(periodInput) {
     }),
     Purchase.findAll({
       where: purchaseWhere,
-      attributes: ['total_price', 'received_at'],
+      attributes: ['total_price', 'created_at'],
       raw: true,
     }),
     Expense.findAll({
@@ -466,7 +468,7 @@ async function getMonthlyAnalysis(periodInput) {
   }
 
   for (const purchase of purchases) {
-    const date = saleDateYmd(purchase.received_at);
+    const date = saleDateYmd(purchase.created_at);
     if (!date || !byDayMap.has(date)) continue;
     byDayMap.get(date).ingredient_expense += parseFloat(purchase.total_price || 0);
   }

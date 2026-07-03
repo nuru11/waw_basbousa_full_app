@@ -181,7 +181,7 @@ export default function MonthlyAnalysisPage() {
       ) : (
         analysis && (
           <>
-            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
               <StatCard
                 title={t("monthlyAnalysis.totalIncome")}
                 value={formatCurrency(analysis.income)}
@@ -194,6 +194,16 @@ export default function MonthlyAnalysisPage() {
                 title={t("monthlyAnalysis.totalSpend")}
                 value={formatCurrency(analysis.expense)}
                 accent="warning"
+              />
+              <StatCard
+                title={t("monthlyAnalysis.netProfit")}
+                value={formatCurrency(analysis.net_profit)}
+                subtitle={
+                  analysis.net_profit >= 0
+                    ? tCommon("status.profitable")
+                    : tCommon("status.loss")
+                }
+                accent={analysis.net_profit >= 0 ? "success" : "error"}
               />
             </div>
 

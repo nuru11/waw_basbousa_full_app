@@ -293,7 +293,7 @@
     "operatingCost": "المصروفات التشغيلية",
     "netProfit": "صافي الربح",
     "saleCount": "{{count}} مبيعة",
-    "purchaseCount": "{{count}} مشتريات مستلمة",
+    "purchaseCount": "{{count}} مشتريات",
     "operatingByCategory": "المصروفات التشغيلية حسب الفئة",
     "paymentMethods": "الدخل حسب طريقة الدفع",
     "topDishes": "أفضل الأطباق",
