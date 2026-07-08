@@ -38,7 +38,8 @@
     "optionalNote": "Note (optional)",
     "noAdjustments": "No changes from recipe",
     "adjustmentHint": "Auto-generated when quantities differ from recipe",
-    "manualReduceOnly": "Manual reduce only"
+    "manualReduceOnly": "Manual reduce only",
+    "lowStockSubmitWarning": "Some ingredients are low; only available stock will be deducted."
   },
   "todaysPlates": {
     "metaTitle": "Today's Plates | Restaurant",

@@ -238,11 +238,10 @@ export default function ProductionPage() {
     );
   }, [autoRecipe, stockByIngredientId, hasSizeByIngredientId]);
 
+  const hasInsufficientStock = autoPreview.some((p) => !p.sufficient);
+
   const canSubmit =
-    form.dish_id &&
-    plateWeightKg > 0 &&
-    preview.length > 0 &&
-    (autoPreview.length === 0 || autoPreview.every((p) => p.sufficient));
+    form.dish_id && plateWeightKg > 0 && preview.length > 0;
 
   const load = () => {
     api.get<Dish[]>("/dishes").then(setDishes);
@@ -442,6 +441,11 @@ export default function ProductionPage() {
               onChange={(e) => setForm({ ...form, chiefNote: e.target.value })}
             />
           </div>
+          {hasInsufficientStock && (
+            <p className="text-sm text-warning-600 dark:text-warning-400">
+              {t("production.lowStockSubmitWarning")}
+            </p>
+          )}
           <Button type="submit" size="sm" disabled={submitting || !canSubmit}>
             {submitting ? t("common:actions.logging") : t("production.logProductionBtn")}
           </Button>

@@ -320,40 +320,40 @@ async function logProduction(
       }
     }
 
+    const shortfallParts = [];
+
     for (const item of effectiveAutoRecipe) {
       const ingredient = await Ingredient.findByPk(item.ingredient_id, {
         lock: transaction.LOCK.UPDATE,
         transaction,
       });
       const used = resolveIngredientUsed(item, plates_count, usageMap);
-      const newStock = parseFloat(ingredient.current_stock) - used;
+      const currentStock = parseFloat(ingredient.current_stock);
+      const actualDeducted = Math.min(used, Math.max(0, currentStock));
 
-      if (newStock < 0) {
-        throw new AppError(
-          'INSUFFICIENT_STOCK',
-          ERROR_CODES.INSUFFICIENT_STOCK,
-          400,
-          {
-            ingredient: ingredient.name,
-            needed: used,
-            have: ingredient.current_stock,
-          }
+      if (used > actualDeducted) {
+        const displayName = ingredientDisplayName(ingredient.name, item.size ?? null);
+        shortfallParts.push(
+          `${displayName} needed ${formatQtyForNote(used)}, deducted ${formatQtyForNote(actualDeducted)}`
         );
       }
 
-      await ingredient.update({ current_stock: newStock }, { transaction });
+      if (actualDeducted > 0) {
+        const newStock = currentStock - actualDeducted;
+        await ingredient.update({ current_stock: newStock }, { transaction });
 
-      await StockMovement.create(
-        {
-          ingredient_id: item.ingredient_id,
-          type: 'production',
-          quantity_delta: -used,
-          reference_id: dish_id,
-          notes: `Production: ${plates_count} plates of ${dish.name}`,
-          created_by: chiefId,
-        },
-        { transaction }
-      );
+        await StockMovement.create(
+          {
+            ingredient_id: item.ingredient_id,
+            type: 'production',
+            quantity_delta: -actualDeducted,
+            reference_id: dish_id,
+            notes: `Production: ${plates_count} plates of ${dish.name}`,
+            created_by: chiefId,
+          },
+          { transaction }
+        );
+      }
     }
 
     const weightGrams =
@@ -374,6 +374,11 @@ async function logProduction(
       finalNotes = mergeProductionNotes(adjustmentNotes, finalNotes);
     } else {
       finalNotes = finalNotes || null;
+    }
+
+    if (shortfallParts.length > 0) {
+      const shortfallNotes = `Stock shortfall: ${shortfallParts.join('; ')}`;
+      finalNotes = finalNotes ? `${shortfallNotes} | ${finalNotes}` : shortfallNotes;
     }
 
     const log = await ProductionLog.create(

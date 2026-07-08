@@ -38,7 +38,8 @@
     "optionalNote": "ملاحظة (اختياري)",
     "noAdjustments": "لا تغييرات عن الوصفة",
     "adjustmentHint": "يُنشأ تلقائياً عند اختلاف الكميات عن الوصفة",
-    "manualReduceOnly": "خصم يدوي فقط"
+    "manualReduceOnly": "خصم يدوي فقط",
+    "lowStockSubmitWarning": "بعض المكوّنات منخفضة؛ سيتم خصم المخزون المتاح فقط."
   },
   "todaysPlates": {
     "metaTitle": "أطباق اليوم | المطعم",
