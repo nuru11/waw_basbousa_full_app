@@ -665,7 +665,7 @@ export default function SalesForm() {
   return (
     <form
       onSubmit={handleCompleteOrder}
-      className="lg:grid lg:grid-cols-[1fr_22rem] lg:gap-6 xl:grid-cols-[1fr_24rem] xl:gap-8 pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0"
+      className="lg:grid lg:grid-cols-[1fr_22rem] lg:gap-6 xl:grid-cols-[1fr_24rem] xl:gap-8 pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-0"
     >
       <div className="space-y-4 md:space-y-5">
         {(error || success) && (
@@ -1012,7 +1012,7 @@ export default function SalesForm() {
         <div className="pos-section-cart">{summaryBlock}</div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-4 pb-[calc(3.5rem+env(safe-area-inset-bottom))] backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95 lg:hidden">
         <div className="flex items-center gap-3 mx-auto max-w-6xl">
           <div className="flex-1 min-w-0">
             {tipValue > 0 && (
