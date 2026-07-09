@@ -1,11 +1,12 @@
 import { SidebarProvider, useSidebar } from "../context/SidebarContext";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen xl:flex">
@@ -20,7 +21,7 @@ const LayoutContent: React.FC = () => {
       >
         <AppHeader />
         <div className="min-h-screen bg-gray-50 p-4 dark:bg-gray-950 md:p-6 mx-auto max-w-(--breakpoint-2xl)">
-          <Outlet />
+          <Outlet key={location.pathname} />
         </div>
       </div>
     </div>

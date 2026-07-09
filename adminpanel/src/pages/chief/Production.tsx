@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -56,6 +56,7 @@ export default function ProductionPage() {
   const [ingredientUsage, setIngredientUsage] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const { submitting, run } = useSubmitLock();
+  const loadAbortRef = useRef<AbortController | null>(null);
 
   const producibleDishes = useMemo(
     () => dishes.filter((d) => d.recipe && d.recipe.length > 0),
@@ -138,12 +139,14 @@ export default function ProductionPage() {
 
   useEffect(() => {
     if (!selectedDish) return;
-    setForm((prev) => ({
-      ...prev,
-      plate_weight_kg: selectedDish.plate_weight_grams
-        ? String(plateWeightToKg(selectedDish.plate_weight_grams))
-        : "",
-    }));
+    const nextWeight = selectedDish.plate_weight_grams
+      ? String(plateWeightToKg(selectedDish.plate_weight_grams))
+      : "";
+    setForm((prev) =>
+      prev.plate_weight_kg === nextWeight
+        ? prev
+        : { ...prev, plate_weight_kg: nextWeight }
+    );
   }, [selectedDish?.id, selectedDish?.plate_weight_grams]);
 
   useEffect(() => {
@@ -174,7 +177,7 @@ export default function ProductionPage() {
       }
       return defaults;
     });
-  }, [selectedDish?.id, effectiveUsageKeySignature, effectiveAutoRecipe]);
+  }, [selectedDish?.id, effectiveUsageKeySignature]);
 
   const preview = useMemo(() => {
     if (!selectedDish?.recipe) return [];
@@ -259,21 +262,46 @@ export default function ProductionPage() {
     (!isEmployee || Boolean(form.chief_id));
 
   const load = () => {
-    api.get<Dish[]>("/dishes").then(setDishes);
-    api.get<Ingredient[]>("/stock").then(setStock);
-    api.get<ProductionLog[]>("/stock/production").then(setLogs);
+    loadAbortRef.current?.abort();
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
+    const { signal } = controller;
+
+    Promise.all([
+      api.get<Dish[]>("/dishes"),
+      api.get<Ingredient[]>("/stock"),
+      api.get<ProductionLog[]>("/stock/production"),
+    ])
+      .then(([dishesData, stockData, logsData]) => {
+        if (signal.aborted) return;
+        setDishes(dishesData);
+        setStock(stockData);
+        setLogs(logsData);
+      })
+      .catch(() => {
+        if (signal.aborted) return;
+      });
   };
 
   useEffect(() => {
     load();
+    return () => {
+      loadAbortRef.current?.abort();
+    };
   }, []);
 
   useEffect(() => {
     if (!isEmployee) return;
+    const controller = new AbortController();
     api
       .get<ChiefOption[]>("/auth/chiefs")
-      .then(setChiefs)
-      .catch((err) => setError(translateApiError(err)));
+      .then((data) => {
+        if (!controller.signal.aborted) setChiefs(data);
+      })
+      .catch((err) => {
+        if (!controller.signal.aborted) setError(translateApiError(err));
+      });
+    return () => controller.abort();
   }, [isEmployee]);
 
   async function handleSubmit(e: FormEvent) {
