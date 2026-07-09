@@ -234,6 +234,31 @@ function mergeProductionNotes(adjustmentNotes, chiefNote) {
   return trimmedChiefNote || null;
 }
 
+async function resolveProductionChiefId(user, chiefIdFromBody) {
+  if (user.role === 'chief') {
+    return user.id;
+  }
+
+  if (user.role === 'employee') {
+    const chiefId =
+      chiefIdFromBody != null ? parseInt(chiefIdFromBody, 10) : null;
+    if (!chiefId) {
+      throw new AppError(
+        'VALIDATION_CHIEF_REQUIRED',
+        ERROR_CODES.VALIDATION_CHIEF_REQUIRED,
+        422
+      );
+    }
+    const chief = await Admin.findByPk(chiefId);
+    if (!chief || chief.role !== 'chief' || chief.status !== 'active') {
+      throw new AppError('INVALID_CHIEF', ERROR_CODES.INVALID_CHIEF, 422);
+    }
+    return chief.id;
+  }
+
+  throw new AppError('FORBIDDEN', ERROR_CODES.FORBIDDEN, 403);
+}
+
 async function logProduction(
   chiefId,
   { dish_id, plates_count, plate_weight_grams, notes, ingredient_usage }
@@ -520,6 +545,7 @@ async function listAllPlatesOverview() {
 module.exports = {
   listStock,
   adjustStock,
+  resolveProductionChiefId,
   logProduction,
   listProductionLogs,
   getPlateAvailabilityForDate,

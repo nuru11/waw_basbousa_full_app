@@ -39,7 +39,9 @@
     "noAdjustments": "لا تغييرات عن الوصفة",
     "adjustmentHint": "يُنشأ تلقائياً عند اختلاف الكميات عن الوصفة",
     "manualReduceOnly": "خصم يدوي فقط",
-    "lowStockSubmitWarning": "بعض المكوّنات منخفضة؛ سيتم خصم المخزون المتاح فقط."
+    "lowStockSubmitWarning": "بعض المكوّنات منخفضة؛ سيتم خصم المخزون المتاح فقط.",
+    "selectChief": "اختر الشيف",
+    "noChiefsHint": "لا يوجد شيف نشط. تواصل مع المشرف."
   },
   "todaysPlates": {
     "metaTitle": "أطباق اليوم | المطعم",

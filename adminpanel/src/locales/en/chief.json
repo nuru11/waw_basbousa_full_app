@@ -39,7 +39,9 @@
     "noAdjustments": "No changes from recipe",
     "adjustmentHint": "Auto-generated when quantities differ from recipe",
     "manualReduceOnly": "Manual reduce only",
-    "lowStockSubmitWarning": "Some ingredients are low; only available stock will be deducted."
+    "lowStockSubmitWarning": "Some ingredients are low; only available stock will be deducted.",
+    "selectChief": "Select chief",
+    "noChiefsHint": "No active chiefs available. Contact your administrator."
   },
   "todaysPlates": {
     "metaTitle": "Today's Plates | Restaurant",

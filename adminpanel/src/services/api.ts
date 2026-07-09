@@ -104,6 +104,25 @@ export interface User {
   monthly_salary?: number | null;
 }
 
+export interface ChiefOption {
+  id: number;
+  name: string;
+  short_id: string;
+}
+
+export interface ProductionPayload {
+  dish_id: number;
+  plates_count: number;
+  plate_weight_grams: number;
+  notes: string | null;
+  chief_id?: number;
+  ingredient_usage?: {
+    ingredient_id: number;
+    size: string | null;
+    quantity_used: number;
+  }[];
+}
+
 export interface LoginResponse {
   token: string;
   user: User;

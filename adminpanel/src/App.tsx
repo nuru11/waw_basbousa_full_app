@@ -41,8 +41,6 @@ import ProductionPage from "./pages/chief/Production";
 import TodaysPlatesPage from "./pages/chief/TodaysPlates";
 import ChiefExpensesViewPage from "./pages/chief/ChiefExpenses";
 
-import MySalesPage from "./pages/employee/MySales";
-
 export default function App() {
   return (
     <Router>
@@ -97,7 +95,8 @@ export default function App() {
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={["employee"]} />}>
-              <Route path="/employee/sales" element={<MySalesPage />} />
+              <Route path="/employee/plates/today" element={<TodaysPlatesPage />} />
+              <Route path="/employee/production" element={<ProductionPage />} />
             </Route>
           </Route>
         </Route>

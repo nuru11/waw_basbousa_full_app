@@ -11,6 +11,14 @@ async function listAdmins() {
   return Admin.findAll({ order: [['created_at', 'DESC']] });
 }
 
+async function listActiveChiefs() {
+  return Admin.findAll({
+    where: { role: 'chief', status: 'active' },
+    attributes: ['id', 'name', 'short_id'],
+    order: [['name', 'ASC']],
+  });
+}
+
 async function getAdmin(id) {
   const admin = await Admin.findByPk(id);
   if (!admin) throw new AppError('ADMIN_NOT_FOUND', ERROR_CODES.ADMIN_NOT_FOUND, 404);
@@ -81,6 +89,7 @@ async function deleteAdmin(id, currentUserId) {
 
 module.exports = {
   listAdmins,
+  listActiveChiefs,
   getAdmin,
   createAdmin,
   updateAdmin,

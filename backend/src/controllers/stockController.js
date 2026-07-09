@@ -25,7 +25,11 @@ async function adjust(req, res, next) {
 
 async function logProduction(req, res, next) {
   try {
-    const log = await stockService.logProduction(req.user.id, req.body);
+    const chiefId = await stockService.resolveProductionChiefId(
+      req.user,
+      req.body.chief_id
+    );
+    const log = await stockService.logProduction(chiefId, req.body);
     res.status(201).json({ success: true, data: log });
   } catch (err) {
     next(err);

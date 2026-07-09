@@ -9,7 +9,15 @@ import Button from "../../components/ui/button/Button";
 import { DataTable, SectionCard, StatusBadge } from "../../components/ui";
 import type { DataTableColumn } from "../../components/ui";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
-import { api, type Dish, type Ingredient, type ProductionLog } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import {
+  api,
+  type ChiefOption,
+  type Dish,
+  type Ingredient,
+  type ProductionLog,
+  type ProductionPayload,
+} from "../../services/api";
 import { formatNumber } from "../../utils/formatNumber";
 import { kgToStoredGrams, plateWeightToKg } from "../../utils/plateWeight";
 import {
@@ -29,6 +37,7 @@ const emptyForm = {
   dish_id: "",
   plate_weight_kg: "",
   chiefNote: "",
+  chief_id: "",
 };
 
 function isAutoReduce(ingredient?: Ingredient): boolean {
@@ -37,9 +46,12 @@ function isAutoReduce(ingredient?: Ingredient): boolean {
 
 export default function ProductionPage() {
   const { t } = useTranslation(["chief", "common", "nav"]);
+  const { user } = useAuth();
+  const isEmployee = user?.role === "employee";
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [stock, setStock] = useState<Ingredient[]>([]);
   const [logs, setLogs] = useState<ProductionLog[]>([]);
+  const [chiefs, setChiefs] = useState<ChiefOption[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [ingredientUsage, setIngredientUsage] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
@@ -241,7 +253,10 @@ export default function ProductionPage() {
   const hasInsufficientStock = autoPreview.some((p) => !p.sufficient);
 
   const canSubmit =
-    form.dish_id && plateWeightKg > 0 && preview.length > 0;
+    form.dish_id &&
+    plateWeightKg > 0 &&
+    preview.length > 0 &&
+    (!isEmployee || Boolean(form.chief_id));
 
   const load = () => {
     api.get<Dish[]>("/dishes").then(setDishes);
@@ -253,6 +268,14 @@ export default function ProductionPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!isEmployee) return;
+    api
+      .get<ChiefOption[]>("/auth/chiefs")
+      .then(setChiefs)
+      .catch((err) => setError(translateApiError(err)));
+  }, [isEmployee]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const recipe = selectedDish?.recipe;
@@ -260,22 +283,15 @@ export default function ProductionPage() {
     await run(async () => {
       setError("");
       try {
-        const payload: {
-          dish_id: number;
-          plates_count: number;
-          plate_weight_grams: number;
-          notes: string | null;
-          ingredient_usage?: {
-            ingredient_id: number;
-            size: string | null;
-            quantity_used: number;
-          }[];
-        } = {
+        const payload: ProductionPayload = {
           dish_id: parseInt(form.dish_id),
           plates_count: PLATES_COUNT,
           plate_weight_grams: kgToStoredGrams(plateWeightKg),
           notes: form.chiefNote.trim() || null,
         };
+        if (isEmployee) {
+          payload.chief_id = parseInt(form.chief_id, 10);
+        }
         if (effectiveAutoRecipe.length > 0) {
           payload.ingredient_usage = effectiveAutoRecipe.map((item) => ({
             ingredient_id: item.ingredient_id,
@@ -286,7 +302,7 @@ export default function ProductionPage() {
           }));
         }
         await api.post("/stock/production", payload);
-        setForm(emptyForm);
+        setForm(isEmployee ? { ...emptyForm, chief_id: form.chief_id } : emptyForm);
         setIngredientUsage({});
         load();
       } catch (err: unknown) {
@@ -306,15 +322,33 @@ export default function ProductionPage() {
         <SectionCard title={t("production.logCookedPlates")}>
           <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-sm text-error-500">{error}</p>}
+          {isEmployee && (
+            <div>
+              <Label>{t("common:fields.chief")}</Label>
+              <Select
+                value={form.chief_id}
+                onChange={(chief_id) => setForm({ ...form, chief_id })}
+                placeholder={t("production.selectChief")}
+                options={chiefs.map((chief) => ({
+                  value: String(chief.id),
+                  label: `${chief.name} (${chief.short_id})`,
+                }))}
+              />
+              {chiefs.length === 0 && (
+                <p className="mt-1 text-xs text-gray-500">{t("production.noChiefsHint")}</p>
+              )}
+            </div>
+          )}
           <div>
             <Label>{t("common:fields.plate")}</Label>
             <Select
               value={form.dish_id}
               onChange={(dish_id) =>
-                setForm({
+                setForm((prev) => ({
                   ...emptyForm,
+                  chief_id: prev.chief_id,
                   dish_id,
-                })
+                }))
               }
               placeholder={t("common:fields.selectPlate")}
               options={producibleDishes.map((d) => ({

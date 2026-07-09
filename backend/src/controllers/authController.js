@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const adminService = require('../services/adminService');
 
 async function login(req, res, next) {
   try {
@@ -22,4 +23,13 @@ function logout(_req, res) {
   res.json({ success: true, message: 'Logged out' });
 }
 
-module.exports = { login, me, logout };
+async function listChiefs(_req, res, next) {
+  try {
+    const chiefs = await adminService.listActiveChiefs();
+    res.json({ success: true, data: chiefs });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { login, me, logout, listChiefs };

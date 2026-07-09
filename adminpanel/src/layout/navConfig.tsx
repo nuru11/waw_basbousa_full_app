@@ -99,7 +99,8 @@ export function getNavForRole(role: User["role"]): NavItem[] {
       ];
     case "employee":
       return [
-        { icon: <TableIcon />, nameKey: "mySales", path: "/employee/sales" },
+        { icon: <TableIcon />, nameKey: "todaysPlates", path: "/employee/plates/today" },
+        { icon: <PieChartIcon />, nameKey: "production", path: "/employee/production" },
       ];
     default:
       return [];

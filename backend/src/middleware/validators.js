@@ -136,6 +136,7 @@ const productionValidation = [
   body('dish_id').isInt().withMessage('VALIDATION_DISH_REQUIRED'),
   body('plates_count').isInt({ gt: 0 }).withMessage('VALIDATION_PLATES_POSITIVE'),
   body('plate_weight_grams').isFloat({ gt: 0 }).withMessage('VALIDATION_PLATE_WEIGHT_REQUIRED'),
+  body('chief_id').optional().isInt().withMessage('VALIDATION_CHIEF_REQUIRED'),
   body('ingredient_usage').optional().isArray({ min: 1 }),
   body('ingredient_usage.*.ingredient_id').isInt(),
   body('ingredient_usage.*.quantity_used').isFloat({ gt: 0 }),

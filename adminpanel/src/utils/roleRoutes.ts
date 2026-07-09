@@ -10,7 +10,7 @@ export function getRoleHome(role: User["role"]): string {
     case "chief":
       return "/chief/inventory";
     case "employee":
-      return "/employee/sales";
+      return "/employee/production";
     default:
       return "/signin";
   }

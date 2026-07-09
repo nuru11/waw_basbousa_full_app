@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.get('/', requireRole('superAdmin', 'chief'), stockController.list);
+router.get('/', requireRole('superAdmin', 'chief', 'employee'), stockController.list);
 
 router.post(
   '/adjust',
@@ -18,14 +18,14 @@ router.post(
 
 router.post(
   '/production',
-  requireRole('chief'),
+  requireRole('employee', 'chief'),
   productionValidation,
   stockController.logProduction
 );
 
 router.get(
   '/production',
-  requireRole('superAdmin', 'chief'),
+  requireRole('superAdmin', 'chief', 'employee'),
   stockController.listProduction
 );
 
@@ -43,7 +43,7 @@ router.get(
 
 router.get(
   '/plates/today',
-  requireRole('chief', 'superAdmin'),
+  requireRole('chief', 'superAdmin', 'employee'),
   stockController.listTodayPlates
 );
 
