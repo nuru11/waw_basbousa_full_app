@@ -1,5 +1,6 @@
 import { api, type Dish, type PosDefaultPrices } from "../services/api";
 import type { WeightType } from "./posColors";
+import { PORTION_WEIGHT_GRAMS } from "./portionWeights";
 
 export type PriceSource = PosDefaultPrices;
 
@@ -87,25 +88,15 @@ function roundKg(kg: number, decimals = 3) {
 }
 
 export function calcKiloConsumed(weightType: WeightType, qty: number, slices: number) {
-  let kg = 0;
-  switch (weightType) {
-    case "quarter":
-      kg = 0.25 * qty;
-      break;
-    case "half":
-      kg = 0.5 * qty;
-      break;
-    case "kilo":
-      kg = 1.0 * qty;
-      break;
-    case "slice":
-      kg = ((slices / 3) * 0.25) * qty;
-      break;
-    case "half_slice":
-      kg = 0.5 * (0.25 / 3) * qty;
-      break;
-    default:
-      return 0;
-  }
+  const grams = PORTION_WEIGHT_GRAMS[weightType];
+  if (grams == null) return 0;
+
+  const kg =
+    weightType === "slice"
+      ? (grams / 1000) * slices * qty
+      : (grams / 1000) * qty;
+
   return roundKg(kg);
 }
+
+export const DEFAULT_KILO_MANUAL_KG = String(calcKiloConsumed("kilo", 1, 1));

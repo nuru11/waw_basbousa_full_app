@@ -167,7 +167,7 @@
     "slices_one": "{{count}} slice",
     "slices_other": "{{count}} slices",
     "slicesInSale": " ({{count}} slices)",
-    "sliceStockRule": "Stock: every 3 slices = 1 quarter (0.25 kg)"
+    "sliceStockRule": "Stock: each slice = 125 g (0.125 kg)"
   },
   "coffee": {
     "title": "Coffee",

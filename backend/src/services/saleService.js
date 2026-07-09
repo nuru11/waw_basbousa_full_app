@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
 const posDefaultPriceService = require('./posDefaultPriceService');
+const { PORTION_WEIGHT_GRAMS } = require('../constants/portionWeights');
 const coffeeService = require('./coffeeService');
 const waterService = require('./waterService');
 const { getDateRange } = require('../utils/dateUtils');
@@ -41,24 +42,19 @@ function calculateTotalPrice(unitPrice, weightType, quantity, sliceCount) {
 
 function calculateKiloConsumed(weightType, quantity, sliceCount) {
   const q = quantity || 1;
-  switch (weightType) {
-    case 'quarter':
-      return 0.25 * q;
-    case 'half':
-      return 0.5 * q;
-    case 'kilo':
-      return 1.0 * q;
-    case 'slice': {
-      if (!sliceCount || sliceCount < 1) {
-        throw new AppError('SLICE_COUNT_REQUIRED', ERROR_CODES.SLICE_COUNT_REQUIRED, 422);
-      }
-      return ((sliceCount / 3) * 0.25) * q;
-    }
-    case 'half_slice':
-      return 0.5 * (0.25 / 3) * q;
-    default:
-      throw new AppError('INVALID_WEIGHT_TYPE', ERROR_CODES.INVALID_WEIGHT_TYPE, 422);
+  const grams = PORTION_WEIGHT_GRAMS[weightType];
+  if (grams == null) {
+    throw new AppError('INVALID_WEIGHT_TYPE', ERROR_CODES.INVALID_WEIGHT_TYPE, 422);
   }
+
+  if (weightType === 'slice') {
+    if (!sliceCount || sliceCount < 1) {
+      throw new AppError('SLICE_COUNT_REQUIRED', ERROR_CODES.SLICE_COUNT_REQUIRED, 422);
+    }
+    return (grams / 1000) * sliceCount * q;
+  }
+
+  return (grams / 1000) * q;
 }
 
 async function validateSeller(sellerId) {

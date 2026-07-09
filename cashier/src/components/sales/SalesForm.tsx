@@ -31,6 +31,7 @@ import { PAYMENT_OPTIONS } from "../../utils/paymentMethods";
 import {
   calcKiloConsumed,
   calcPrice,
+  DEFAULT_KILO_MANUAL_KG,
   loadCashierPrices,
   parsePositivePrice,
   PRICE_FIELDS,
@@ -193,7 +194,7 @@ export default function SalesForm() {
     weight_type: "kilo" as WeightType,
     quantity: "1",
     slice_count: "1",
-    manual_kg: "1",
+    manual_kg: DEFAULT_KILO_MANUAL_KG,
   });
   const [coffeeBuilder, setCoffeeBuilder] = useState({ quantity: "1" });
   const [waterBuilder, setWaterBuilder] = useState<{ quantity: string; bottle_size: WaterBottleSize }>({
@@ -439,7 +440,7 @@ export default function SalesForm() {
       weight_type: "kilo",
       quantity: "1",
       slice_count: "1",
-      manual_kg: "1",
+      manual_kg: DEFAULT_KILO_MANUAL_KG,
     });
     setError("");
   }

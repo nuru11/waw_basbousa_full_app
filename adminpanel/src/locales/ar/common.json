@@ -185,7 +185,7 @@
     "slices_one": "{{count}} شريحة",
     "slices_other": "{{count}} شرائح",
     "slicesInSale": " ({{count}} شرائح)",
-    "sliceStockRule": "المخزون: كل 3 شرائح = ربع (0.25 كغ)"
+    "sliceStockRule": "المخزون: كل شريحة = 125 غ (0.125 كغ)"
   },
   "weightTypes": {
     "quarter": "ربع",

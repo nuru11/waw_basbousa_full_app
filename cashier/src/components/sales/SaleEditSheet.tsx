@@ -21,6 +21,7 @@ import { PAYMENT_OPTIONS } from "../../utils/paymentMethods";
 import {
   calcKiloConsumed,
   calcPrice,
+  DEFAULT_KILO_MANUAL_KG,
   loadCashierPrices,
   priceSourceFromDish,
 } from "../../utils/salePricing";
@@ -100,7 +101,7 @@ export default function SaleEditSheet({
     weight_type: "kilo" as WeightType,
     quantity: "1",
     slice_count: "1",
-    manual_kg: "1",
+    manual_kg: DEFAULT_KILO_MANUAL_KG,
     water_bottle_size: "small" as WaterBottleSize,
     seller_id: "",
     payment_method: "cash",
@@ -117,7 +118,7 @@ export default function SaleEditSheet({
       weight_type: sale.weight_type ?? "kilo",
       quantity: String(sale.quantity),
       slice_count: String(sale.slice_count ?? 1),
-      manual_kg: String(parseFloat(String(sale.kilo_consumed)) || 1),
+      manual_kg: String(parseFloat(String(sale.kilo_consumed)) || parseFloat(DEFAULT_KILO_MANUAL_KG)),
       water_bottle_size: (sale.water_bottle_size === "large" ? "large" : "small") as WaterBottleSize,
       seller_id: String(sale.seller_id),
       payment_method: sale.payment_method,
