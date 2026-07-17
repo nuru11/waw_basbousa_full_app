@@ -154,6 +154,15 @@
     "title": "All Purchases",
     "empty": "No purchases for this period"
   },
+  "editPurchase": {
+    "title": "Edit purchase #{{id}}",
+    "currentUnitPrice": "Current unit price",
+    "newUnitPrice": "New unit price",
+    "newTotal": "New total",
+    "save": "Save price",
+    "success": "Purchase price updated and transfer balance recalculated",
+    "invalidUnitPrice": "Unit price must be a positive number"
+  },
   "purchaserToday": {
     "metaTitle": "Purchaser Today | Restaurant",
     "metaDescription": "Today's purchaser activity",

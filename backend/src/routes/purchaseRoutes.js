@@ -44,4 +44,10 @@ router.post(
   purchaseController.receive
 );
 
+router.put(
+  '/:id',
+  requireRole('superAdmin'),
+  purchaseController.update
+);
+
 module.exports = router;

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import EditPurchaseUnitPriceModal from "../../components/purchases/EditPurchaseUnitPriceModal";
 import PurchasesTable from "../../components/purchases/PurchasesTable";
 import { SectionCard } from "../../components/ui";
 import { api, type Purchase } from "../../services/api";
@@ -18,17 +19,23 @@ export default function AllPurchasesPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
     setError("");
     const query = period === "all" ? "/purchases" : `/purchases?period=${period}`;
-    api
+    return api
       .get<Purchase[]>(query)
       .then(setPurchases)
       .catch((e) => setError(translateApiError(e)))
       .finally(() => setLoading(false));
   }, [period]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div>
@@ -38,6 +45,7 @@ export default function AllPurchasesPage() {
       />
       <PageBreadcrumb pageTitle={tNav("allPurchases")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
+      {success && <p className="mb-4 text-sm text-success-500">{success}</p>}
 
       <div className="mb-4 flex flex-wrap gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
         {PERIODS.map((value) => (
@@ -67,9 +75,19 @@ export default function AllPurchasesPage() {
             purchases={purchases}
             showUnitPrice
             emptyMessage={t("allPurchases.empty")}
+            onEdit={setEditingPurchase}
           />
         </SectionCard>
       )}
+
+      <EditPurchaseUnitPriceModal
+        purchase={editingPurchase}
+        onClose={() => setEditingPurchase(null)}
+        onSaved={() => {
+          setSuccess(t("editPurchase.success"));
+          load();
+        }}
+      />
     </div>
   );
 }

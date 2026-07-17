@@ -22,6 +22,7 @@
   "PURCHASE_IN_INVENTORY_ONLY": "يمكن تسليم مشتريات المخزون فقط للطباخ",
   "PURCHASE_ALREADY_RECEIVED": "تم استلام عملية الشراء مسبقاً",
   "PURCHASE_MUST_BE_HANDED": "يجب أن يسلم المشتري عملية الشراء قبل الاستلام",
+  "PURCHASE_INVALID_UNIT_PRICE": "يجب أن يكون سعر الوحدة رقماً موجباً",
   "TRANSFER_NOT_FOUND": "التحويل غير موجود",
   "TRANSFER_NOT_AUTHORIZED": "غير مصرّح لك بقبول هذا التحويل",
   "TRANSFER_NOT_PENDING": "التحويل ليس في انتظار القبول",

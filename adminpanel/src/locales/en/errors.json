@@ -22,6 +22,7 @@
   "PURCHASE_IN_INVENTORY_ONLY": "Only in-inventory purchases can be handed to chief",
   "PURCHASE_ALREADY_RECEIVED": "Purchase already received",
   "PURCHASE_MUST_BE_HANDED": "Purchase must be handed by purchaser before receiving",
+  "PURCHASE_INVALID_UNIT_PRICE": "Unit price must be a positive number",
   "TRANSFER_NOT_FOUND": "Transfer not found",
   "TRANSFER_NOT_AUTHORIZED": "Not authorized to accept this transfer",
   "TRANSFER_NOT_PENDING": "Transfer is not pending acceptance",

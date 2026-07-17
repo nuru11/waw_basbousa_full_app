@@ -90,4 +90,16 @@ async function receive(req, res, next) {
   }
 }
 
-module.exports = { list, inventory, create, screenshot, handToChief, receive };
+async function update(req, res, next) {
+  try {
+    const purchase = await purchaseService.updatePurchaseUnitPrice(
+      req.params.id,
+      req.body.unit_price
+    );
+    res.json({ success: true, data: purchase });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { list, inventory, create, screenshot, handToChief, receive, update };

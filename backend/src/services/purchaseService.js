@@ -15,7 +15,7 @@ const {
   getStartOfMonth,
   getStartOfQuarter,
 } = require('../utils/dateUtils');
-const { deductFromTransfers } = require('./transferService');
+const { deductFromTransfers, rebuildTransferBalances } = require('./transferService');
 
 const PURCHASE_DATE_FIELDS = ['created_at', 'handed_at', 'received_at', 'approved_at'];
 
@@ -242,6 +242,49 @@ async function getPurchaseForScreenshot(purchaseId, user) {
   return purchase;
 }
 
+async function updatePurchaseUnitPrice(purchaseId, newUnitPrice) {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const purchase = await Purchase.findByPk(purchaseId, {
+      lock: transaction.LOCK.UPDATE,
+      transaction,
+    });
+
+    if (!purchase) {
+      throw new AppError('PURCHASE_NOT_FOUND', ERROR_CODES.PURCHASE_NOT_FOUND, 404);
+    }
+
+    const unitPrice = parseFloat(newUnitPrice);
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      throw new AppError(
+        'PURCHASE_INVALID_UNIT_PRICE',
+        ERROR_CODES.PURCHASE_INVALID_UNIT_PRICE,
+        400
+      );
+    }
+
+    const quantity = parseFloat(purchase.quantity);
+    const totalPrice = Math.round(quantity * unitPrice * 100) / 100;
+
+    await purchase.update(
+      {
+        unit_price: unitPrice,
+        total_price: totalPrice,
+      },
+      { transaction }
+    );
+
+    await rebuildTransferBalances(purchase.purchaser_id, transaction);
+
+    await transaction.commit();
+    return Purchase.findByPk(purchaseId, { include: purchaseIncludes });
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
+  }
+}
+
 module.exports = {
   listPurchases,
   createPurchase,
@@ -249,4 +292,5 @@ module.exports = {
   receivePurchase,
   getPurchaserInventory,
   getPurchaseForScreenshot,
+  updatePurchaseUnitPrice,
 };

@@ -22,11 +22,13 @@ export default function PurchasesTable({
   emptyMessage,
   dateField = "created_at",
   showUnitPrice = false,
+  onEdit,
 }: {
   purchases: Purchase[];
   emptyMessage: string;
   dateField?: "created_at" | "handed_at";
   showUnitPrice?: boolean;
+  onEdit?: (purchase: Purchase) => void;
 }) {
   const { t: tCommon } = useTranslation("common");
 
@@ -116,9 +118,25 @@ export default function PurchasesTable({
         }
       );
 
+      if (onEdit) {
+        cols.push({
+          key: "actions",
+          header: tCommon("fields.actions"),
+          render: (p) => (
+            <button
+              type="button"
+              onClick={() => onEdit(p)}
+              className="text-brand-500 hover:underline"
+            >
+              {tCommon("actions.edit")}
+            </button>
+          ),
+        });
+      }
+
       return cols;
     },
-    [dateField, showUnitPrice, tCommon]
+    [dateField, onEdit, showUnitPrice, tCommon]
   );
 
   return (

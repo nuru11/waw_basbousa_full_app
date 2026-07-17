@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Transfer, Admin } = require('../models');
+const { Transfer, Admin, Purchase } = require('../models');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
 const {
@@ -228,6 +228,61 @@ async function deductFromTransfers(purchaserId, totalPrice, transaction) {
   }
 }
 
+/**
+ * Reset accepted transfers for a purchaser to full amount, then replay all
+ * of their purchases FIFO so amount_remaining matches Σ transfers − Σ purchases.
+ */
+async function rebuildTransferBalances(purchaserId, transaction) {
+  const transfers = await Transfer.findAll({
+    where: { purchaser_id: purchaserId, status: 'accepted' },
+    order: [
+      ['created_at', 'ASC'],
+      ['id', 'ASC'],
+    ],
+    lock: transaction.LOCK.UPDATE,
+    transaction,
+  });
+
+  const purchases = await Purchase.findAll({
+    where: { purchaser_id: purchaserId },
+    order: [
+      ['created_at', 'ASC'],
+      ['id', 'ASC'],
+    ],
+    transaction,
+  });
+
+  const remainingById = new Map();
+  for (const transfer of transfers) {
+    remainingById.set(transfer.id, parseFloat(transfer.amount));
+  }
+
+  for (const purchase of purchases) {
+    let toDeduct = parseFloat(purchase.total_price);
+    if (!(toDeduct > 0)) continue;
+
+    for (const transfer of transfers) {
+      if (toDeduct <= 0) break;
+      const available = remainingById.get(transfer.id);
+      if (available > 0) {
+        const deduct = Math.min(available, toDeduct);
+        remainingById.set(transfer.id, available - deduct);
+        toDeduct -= deduct;
+      }
+    }
+
+    if (toDeduct > 0 && transfers.length > 0) {
+      const last = transfers[transfers.length - 1];
+      remainingById.set(last.id, remainingById.get(last.id) - toDeduct);
+    }
+  }
+
+  for (const transfer of transfers) {
+    const rem = round2(remainingById.get(transfer.id));
+    await transfer.update({ amount_remaining: rem }, { transaction });
+  }
+}
+
 module.exports = {
   listTransfers,
   createTransfer,
@@ -235,4 +290,5 @@ module.exports = {
   getBalanceSummary,
   getAdminSummary,
   deductFromTransfers,
+  rebuildTransferBalances,
 };

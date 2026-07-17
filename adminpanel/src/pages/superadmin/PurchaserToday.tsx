@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import EditPurchaseUnitPriceModal from "../../components/purchases/EditPurchaseUnitPriceModal";
 import PurchasesTable from "../../components/purchases/PurchasesTable";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
 import { SectionCard, StatCard } from "../../components/ui";
@@ -19,6 +20,8 @@ export default function PurchaserTodayPage() {
   const [handed, setHanded] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
 
   const todayLabel = new Date().toLocaleDateString(getIntlLocale(), {
     weekday: "long",
@@ -27,10 +30,10 @@ export default function PurchaserTodayPage() {
     day: "numeric",
   });
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
     setError("");
-    Promise.all([
+    return Promise.all([
       api.get<Purchase[]>("/purchases?period=today&date_field=created_at"),
       api.get<Transfer[]>("/transfers?period=today&date_field=created_at"),
       api.get<Transfer[]>(
@@ -48,6 +51,10 @@ export default function PurchaserTodayPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const totalCount =
     submitted.length + transfersSent.length + transfersAccepted.length + handed.length;
 
@@ -59,6 +66,7 @@ export default function PurchaserTodayPage() {
       />
       <PageBreadcrumb pageTitle={tNav("purchaserTodayTitle")} subtitle={todayLabel} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
+      {success && <p className="mb-4 text-sm text-success-500">{success}</p>}
       {loading ? (
         <p className="text-gray-500 dark:text-gray-400">{tCommon("loadingTodayActivity")}</p>
       ) : (
@@ -76,7 +84,9 @@ export default function PurchaserTodayPage() {
             <PurchasesTable
               purchases={submitted}
               dateField="created_at"
+              showUnitPrice
               emptyMessage={t("purchaserToday.noPurchasesSubmitted")}
+              onEdit={setEditingPurchase}
             />
           </SectionCard>
 
@@ -111,11 +121,22 @@ export default function PurchaserTodayPage() {
             <PurchasesTable
               purchases={handed}
               dateField="handed_at"
+              showUnitPrice
               emptyMessage={t("purchaserToday.noHandedToChief")}
+              onEdit={setEditingPurchase}
             />
           </SectionCard>
         </div>
       )}
+
+      <EditPurchaseUnitPriceModal
+        purchase={editingPurchase}
+        onClose={() => setEditingPurchase(null)}
+        onSaved={() => {
+          setSuccess(t("editPurchase.success"));
+          load();
+        }}
+      />
     </div>
   );
 }
