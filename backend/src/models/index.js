@@ -20,6 +20,8 @@ const Purchase = require('./Purchase')(sequelize);
 const DishIngredient = require('./DishIngredient')(sequelize);
 const ProductionLog = require('./ProductionLog')(sequelize);
 const Sale = require('./Sale')(sequelize);
+const SaleOrder = require('./SaleOrder')(sequelize);
+const SaleOrderPayment = require('./SaleOrderPayment')(sequelize);
 const StockMovement = require('./StockMovement')(sequelize);
 const Transfer = require('./Transfer')(sequelize);
 const Expense = require('./Expense')(sequelize);
@@ -68,6 +70,13 @@ Sale.belongsTo(Dish, { foreignKey: 'dish_id', as: 'dish' });
 Sale.belongsTo(Admin, { foreignKey: 'seller_id', as: 'seller' });
 Admin.hasMany(Sale, { foreignKey: 'seller_id', as: 'sales' });
 
+SaleOrder.belongsTo(Admin, { foreignKey: 'seller_id', as: 'seller' });
+Admin.hasMany(SaleOrder, { foreignKey: 'seller_id', as: 'saleOrders' });
+SaleOrder.hasMany(Sale, { foreignKey: 'sale_order_id', as: 'sales' });
+Sale.belongsTo(SaleOrder, { foreignKey: 'sale_order_id', as: 'saleOrder' });
+SaleOrder.hasMany(SaleOrderPayment, { foreignKey: 'sale_order_id', as: 'payments' });
+SaleOrderPayment.belongsTo(SaleOrder, { foreignKey: 'sale_order_id', as: 'saleOrder' });
+
 Ingredient.hasMany(StockMovement, { foreignKey: 'ingredient_id', as: 'movements' });
 StockMovement.belongsTo(Ingredient, { foreignKey: 'ingredient_id', as: 'ingredient' });
 StockMovement.belongsTo(Admin, { foreignKey: 'created_by', as: 'creator' });
@@ -115,6 +124,8 @@ module.exports = {
   DishIngredient,
   ProductionLog,
   Sale,
+  SaleOrder,
+  SaleOrderPayment,
   StockMovement,
   Transfer,
   Expense,

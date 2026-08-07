@@ -2,6 +2,8 @@ const { Op, fn, col, literal } = require('sequelize');
 const {
   Purchase,
   Sale,
+  SaleOrder,
+  SaleOrderPayment,
   Ingredient,
   Dish,
   StockMovement,
@@ -16,6 +18,68 @@ const salaryService = require('./salaryService');
 const { createEmptyPayments } = require('../constants/paymentMethods');
 
 const COMMITTED_PURCHASE_STATUSES = ['in_inventory', 'handed', 'received'];
+
+const SALE_REPORT_INCLUDES = [
+  { model: Dish, as: 'dish' },
+  { model: Admin, as: 'seller', attributes: ['id', 'name', 'short_id', 'role'] },
+  {
+    model: SaleOrder,
+    as: 'saleOrder',
+    required: false,
+    include: [{ model: SaleOrderPayment, as: 'payments' }],
+  },
+];
+
+function addToPaymentBucket(payments, method, amount) {
+  if (payments[method] !== undefined) {
+    payments[method] += amount;
+  } else {
+    payments.other += amount;
+  }
+}
+
+/**
+ * Attribute line revenue into payment-method buckets.
+ * Split orders: use sale_order_payments once per order; tip goes to first non-cash method.
+ * Legacy sales: use sale.payment_method + line tip.
+ */
+function attributeSalePayments(sales, payments) {
+  const processedOrderIds = new Set();
+
+  for (const sale of sales) {
+    const tip = parseFloat(sale.tip_amount || 0);
+    const linePrice = parseFloat(sale.total_price || 0);
+    const orderId = sale.sale_order_id;
+    const orderPayments = sale.saleOrder?.payments;
+
+    if (orderId && Array.isArray(orderPayments) && orderPayments.length > 0) {
+      if (processedOrderIds.has(orderId)) continue;
+      processedOrderIds.add(orderId);
+
+      for (const payment of orderPayments) {
+        addToPaymentBucket(
+          payments,
+          payment.payment_method || 'other',
+          parseFloat(payment.amount || 0)
+        );
+      }
+
+      const orderTip = sale.saleOrder
+        ? parseFloat(sale.saleOrder.tip_amount || 0)
+        : tip;
+      if (orderTip > 0) {
+        const tipMethod =
+          orderPayments.find((p) => p.payment_method !== 'cash')?.payment_method ||
+          orderPayments[0]?.payment_method ||
+          'other';
+        addToPaymentBucket(payments, tipMethod, orderTip);
+      }
+      continue;
+    }
+
+    addToPaymentBucket(payments, sale.payment_method || 'other', linePrice + tip);
+  }
+}
 
 function saleDateYmd(soldAt) {
   if (!soldAt) return null;
@@ -188,10 +252,7 @@ async function getDailySalesOverview(dateInput) {
 
   const sales = await Sale.findAll({
     where: { sold_at: { [Op.between]: [start, end] } },
-    include: [
-      { model: Dish, as: 'dish' },
-      { model: Admin, as: 'seller', attributes: ['id', 'name', 'short_id', 'role'] },
-    ],
+    include: SALE_REPORT_INCLUDES,
     order: [['sold_at', 'DESC']],
   });
 
@@ -203,6 +264,8 @@ async function getDailySalesOverview(dateInput) {
   const dishSalesMap = new Map();
   const sellerMap = new Map();
 
+  attributeSalePayments(sales, payments);
+
   for (const sale of sales) {
     const tip = parseFloat(sale.tip_amount || 0);
     const lineRevenue = parseFloat(sale.total_price || 0) + tip;
@@ -211,13 +274,6 @@ async function getDailySalesOverview(dateInput) {
     totalRevenue += lineRevenue;
     totalTips += tip;
     kiloSold += kilo;
-
-    const method = sale.payment_method || 'other';
-    if (payments[method] !== undefined) {
-      payments[method] += lineRevenue;
-    } else {
-      payments.other += lineRevenue;
-    }
 
     const dishId = sale.dish_id;
     if (!dishSalesMap.has(dishId)) {
@@ -372,6 +428,12 @@ async function getMonthlyAnalysis(periodInput) {
       include: [
         { model: Dish, as: 'dish', attributes: ['name'] },
         { model: Admin, as: 'seller', attributes: ['id', 'name', 'short_id', 'role'] },
+        {
+          model: SaleOrder,
+          as: 'saleOrder',
+          required: false,
+          include: [{ model: SaleOrderPayment, as: 'payments' }],
+        },
       ],
       order: [['sold_at', 'ASC']],
     }),
@@ -418,18 +480,13 @@ async function getMonthlyAnalysis(periodInput) {
   const sellerMap = new Map();
   let income = 0;
 
+  attributeSalePayments(sales, payments);
+
   for (const sale of sales) {
     const tip = parseFloat(sale.tip_amount || 0);
     const lineRevenue = parseFloat(sale.total_price || 0) + tip;
     const dishRevenue = parseFloat(sale.total_price || 0);
     income += lineRevenue;
-
-    const method = sale.payment_method || 'other';
-    if (payments[method] !== undefined) {
-      payments[method] += lineRevenue;
-    } else {
-      payments.other += lineRevenue;
-    }
 
     const dishId = sale.dish_id;
     if (!dishSalesMap.has(dishId)) {

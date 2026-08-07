@@ -163,6 +163,16 @@
     "success": "Purchase price updated and transfer balance recalculated",
     "invalidUnitPrice": "Unit price must be a positive number"
   },
+  "editTransfer": {
+    "title": "Edit transfer #{{id}}",
+    "currentAmount": "Current amount",
+    "newAmount": "New amount",
+    "save": "Save amount",
+    "success": "Transfer amount updated",
+    "invalidAmount": "Amount must be a positive number",
+    "deleteConfirm": "Delete this pending transfer? This cannot be undone.",
+    "deleteSuccess": "Transfer deleted"
+  },
   "purchaserToday": {
     "metaTitle": "Purchaser Today | Restaurant",
     "metaDescription": "Today's purchaser activity",

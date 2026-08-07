@@ -1,12 +1,85 @@
-const { sequelize, Sale, Dish, Admin, Ingredient, StockMovement } = require('../models');
+const {
+  sequelize,
+  Sale,
+  SaleOrder,
+  SaleOrderPayment,
+  Dish,
+  Admin,
+  Ingredient,
+  StockMovement,
+} = require('../models');
 const { Op } = require('sequelize');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
+const { PAYMENT_METHODS } = require('../constants/paymentMethods');
 const posDefaultPriceService = require('./posDefaultPriceService');
 const { PORTION_WEIGHT_GRAMS } = require('../constants/portionWeights');
 const coffeeService = require('./coffeeService');
 const waterService = require('./waterService');
 const { getDateRange } = require('../utils/dateUtils');
+
+const AMOUNT_TOLERANCE = 0.01;
+
+const SALE_INCLUDES = [
+  { model: Dish, as: 'dish' },
+  { model: Admin, as: 'seller', attributes: ['id', 'name', 'short_id', 'role'] },
+  {
+    model: SaleOrder,
+    as: 'saleOrder',
+    required: false,
+    include: [{ model: SaleOrderPayment, as: 'payments' }],
+  },
+];
+
+function normalizeBatchPayments(data, subtotal) {
+  if (Array.isArray(data.payments) && data.payments.length > 0) {
+    const seen = new Set();
+    const payments = [];
+    for (const payment of data.payments) {
+      const method = payment.payment_method;
+      if (!PAYMENT_METHODS.includes(method)) {
+        throw new AppError('VALIDATION_INVALID_PAYMENT', ERROR_CODES.VALIDATION_INVALID_PAYMENT, 422);
+      }
+      if (seen.has(method)) {
+        throw new AppError(
+          'VALIDATION_DUPLICATE_PAYMENT_METHOD',
+          ERROR_CODES.VALIDATION_DUPLICATE_PAYMENT_METHOD,
+          422
+        );
+      }
+      seen.add(method);
+      const amount = parseFloat(payment.amount);
+      if (Number.isNaN(amount) || amount <= 0) {
+        throw new AppError(
+          'VALIDATION_PAYMENT_AMOUNT_POSITIVE',
+          ERROR_CODES.VALIDATION_PAYMENT_AMOUNT_POSITIVE,
+          422
+        );
+      }
+      payments.push({ payment_method: method, amount });
+    }
+    return payments;
+  }
+
+  const method = data.payment_method || 'cash';
+  if (!PAYMENT_METHODS.includes(method)) {
+    throw new AppError('VALIDATION_INVALID_PAYMENT', ERROR_CODES.VALIDATION_INVALID_PAYMENT, 422);
+  }
+  return [{ payment_method: method, amount: subtotal }];
+}
+
+function resolveTipAmount(tipRaw, payments) {
+  const hasNonCash = payments.some((p) => p.payment_method !== 'cash');
+  const tip = Math.max(0, parseFloat(tipRaw) || 0);
+  if (tip > 0 && !hasNonCash) {
+    throw new AppError(
+      'VALIDATION_TIP_NOT_ALLOWED_FOR_CASH',
+      ERROR_CODES.VALIDATION_TIP_NOT_ALLOWED_FOR_CASH,
+      422
+    );
+  }
+  return hasNonCash ? tip : 0;
+}
 
 const WEIGHT_PRICE_FIELD = {
   quarter: 'price_quarter',
@@ -296,12 +369,41 @@ async function createSalesBatch(userId, data) {
       lines.push(await resolveSaleLine(item, transaction));
     }
 
+    const subtotal = lines.reduce((sum, line) => sum + parseFloat(line.total_price), 0);
+    const payments = normalizeBatchPayments(data, subtotal);
+    const paymentsSum = payments.reduce((sum, p) => sum + p.amount, 0);
+    if (Math.abs(paymentsSum - subtotal) > AMOUNT_TOLERANCE) {
+      throw new AppError(
+        'VALIDATION_PAYMENT_AMOUNTS_MISMATCH',
+        ERROR_CODES.VALIDATION_PAYMENT_AMOUNTS_MISMATCH,
+        422
+      );
+    }
+
+    const tipAmount = resolveTipAmount(data.tip_amount, payments);
+    const primaryMethod = payments[0].payment_method;
     const soldAt = new Date();
-    const paymentMethod = data.payment_method || 'cash';
-    const tipAmount =
-      paymentMethod === 'cash'
-        ? 0
-        : Math.max(0, parseFloat(data.tip_amount) || 0);
+
+    const saleOrder = await SaleOrder.create(
+      {
+        seller_id: sellerId,
+        tip_amount: tipAmount,
+        sold_at: soldAt,
+      },
+      { transaction }
+    );
+
+    for (const payment of payments) {
+      await SaleOrderPayment.create(
+        {
+          sale_order_id: saleOrder.id,
+          payment_method: payment.payment_method,
+          amount: payment.amount,
+        },
+        { transaction }
+      );
+    }
+
     const saleIds = [];
     let orderTotal = 0;
 
@@ -312,6 +414,7 @@ async function createSalesBatch(userId, data) {
           dish_id: line.dish_id,
           sale_type: line.sale_type || 'plate',
           seller_id: sellerId,
+          sale_order_id: saleOrder.id,
           weight_type: line.weight_type,
           slice_count: line.slice_count,
           water_bottle_size: line.water_bottle_size ?? null,
@@ -319,7 +422,7 @@ async function createSalesBatch(userId, data) {
           unit_price: line.unit_price,
           total_price: line.total_price,
           kilo_consumed: line.kilo_consumed,
-          payment_method: paymentMethod,
+          payment_method: primaryMethod,
           tip_amount: i === 0 ? tipAmount : 0,
           sold_at: soldAt,
         },
@@ -340,14 +443,18 @@ async function createSalesBatch(userId, data) {
 
     const sales = await Sale.findAll({
       where: { id: saleIds },
-      include: [
-        { model: Dish, as: 'dish' },
-        { model: Admin, as: 'seller', attributes: ['id', 'name', 'short_id', 'role'] },
-      ],
+      include: SALE_INCLUDES,
       order: [['id', 'ASC']],
     });
 
-    return { sales, order_total: orderTotal };
+    return {
+      sales,
+      order_total: orderTotal,
+      payments: payments.map((p) => ({
+        payment_method: p.payment_method,
+        amount: p.amount,
+      })),
+    };
   } catch (err) {
     await transaction.rollback();
     throw err;
@@ -410,10 +517,7 @@ async function listSales({ sellerId, limit = 100 } = {}) {
   const where = sellerId ? { seller_id: sellerId } : {};
   return Sale.findAll({
     where,
-    include: [
-      { model: Dish, as: 'dish' },
-      { model: Admin, as: 'seller', attributes: ['id', 'name', 'short_id', 'role'] },
-    ],
+    include: SALE_INCLUDES,
     order: [['sold_at', 'DESC']],
     limit,
   });
@@ -433,10 +537,7 @@ async function listTodaySales() {
   const { start, end } = getDateRange();
   return Sale.findAll({
     where: { sold_at: { [Op.between]: [start, end] } },
-    include: [
-      { model: Dish, as: 'dish' },
-      { model: Admin, as: 'seller', attributes: ['id', 'name', 'short_id', 'role'] },
-    ],
+    include: SALE_INCLUDES,
     order: [['sold_at', 'DESC']],
   });
 }

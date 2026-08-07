@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import EditTransferAmountModal from "../../components/transfers/EditTransferAmountModal";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
 import { SectionCard, StatCard } from "../../components/ui";
 import { api, type Transfer } from "../../services/api";
@@ -20,10 +21,13 @@ export default function TransferHistoryPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const summary = useMemo(() => computeTransferSummary(transfers), [transfers]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
     setError("");
     const query = period === "all" ? "/transfers" : `/transfers?period=${period}`;
@@ -34,6 +38,25 @@ export default function TransferHistoryPage() {
       .finally(() => setLoading(false));
   }, [period]);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function handleDelete(transfer: Transfer) {
+    if (!window.confirm(t("editTransfer.deleteConfirm"))) return;
+    setDeletingId(transfer.id);
+    setError("");
+    try {
+      await api.delete(`/transfers/${transfer.id}`);
+      setSuccess(t("editTransfer.deleteSuccess"));
+      load();
+    } catch (e) {
+      setError(translateApiError(e));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div>
       <PageMeta
@@ -42,6 +65,7 @@ export default function TransferHistoryPage() {
       />
       <PageBreadcrumb pageTitle={tNav("transferHistory")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
+      {success && <p className="mb-4 text-sm text-success-500">{success}</p>}
 
       <div className="mb-4 flex flex-wrap gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
         {PERIODS.map((value) => (
@@ -99,10 +123,22 @@ export default function TransferHistoryPage() {
             <TransferHistoryTable
               transfers={transfers}
               emptyMessage={t("transferHistory.empty")}
+              onEdit={setEditingTransfer}
+              onDelete={handleDelete}
+              deletingId={deletingId}
             />
           </SectionCard>
         </>
       )}
+
+      <EditTransferAmountModal
+        transfer={editingTransfer}
+        onClose={() => setEditingTransfer(null)}
+        onSaved={() => {
+          setSuccess(t("editTransfer.success"));
+          load();
+        }}
+      />
     </div>
   );
 }

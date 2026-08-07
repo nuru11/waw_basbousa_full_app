@@ -7,6 +7,7 @@ import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
+import EditTransferAmountModal from "../../components/transfers/EditTransferAmountModal";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
 import { SectionCard, StatCard } from "../../components/ui";
 import { api, type Transfer, type TransferSummary, type User } from "../../services/api";
@@ -22,6 +23,8 @@ export default function TransfersPage() {
   const [purchasers, setPurchasers] = useState<User[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [form, setForm] = useState({
     amount: "",
     purchaser_id: "",
@@ -40,6 +43,21 @@ export default function TransfersPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function handleDelete(transfer: Transfer) {
+    if (!window.confirm(t("editTransfer.deleteConfirm"))) return;
+    setDeletingId(transfer.id);
+    setError("");
+    try {
+      await api.delete(`/transfers/${transfer.id}`);
+      setSuccess(t("editTransfer.deleteSuccess"));
+      load();
+    } catch (err: unknown) {
+      setError(translateApiError(err));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -130,9 +148,21 @@ export default function TransfersPage() {
           <TransferHistoryTable
             transfers={transfers}
             emptyMessage={t("transfers.noTransfersThisWeek")}
+            onEdit={setEditingTransfer}
+            onDelete={handleDelete}
+            deletingId={deletingId}
           />
         </SectionCard>
       </div>
+
+      <EditTransferAmountModal
+        transfer={editingTransfer}
+        onClose={() => setEditingTransfer(null)}
+        onSaved={() => {
+          setSuccess(t("editTransfer.success"));
+          load();
+        }}
+      />
     </div>
   );
 }

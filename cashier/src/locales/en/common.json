@@ -213,7 +213,13 @@
     "nib": "NIB Bank",
     "coop": "Coop Bank",
     "other": "Other",
-    "method": "Payment Method"
+    "method": "Payment Method",
+    "addPayment": "Add payment",
+    "removePayment": "Remove",
+    "amount": "Amount",
+    "remaining": "Remaining: {{amount}}",
+    "overpaid": "Over by: {{amount}}",
+    "amountsMustMatch": "Payment amounts must equal the order subtotal"
   },
   "sales": {
     "totalRevenue": "Total Revenue",

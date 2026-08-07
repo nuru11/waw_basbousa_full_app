@@ -30,10 +30,57 @@ function validateSaleItems(items) {
 function tipNotAllowedForCash() {
   return body('tip_amount').custom((value, { req }) => {
     const tip = parseFloat(value);
+    if (Number.isNaN(tip) || tip <= 0) return true;
+
+    const payments = req.body.payments;
+    if (Array.isArray(payments) && payments.length > 0) {
+      const hasNonCash = payments.some((p) => p && p.payment_method && p.payment_method !== 'cash');
+      if (!hasNonCash) {
+        throw new Error('VALIDATION_TIP_NOT_ALLOWED_FOR_CASH');
+      }
+      return true;
+    }
+
     const paymentMethod = req.body.payment_method || 'cash';
-    if (paymentMethod === 'cash' && !Number.isNaN(tip) && tip > 0) {
+    if (paymentMethod === 'cash') {
       throw new Error('VALIDATION_TIP_NOT_ALLOWED_FOR_CASH');
     }
+    return true;
+  });
+}
+
+function validateBatchPayments() {
+  return body().custom((value) => {
+    const payments = value.payments;
+    const legacyMethod = value.payment_method;
+
+    if (payments === undefined || payments === null) {
+      if (legacyMethod && !PAYMENT_METHODS.includes(legacyMethod)) {
+        throw new Error('VALIDATION_INVALID_PAYMENT');
+      }
+      return true;
+    }
+
+    if (!Array.isArray(payments) || payments.length < 1) {
+      throw new Error('VALIDATION_PAYMENTS_REQUIRED');
+    }
+
+    const seen = new Set();
+    for (const payment of payments) {
+      if (!payment || !PAYMENT_METHODS.includes(payment.payment_method)) {
+        throw new Error('VALIDATION_INVALID_PAYMENT');
+      }
+      if (seen.has(payment.payment_method)) {
+        throw new Error('VALIDATION_DUPLICATE_PAYMENT_METHOD');
+      }
+      seen.add(payment.payment_method);
+
+      const amount = parseFloat(payment.amount);
+      if (Number.isNaN(amount) || amount <= 0) {
+        throw new Error('VALIDATION_PAYMENT_AMOUNT_POSITIVE');
+      }
+    }
+
     return true;
   });
 }
@@ -68,6 +115,11 @@ const createIngredientValidation = [
 const createTransferValidation = [
   body('amount').isFloat({ gt: 0 }).withMessage('VALIDATION_AMOUNT_POSITIVE'),
   body('purchaser_id').isInt().withMessage('VALIDATION_PURCHASER_REQUIRED'),
+  validate,
+];
+
+const updateTransferValidation = [
+  body('amount').isFloat({ gt: 0 }).withMessage('VALIDATION_AMOUNT_POSITIVE'),
   validate,
 ];
 
@@ -152,6 +204,15 @@ const createSalesBatchValidation = [
     .optional()
     .isIn(PAYMENT_METHODS)
     .withMessage('VALIDATION_INVALID_PAYMENT'),
+  body('payments').optional().isArray({ min: 1 }).withMessage('VALIDATION_PAYMENTS_REQUIRED'),
+  body('payments.*.payment_method')
+    .optional()
+    .isIn(PAYMENT_METHODS)
+    .withMessage('VALIDATION_INVALID_PAYMENT'),
+  body('payments.*.amount')
+    .optional()
+    .isFloat({ gt: 0 })
+    .withMessage('VALIDATION_PAYMENT_AMOUNT_POSITIVE'),
   body('seller_id').optional().isInt().withMessage('VALIDATION_INVALID_SELLER'),
   body('items').isArray({ min: 1 }).withMessage('VALIDATION_ITEMS_REQUIRED'),
   body('items').custom(validateSaleItems),
@@ -166,6 +227,7 @@ const createSalesBatchValidation = [
     .isFloat({ gt: 0 })
     .withMessage('VALIDATION_QUANTITY_POSITIVE'),
   body('tip_amount').optional().isFloat({ min: 0 }).withMessage('VALIDATION_FAILED'),
+  validateBatchPayments(),
   tipNotAllowedForCash(),
   validate,
 ];
@@ -259,6 +321,7 @@ module.exports = {
   productionValidation,
   stockAdjustValidation,
   createTransferValidation,
+  updateTransferValidation,
   createChiefExpenseValidation,
   updateCoffeeSettingsValidation,
   updateWaterSettingsValidation,

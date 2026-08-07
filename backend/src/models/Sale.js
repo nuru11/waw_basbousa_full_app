@@ -26,6 +26,7 @@ module.exports = (sequelize) => {
       quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
       unit_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       total_price: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
+      sale_order_id: { type: DataTypes.INTEGER, allowNull: true },
       payment_method: {
         type: DataTypes.ENUM(...PAYMENT_METHODS),
         allowNull: false,

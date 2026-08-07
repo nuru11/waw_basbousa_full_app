@@ -213,7 +213,13 @@
     "nib": "بنك NIB",
     "coop": "بنك التعاون",
     "other": "أخرى",
-    "method": "طريقة الدفع"
+    "method": "طريقة الدفع",
+    "addPayment": "إضافة دفعة",
+    "removePayment": "إزالة",
+    "amount": "المبلغ",
+    "remaining": "المتبقي: {{amount}}",
+    "overpaid": "زيادة: {{amount}}",
+    "amountsMustMatch": "يجب أن تساوي مبالغ الدفع المجموع الفرعي للطلب"
   },
   "sales": {
     "totalRevenue": "إجمالي الإيرادات",

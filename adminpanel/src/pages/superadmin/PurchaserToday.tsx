@@ -4,6 +4,7 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import EditPurchaseUnitPriceModal from "../../components/purchases/EditPurchaseUnitPriceModal";
 import PurchasesTable from "../../components/purchases/PurchasesTable";
+import EditTransferAmountModal from "../../components/transfers/EditTransferAmountModal";
 import TransferHistoryTable from "../../components/transfers/TransferHistoryTable";
 import { SectionCard, StatCard } from "../../components/ui";
 import { getIntlLocale } from "../../i18n";
@@ -22,6 +23,8 @@ export default function PurchaserTodayPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
+  const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const todayLabel = new Date().toLocaleDateString(getIntlLocale(), {
     weekday: "long",
@@ -54,6 +57,21 @@ export default function PurchaserTodayPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function handleDeleteTransfer(transfer: Transfer) {
+    if (!window.confirm(t("editTransfer.deleteConfirm"))) return;
+    setDeletingId(transfer.id);
+    setError("");
+    try {
+      await api.delete(`/transfers/${transfer.id}`);
+      setSuccess(t("editTransfer.deleteSuccess"));
+      load();
+    } catch (e) {
+      setError(translateApiError(e));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const totalCount =
     submitted.length + transfersSent.length + transfersAccepted.length + handed.length;
@@ -99,6 +117,9 @@ export default function PurchaserTodayPage() {
               showPurchaser
               showCreator
               emptyMessage={t("purchaserToday.noTransfersSent")}
+              onEdit={setEditingTransfer}
+              onDelete={handleDeleteTransfer}
+              deletingId={deletingId}
             />
           </SectionCard>
 
@@ -134,6 +155,15 @@ export default function PurchaserTodayPage() {
         onClose={() => setEditingPurchase(null)}
         onSaved={() => {
           setSuccess(t("editPurchase.success"));
+          load();
+        }}
+      />
+
+      <EditTransferAmountModal
+        transfer={editingTransfer}
+        onClose={() => setEditingTransfer(null)}
+        onSaved={() => {
+          setSuccess(t("editTransfer.success"));
           load();
         }}
       />

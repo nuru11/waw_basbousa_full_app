@@ -16,6 +16,17 @@ function formatSaleTime(soldAt: string) {
   });
 }
 
+function salePaymentLabel(sale: Sale): string {
+  const orderPayments = sale.saleOrder?.payments;
+  if (Array.isArray(orderPayments) && orderPayments.length > 1) {
+    return orderPayments.map((p) => paymentMethodLabel(p.payment_method)).join(" + ");
+  }
+  if (Array.isArray(orderPayments) && orderPayments.length === 1) {
+    return paymentMethodLabel(orderPayments[0].payment_method);
+  }
+  return paymentMethodLabel(sale.payment_method);
+}
+
 export default function TodaySalesList() {
   const { t } = useTranslation(["cashier", "common"]);
   const [sales, setSales] = useState<Sale[]>([]);
@@ -115,7 +126,7 @@ export default function TodaySalesList() {
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {sale.seller?.name ?? t("common:emDash")} ·{" "}
-                        {paymentMethodLabel(sale.payment_method)}
+                        {salePaymentLabel(sale)}
                         {(!sale.sale_type || sale.sale_type === "plate") &&
                           parseFloat(String(sale.kilo_consumed)) > 0 && (
                             <>

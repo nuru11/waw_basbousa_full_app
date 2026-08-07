@@ -159,9 +159,14 @@ export interface SaleBatchItem {
   kilo_consumed?: number;
 }
 
+export interface SaleBatchPayment {
+  payment_method: string;
+  amount: number;
+}
+
 export interface SaleBatchRequest {
   seller_id: number;
-  payment_method: string;
+  payments: SaleBatchPayment[];
   tip_amount?: number;
   items: SaleBatchItem[];
 }
@@ -169,6 +174,21 @@ export interface SaleBatchRequest {
 export interface SaleBatchResponse {
   sales: Sale[];
   order_total: number;
+  payments?: SaleBatchPayment[];
+}
+
+export interface SaleOrderPayment {
+  id?: number;
+  payment_method: string;
+  amount: string | number;
+}
+
+export interface SaleOrder {
+  id: number;
+  seller_id: number;
+  tip_amount?: string | number;
+  sold_at?: string;
+  payments?: SaleOrderPayment[];
 }
 
 export interface Sale {
@@ -176,6 +196,7 @@ export interface Sale {
   dish_id: number | null;
   sale_type?: "plate" | "coffee" | "water";
   seller_id: number;
+  sale_order_id?: number | null;
   weight_type: "quarter" | "half" | "kilo" | "slice" | "half_slice" | null;
   water_bottle_size?: "small" | "large" | null;
   slice_count: number | null;
@@ -188,6 +209,7 @@ export interface Sale {
   sold_at: string;
   dish?: Dish | null;
   seller?: { id: number; name: string; short_id: string; role?: User["role"] };
+  saleOrder?: SaleOrder | null;
 }
 
 export interface SaleUpdateRequest {

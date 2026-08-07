@@ -18,7 +18,6 @@ import { formatNumber } from "../../utils/formatNumber";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { translateApiError } from "../../utils/translateApiError";
 import {
-  paymentColors,
   portionColors,
   sectionAccentClasses,
   sectionTitleClasses,
@@ -27,7 +26,7 @@ import {
   type SectionAccent,
   type WeightType,
 } from "../../utils/posColors";
-import { PAYMENT_OPTIONS } from "../../utils/paymentMethods";
+import { PAYMENT_OPTIONS, type PaymentMethod } from "../../utils/paymentMethods";
 import {
   calcKiloConsumed,
   calcPrice,
@@ -38,6 +37,12 @@ import {
 } from "../../utils/salePricing";
 
 type WaterBottleSize = "small" | "large";
+
+type PaymentRow = {
+  id: string;
+  method: PaymentMethod;
+  amount: string;
+};
 
 type CartLine = {
   id: string;
@@ -180,6 +185,17 @@ function PortionPill({ weightType, label }: { weightType: WeightType; label: str
   );
 }
 
+const PAYMENT_AMOUNT_TOLERANCE = 0.01;
+
+function createPaymentRow(method: PaymentMethod = "cash", amount = ""): PaymentRow {
+  return { id: crypto.randomUUID(), method, amount };
+}
+
+function formatAmountInput(value: number): string {
+  if (value <= 0) return "";
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
 export default function SalesForm() {
   const { t } = useTranslation("common");
   const { user, loading: authLoading } = useAuth();
@@ -201,11 +217,9 @@ export default function SalesForm() {
     quantity: "1",
     bottle_size: "small",
   });
-  const [order, setOrder] = useState({
-    seller_id: "",
-    payment_method: "cash",
-    tip_amount: "",
-  });
+  const [sellerId, setSellerId] = useState("");
+  const [payments, setPayments] = useState<PaymentRow[]>([createPaymentRow("cash")]);
+  const [tipAmount, setTipAmount] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { submitting, run } = useSubmitLock();
@@ -248,10 +262,7 @@ export default function SalesForm() {
     api.get<User[]>("/sales/sellers").then((list) => {
       setSellers(list);
       if (user) {
-        setOrder((prev) => ({
-          ...prev,
-          seller_id: prev.seller_id || String(user.id),
-        }));
+        setSellerId((prev) => prev || String(user.id));
       }
     });
     refreshTotalPool();
@@ -265,11 +276,33 @@ export default function SalesForm() {
     refreshWaterSettings();
   }, [cart, success, refreshTotalPool, refreshCoffeeSettings, refreshWaterSettings]);
 
+  const orderTotal = cart.reduce((sum, line) => sum + line.line_total, 0);
+  const hasNonCashPayment = payments.some((p) => p.method !== "cash");
+  const tipValue = hasNonCashPayment ? parseFloat(tipAmount) || 0 : 0;
+  const grandTotal = orderTotal + tipValue;
+  const paymentsSum = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const paymentsRemaining = orderTotal - paymentsSum;
+  const paymentsMatch =
+    orderTotal > 0 && Math.abs(paymentsRemaining) <= PAYMENT_AMOUNT_TOLERANCE;
+  const paymentsHavePositiveAmounts = payments.every((p) => (parseFloat(p.amount) || 0) > 0);
+  const usedPaymentMethods = new Set(payments.map((p) => p.method));
+  const canAddPaymentRow = PAYMENT_OPTIONS.some((method) => !usedPaymentMethods.has(method));
+
   useEffect(() => {
-    if (order.payment_method === "cash") {
-      setOrder((prev) => (prev.tip_amount === "" ? prev : { ...prev, tip_amount: "" }));
+    if (!hasNonCashPayment && tipAmount !== "") {
+      setTipAmount("");
     }
-  }, [order.payment_method]);
+  }, [hasNonCashPayment, tipAmount]);
+
+  useEffect(() => {
+    if (payments.length !== 1) return;
+    const synced = formatAmountInput(orderTotal);
+    setPayments((prev) => {
+      if (prev.length !== 1) return prev;
+      if (prev[0].amount === synced) return prev;
+      return [{ ...prev[0], amount: synced }];
+    });
+  }, [orderTotal, payments.length]);
 
   const coffeePrice = coffeeSettings?.price_per_cup
     ? parseFloat(String(coffeeSettings.price_per_cup))
@@ -319,10 +352,6 @@ export default function SalesForm() {
     priceSource == null ||
     !Object.values(PRICE_FIELDS).some((field) => parsePositivePrice(priceSource[field]) != null);
 
-  const orderTotal = cart.reduce((sum, line) => sum + line.line_total, 0);
-  const tipValue =
-    order.payment_method !== "cash" ? parseFloat(order.tip_amount) || 0 : 0;
-  const grandTotal = orderTotal + tipValue;
   const cartStockWarning = cartExceedsPoolWarning(cart, totalPool);
 
   useEffect(() => {
@@ -352,8 +381,36 @@ export default function SalesForm() {
 
   const canCompleteOrder =
     cart.length > 0 &&
-    !!order.seller_id &&
+    !!sellerId &&
+    paymentsHavePositiveAmounts &&
+    paymentsMatch &&
     !submitting;
+
+  function updatePaymentRow(id: string, patch: Partial<Pick<PaymentRow, "method" | "amount">>) {
+    setPayments((prev) =>
+      prev.map((row) => {
+        if (row.id !== id) return row;
+        if (patch.method && prev.some((other) => other.id !== id && other.method === patch.method)) {
+          return row;
+        }
+        return { ...row, ...patch };
+      })
+    );
+  }
+
+  function handleAddPaymentRow() {
+    const nextMethod = PAYMENT_OPTIONS.find((method) => !usedPaymentMethods.has(method));
+    if (!nextMethod) return;
+    const remaining = Math.max(0, orderTotal - paymentsSum);
+    setPayments((prev) => [...prev, createPaymentRow(nextMethod, formatAmountInput(remaining))]);
+  }
+
+  function handleRemovePaymentRow(id: string) {
+    setPayments((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((row) => row.id !== id);
+    });
+  }
 
   function adjustQuantity(delta: number) {
     setBuilder((prev) => {
@@ -458,11 +515,12 @@ export default function SalesForm() {
       setSuccess("");
       try {
         const result = await api.post<SaleBatchResponse>("/sales/batch", {
-          seller_id: parseInt(order.seller_id),
-          payment_method: order.payment_method,
-          ...(order.payment_method !== "cash" && tipValue > 0
-            ? { tip_amount: tipValue }
-            : {}),
+          seller_id: parseInt(sellerId),
+          payments: payments.map((p) => ({
+            payment_method: p.method,
+            amount: parseFloat(p.amount) || 0,
+          })),
+          ...(hasNonCashPayment && tipValue > 0 ? { tip_amount: tipValue } : {}),
           items: cart.map((line) => {
             if (line.sale_type === "coffee") {
               return {
@@ -488,7 +546,7 @@ export default function SalesForm() {
           }),
         });
 
-        const seller = sellers.find((s) => s.id === parseInt(order.seller_id));
+        const seller = sellers.find((s) => s.id === parseInt(sellerId));
         setSuccess(
           t("cart.orderRecorded", {
             count: result.sales.length,
@@ -496,7 +554,8 @@ export default function SalesForm() {
           })
         );
         setCart([]);
-        setOrder((prev) => ({ ...prev, tip_amount: "" }));
+        setPayments([createPaymentRow("cash")]);
+        setTipAmount("");
         refreshTotalPool();
         refreshCoffeeSettings();
         refreshWaterSettings();
@@ -594,8 +653,8 @@ export default function SalesForm() {
         </p>
         <select
           className="field-select"
-          value={order.seller_id}
-          onChange={(e) => setOrder({ ...order, seller_id: e.target.value })}
+          value={sellerId}
+          onChange={(e) => setSellerId(e.target.value)}
         >
           <option value="">{t("fields.selectSeller")}</option>
           {sellers.map((s) => (
@@ -610,22 +669,76 @@ export default function SalesForm() {
         <p className={`mb-2 text-sm font-semibold md:text-base ${sectionTitleClasses.payment}`}>
           {t("paymentMethods.method")}
         </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {PAYMENT_OPTIONS.map((p) => (
-            <ChoiceButton
-              key={p}
-              selected={order.payment_method === p}
-              onClick={() => setOrder({ ...order, payment_method: p })}
-              colorClass={paymentColors[p]}
-              className="min-h-[3.5rem]"
+        <div className="space-y-3">
+          {payments.map((row) => (
+            <div
+              key={row.id}
+              className="flex flex-col gap-2 p-3 border-2 rounded-xl border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center"
             >
-              {paymentMethodLabel(p)}
-            </ChoiceButton>
+              <select
+                className="field-select sm:flex-1"
+                value={row.method}
+                onChange={(e) =>
+                  updatePaymentRow(row.id, { method: e.target.value as PaymentMethod })
+                }
+              >
+                {PAYMENT_OPTIONS.map((method) => {
+                  const taken =
+                    method !== row.method && usedPaymentMethods.has(method);
+                  return (
+                    <option key={method} value={method} disabled={taken}>
+                      {paymentMethodLabel(method)}
+                    </option>
+                  );
+                })}
+              </select>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={row.amount}
+                onChange={(e) => updatePaymentRow(row.id, { amount: e.target.value })}
+                className="text-lg font-semibold border-gray-200 sm:w-36"
+                disabled={payments.length === 1}
+              />
+              {payments.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRemovePaymentRow(row.id)}
+                >
+                  {t("paymentMethods.removePayment")}
+                </Button>
+              )}
+            </div>
           ))}
         </div>
+        {canAddPaymentRow && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={handleAddPaymentRow}
+          >
+            {t("paymentMethods.addPayment")}
+          </Button>
+        )}
+        {cart.length > 0 && payments.length > 1 && !paymentsMatch && (
+          <p className="mt-2 text-sm font-medium text-error-600 dark:text-error-400">
+            {paymentsRemaining > PAYMENT_AMOUNT_TOLERANCE
+              ? t("paymentMethods.remaining", {
+                  amount: formatCurrency(paymentsRemaining),
+                })
+              : t("paymentMethods.overpaid", {
+                  amount: formatCurrency(Math.abs(paymentsRemaining)),
+                })}
+          </p>
+        )}
       </div>
 
-      {order.payment_method !== "cash" && (
+      {hasNonCashPayment && (
         <div>
           <p className={`mb-2 text-sm font-semibold md:text-base ${sectionTitleClasses.payment}`}>
             {t("fields.tip")}
@@ -634,8 +747,8 @@ export default function SalesForm() {
             type="number"
             min="0"
             step="0.01"
-            value={order.tip_amount}
-            onChange={(e) => setOrder({ ...order, tip_amount: e.target.value })}
+            value={tipAmount}
+            onChange={(e) => setTipAmount(e.target.value)}
             className="text-lg font-semibold border-gray-200"
           />
         </div>

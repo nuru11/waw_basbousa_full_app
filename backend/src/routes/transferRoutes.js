@@ -1,7 +1,10 @@
 const express = require('express');
 const transferController = require('../controllers/transferController');
 const { authMiddleware, requireRole } = require('../middleware/auth');
-const { createTransferValidation } = require('../middleware/validators');
+const {
+  createTransferValidation,
+  updateTransferValidation,
+} = require('../middleware/validators');
 
 const router = express.Router();
 
@@ -30,6 +33,19 @@ router.post(
   requireRole('superAdmin'),
   createTransferValidation,
   transferController.create
+);
+
+router.put(
+  '/:id',
+  requireRole('superAdmin'),
+  updateTransferValidation,
+  transferController.update
+);
+
+router.delete(
+  '/:id',
+  requireRole('superAdmin'),
+  transferController.remove
 );
 
 router.post(

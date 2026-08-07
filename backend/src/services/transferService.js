@@ -97,6 +97,42 @@ async function acceptTransfer(transferId, purchaserId) {
   });
 }
 
+async function updateTransfer(transferId, data) {
+  const transfer = await Transfer.findByPk(transferId);
+  if (!transfer) {
+    throw new AppError('TRANSFER_NOT_FOUND', ERROR_CODES.TRANSFER_NOT_FOUND, 404);
+  }
+  if (transfer.status !== 'pending') {
+    throw new AppError('TRANSFER_NOT_PENDING', ERROR_CODES.TRANSFER_NOT_PENDING, 400);
+  }
+
+  const amount = parseFloat(data.amount);
+  if (!amount || amount <= 0) {
+    throw new AppError('AMOUNT_MUST_BE_POSITIVE', ERROR_CODES.AMOUNT_MUST_BE_POSITIVE, 400);
+  }
+
+  await transfer.update({ amount });
+
+  return Transfer.findByPk(transfer.id, {
+    include: [
+      { model: Admin, as: 'purchaser', attributes: ['id', 'name', 'short_id'] },
+      { model: Admin, as: 'creator', attributes: ['id', 'name', 'short_id'] },
+    ],
+  });
+}
+
+async function deleteTransfer(transferId) {
+  const transfer = await Transfer.findByPk(transferId);
+  if (!transfer) {
+    throw new AppError('TRANSFER_NOT_FOUND', ERROR_CODES.TRANSFER_NOT_FOUND, 404);
+  }
+  if (transfer.status !== 'pending') {
+    throw new AppError('TRANSFER_NOT_PENDING', ERROR_CODES.TRANSFER_NOT_PENDING, 400);
+  }
+
+  await transfer.destroy();
+}
+
 async function getBalanceSummary(purchaserId) {
   const transfers = await Transfer.findAll({
     where: { purchaser_id: purchaserId },
@@ -286,6 +322,8 @@ async function rebuildTransferBalances(purchaserId, transaction) {
 module.exports = {
   listTransfers,
   createTransfer,
+  updateTransfer,
+  deleteTransfer,
   acceptTransfer,
   getBalanceSummary,
   getAdminSummary,

@@ -19,6 +19,9 @@ type Props = {
   emptyMessage?: string;
   showPurchaser?: boolean;
   showCreator?: boolean;
+  onEdit?: (transfer: Transfer) => void;
+  onDelete?: (transfer: Transfer) => void;
+  deletingId?: number | null;
 };
 
 export default function TransferHistoryTable({
@@ -26,6 +29,9 @@ export default function TransferHistoryTable({
   emptyMessage,
   showPurchaser = true,
   showCreator = false,
+  onEdit,
+  onDelete,
+  deletingId = null,
 }: Props) {
   const { t } = useTranslation("common");
 
@@ -101,8 +107,43 @@ export default function TransferHistoryTable({
       }
     );
 
+    if (onEdit || onDelete) {
+      cols.push({
+        key: "actions",
+        header: t("fields.actions"),
+        render: (tfr) => {
+          if (tfr.status !== "pending") return t("emDash");
+          return (
+            <div className="flex flex-wrap gap-3">
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={() => onEdit(tfr)}
+                  className="text-brand-500 hover:underline"
+                >
+                  {t("actions.edit")}
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(tfr)}
+                  disabled={deletingId === tfr.id}
+                  className="text-error-500 hover:underline disabled:opacity-50"
+                >
+                  {deletingId === tfr.id
+                    ? t("actions.deleting")
+                    : t("actions.delete")}
+                </button>
+              )}
+            </div>
+          );
+        },
+      });
+    }
+
     return cols;
-  }, [showCreator, showPurchaser, t]);
+  }, [deletingId, onDelete, onEdit, showCreator, showPurchaser, t]);
 
   if (transfers.length === 0) {
     return <EmptyState message={emptyMessage ?? t("transfers.noTransfersFound")} />;

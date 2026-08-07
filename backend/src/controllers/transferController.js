@@ -68,6 +68,27 @@ async function summary(req, res, next) {
   }
 }
 
+async function update(req, res, next) {
+  try {
+    const transfer = await transferService.updateTransfer(
+      parseInt(req.params.id, 10),
+      req.body
+    );
+    res.json({ success: true, data: transfer });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function remove(req, res, next) {
+  try {
+    await transferService.deleteTransfer(parseInt(req.params.id, 10));
+    res.json({ success: true, data: null });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function accept(req, res, next) {
   try {
     const transfer = await transferService.acceptTransfer(
@@ -80,4 +101,4 @@ async function accept(req, res, next) {
   }
 }
 
-module.exports = { list, create, balance, summary, accept };
+module.exports = { list, create, update, remove, balance, summary, accept };
