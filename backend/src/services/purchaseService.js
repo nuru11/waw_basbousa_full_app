@@ -67,21 +67,12 @@ async function createPurchase(purchaserId, data) {
     const quantity = parseFloat(data.quantity);
     const unitPrice = parseFloat(data.unit_price);
     const totalPrice = quantity * unitPrice;
-    const size = data.size || null;
-    const validSizes = ['small', 'large'];
-
-    if (ingredient.has_size) {
-      if (!size || !validSizes.includes(size)) {
-        throw new AppError('PURCHASE_SIZE_REQUIRED', ERROR_CODES.PURCHASE_SIZE_REQUIRED, 400);
-      }
-    } else if (size) {
-      throw new AppError('PURCHASE_SIZE_NOT_ALLOWED', ERROR_CODES.PURCHASE_SIZE_NOT_ALLOWED, 400);
-    }
+    const size = resolvePurchaseSize(ingredient, data.size);
 
     const purchase = await Purchase.create(
       {
         ingredient_id: data.ingredient_id,
-        size: ingredient.has_size ? size : null,
+        size,
         quantity,
         unit_price: unitPrice,
         total_price: totalPrice,
@@ -242,7 +233,85 @@ async function getPurchaseForScreenshot(purchaseId, user) {
   return purchase;
 }
 
-async function updatePurchaseUnitPrice(purchaseId, newUnitPrice) {
+function resolvePurchaseSize(ingredient, size) {
+  const requestedSize = size || null;
+  const validSizes = ['small', 'large'];
+
+  if (ingredient.has_size) {
+    if (!requestedSize || !validSizes.includes(requestedSize)) {
+      throw new AppError('PURCHASE_SIZE_REQUIRED', ERROR_CODES.PURCHASE_SIZE_REQUIRED, 400);
+    }
+    return requestedSize;
+  }
+  if (requestedSize) {
+    throw new AppError('PURCHASE_SIZE_NOT_ALLOWED', ERROR_CODES.PURCHASE_SIZE_NOT_ALLOWED, 400);
+  }
+  return null;
+}
+
+async function applyReceivedStockChange({
+  purchaseId,
+  oldIngredientId,
+  oldQuantity,
+  newIngredientId,
+  newQuantity,
+  transaction,
+}) {
+  const oldId = Number(oldIngredientId);
+  const newId = Number(newIngredientId);
+  const ids = [...new Set([oldId, newId])].sort((a, b) => a - b);
+  const locked = {};
+  for (const id of ids) {
+    const ingredient = await Ingredient.findByPk(id, {
+      lock: transaction.LOCK.UPDATE,
+      transaction,
+    });
+    if (!ingredient) {
+      throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
+    }
+    locked[id] = ingredient;
+  }
+
+  if (oldId === newId) {
+    const ingredient = locked[newId];
+    const delta = newQuantity - oldQuantity;
+    if (delta !== 0) {
+      const newStock = parseFloat(ingredient.current_stock) + delta;
+      if (newStock < 0) {
+        throw new AppError('STOCK_BELOW_ZERO', ERROR_CODES.STOCK_BELOW_ZERO, 400);
+      }
+      await ingredient.update({ current_stock: newStock }, { transaction });
+    }
+  } else {
+    const oldIngredient = locked[oldId];
+    const newIngredient = locked[newId];
+    const oldStock = parseFloat(oldIngredient.current_stock) - oldQuantity;
+    if (oldStock < 0) {
+      throw new AppError('STOCK_BELOW_ZERO', ERROR_CODES.STOCK_BELOW_ZERO, 400);
+    }
+    await oldIngredient.update({ current_stock: oldStock }, { transaction });
+    await newIngredient.update(
+      { current_stock: parseFloat(newIngredient.current_stock) + newQuantity },
+      { transaction }
+    );
+  }
+
+  const movement = await StockMovement.findOne({
+    where: { type: 'purchase', reference_id: purchaseId },
+    transaction,
+  });
+  if (movement) {
+    await movement.update(
+      {
+        ingredient_id: newId,
+        quantity_delta: newQuantity,
+      },
+      { transaction }
+    );
+  }
+}
+
+async function updatePurchase(purchaseId, { ingredient_id, quantity, unit_price, size }, actor) {
   const transaction = await sequelize.transaction();
 
   try {
@@ -255,7 +324,16 @@ async function updatePurchaseUnitPrice(purchaseId, newUnitPrice) {
       throw new AppError('PURCHASE_NOT_FOUND', ERROR_CODES.PURCHASE_NOT_FOUND, 404);
     }
 
-    const unitPrice = parseFloat(newUnitPrice);
+    if (actor?.role === 'purchaser') {
+      if (Number(purchase.purchaser_id) !== Number(actor.id)) {
+        throw new AppError('FORBIDDEN', ERROR_CODES.FORBIDDEN, 403);
+      }
+      if (purchase.status !== 'in_inventory') {
+        throw new AppError('PURCHASE_NOT_EDITABLE', ERROR_CODES.PURCHASE_NOT_EDITABLE, 400);
+      }
+    }
+
+    const unitPrice = parseFloat(unit_price);
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
       throw new AppError(
         'PURCHASE_INVALID_UNIT_PRICE',
@@ -264,11 +342,40 @@ async function updatePurchaseUnitPrice(purchaseId, newUnitPrice) {
       );
     }
 
-    const quantity = parseFloat(purchase.quantity);
-    const totalPrice = Math.round(quantity * unitPrice * 100) / 100;
+    const newQuantity = parseFloat(quantity);
+    if (!Number.isFinite(newQuantity) || newQuantity <= 0) {
+      throw new AppError('QUANTITY_MUST_BE_POSITIVE', ERROR_CODES.QUANTITY_MUST_BE_POSITIVE, 400);
+    }
+
+    const newIngredientId = parseInt(ingredient_id, 10);
+    if (!Number.isInteger(newIngredientId) || newIngredientId <= 0) {
+      throw new AppError('INGREDIENT_REQUIRED', ERROR_CODES.INGREDIENT_REQUIRED, 400);
+    }
+
+    const newIngredient = await Ingredient.findByPk(newIngredientId, { transaction });
+    if (!newIngredient) {
+      throw new AppError('INGREDIENT_NOT_FOUND', ERROR_CODES.INGREDIENT_NOT_FOUND, 404);
+    }
+
+    const resolvedSize = resolvePurchaseSize(newIngredient, size);
+    const totalPrice = Math.round(newQuantity * unitPrice * 100) / 100;
+
+    if (purchase.status === 'received') {
+      await applyReceivedStockChange({
+        purchaseId: purchase.id,
+        oldIngredientId: purchase.ingredient_id,
+        oldQuantity: parseFloat(purchase.quantity),
+        newIngredientId,
+        newQuantity,
+        transaction,
+      });
+    }
 
     await purchase.update(
       {
+        ingredient_id: newIngredientId,
+        size: resolvedSize,
+        quantity: newQuantity,
         unit_price: unitPrice,
         total_price: totalPrice,
       },
@@ -292,5 +399,5 @@ module.exports = {
   receivePurchase,
   getPurchaserInventory,
   getPurchaseForScreenshot,
-  updatePurchaseUnitPrice,
+  updatePurchase,
 };

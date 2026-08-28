@@ -92,9 +92,15 @@ async function receive(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    const purchase = await purchaseService.updatePurchaseUnitPrice(
+    const purchase = await purchaseService.updatePurchase(
       req.params.id,
-      req.body.unit_price
+      {
+        ingredient_id: req.body.ingredient_id,
+        quantity: req.body.quantity,
+        unit_price: req.body.unit_price,
+        size: req.body.size,
+      },
+      req.user
     );
     res.json({ success: true, data: purchase });
   } catch (err) {

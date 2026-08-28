@@ -9,6 +9,7 @@ import {
   StatCard,
 } from "../../components/ui";
 import type { DataTableColumn } from "../../components/ui";
+import EditPurchaseUnitPriceModal from "../../components/purchases/EditPurchaseUnitPriceModal";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import { api, type Purchase, type PurchaserInventory } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -17,10 +18,12 @@ import { purchaseSizeLabel } from "../../utils/purchaseStatus";
 import { translateApiError } from "../../utils/translateApiError";
 
 export default function PurchaserInventoryPage() {
-  const { t } = useTranslation(["purchaser", "common", "nav"]);
+  const { t } = useTranslation(["purchaser", "common", "nav", "admin"]);
   const [inventory, setInventory] = useState<PurchaserInventory | null>(null);
   const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
 
   const load = () =>
     api
@@ -35,6 +38,7 @@ export default function PurchaserInventoryPage() {
   async function handleHandToChief(id: number) {
     setLoading(id);
     setError("");
+    setSuccess("");
     try {
       await api.post(`/purchases/${id}/hand-to-chief`, {});
       load();
@@ -98,15 +102,24 @@ export default function PurchaserInventoryPage() {
         key: "action",
         header: t("common:fields.action"),
         render: (p) => (
-          <Button
-            size="sm"
-            disabled={loading === p.id}
-            onClick={() => handleHandToChief(p.id)}
-          >
-            {loading === p.id
-              ? t("common:actions.handing")
-              : t("common:actions.handToChief")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setEditingPurchase(p)}
+              className="text-brand-500 hover:underline"
+            >
+              {t("common:actions.edit")}
+            </button>
+            <Button
+              size="sm"
+              disabled={loading === p.id}
+              onClick={() => handleHandToChief(p.id)}
+            >
+              {loading === p.id
+                ? t("common:actions.handing")
+                : t("common:actions.handToChief")}
+            </Button>
+          </div>
         ),
       },
     ],
@@ -121,6 +134,7 @@ export default function PurchaserInventoryPage() {
       />
       <PageBreadcrumb pageTitle={t("nav:myInventory")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
+      {success && <p className="mb-4 text-sm text-success-500">{success}</p>}
 
       {summary.length > 0 && (
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -148,6 +162,14 @@ export default function PurchaserInventoryPage() {
           hoverRows
         />
       </SectionCard>
+      <EditPurchaseUnitPriceModal
+        purchase={editingPurchase}
+        onClose={() => setEditingPurchase(null)}
+        onSaved={() => {
+          setSuccess(t("admin:editPurchase.success"));
+          load();
+        }}
+      />
     </div>
   );
 }

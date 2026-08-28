@@ -46,7 +46,7 @@ router.post(
 
 router.put(
   '/:id',
-  requireRole('superAdmin'),
+  requireRole('superAdmin', 'purchaser'),
   purchaseController.update
 );
 

@@ -20,6 +20,7 @@
   "DISH_NO_RECIPE": "الطبق ليس له وصفة محددة",
   "PURCHASE_NOT_FOUND": "عملية الشراء غير موجودة",
   "PURCHASE_IN_INVENTORY_ONLY": "يمكن تسليم مشتريات المخزون فقط للطباخ",
+  "PURCHASE_NOT_EDITABLE": "يمكن تعديل المشتريات الموجودة في المخزون فقط",
   "PURCHASE_ALREADY_RECEIVED": "تم استلام عملية الشراء مسبقاً",
   "PURCHASE_MUST_BE_HANDED": "يجب أن يسلم المشتري عملية الشراء قبل الاستلام",
   "PURCHASE_INVALID_UNIT_PRICE": "يجب أن يكون سعر الوحدة رقماً موجباً",

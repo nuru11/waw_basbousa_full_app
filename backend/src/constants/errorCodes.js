@@ -19,6 +19,7 @@ const ERROR_CODES = {
   DISH_NO_RECIPE: 'Dish has no recipe defined',
   PURCHASE_NOT_FOUND: 'Purchase not found',
   PURCHASE_IN_INVENTORY_ONLY: 'Only in-inventory purchases can be handed to chief',
+  PURCHASE_NOT_EDITABLE: 'Only purchases still in inventory can be edited',
   PURCHASE_ALREADY_RECEIVED: 'Purchase already received',
   PURCHASE_MUST_BE_HANDED: 'Purchase must be handed by purchaser before receiving',
   PURCHASE_INVALID_UNIT_PRICE: 'Unit price must be a positive number',

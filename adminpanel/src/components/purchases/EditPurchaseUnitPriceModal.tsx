@@ -1,13 +1,14 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import Label from "../form/Label";
+import Select from "../form/Select";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import { Modal } from "../ui/modal";
 import { useSubmitLock } from "../../hooks/useSubmitLock";
-import { api, type Purchase } from "../../services/api";
+import { api, type Ingredient, type Purchase } from "../../services/api";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { formatNumber } from "../../utils/formatNumber";
+import { unitLabel } from "../../utils/purchaseStatus";
 import { translateApiError } from "../../utils/translateApiError";
 
 export default function EditPurchaseUnitPriceModal({
@@ -21,23 +22,77 @@ export default function EditPurchaseUnitPriceModal({
 }) {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [ingredientId, setIngredientId] = useState("");
+  const [size, setSize] = useState("");
+  const [quantity, setQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [error, setError] = useState("");
   const { submitting, run } = useSubmitLock();
 
   useEffect(() => {
-    if (purchase) {
-      setUnitPrice(String(purchase.unit_price));
-      setError("");
-    }
+    if (!purchase) return;
+
+    setIngredientId(String(purchase.ingredient_id));
+    setSize(purchase.size ?? "");
+    setQuantity(String(purchase.quantity));
+    setUnitPrice(String(purchase.unit_price));
+    setError("");
+
+    api
+      .get<Ingredient[]>("/ingredients")
+      .then(setIngredients)
+      .catch((err: unknown) => setError(translateApiError(err)));
   }, [purchase]);
 
-  const quantity = purchase ? parseFloat(String(purchase.quantity)) : 0;
+  const selectedIngredient = useMemo(
+    () =>
+      ingredients.find((item) => String(item.id) === ingredientId) ??
+      (purchase?.ingredient && String(purchase.ingredient.id) === ingredientId
+        ? purchase.ingredient
+        : undefined),
+    [ingredients, ingredientId, purchase]
+  );
+  const requiresSize = selectedIngredient?.has_size ?? false;
+
+  const ingredientOptions = useMemo(() => {
+    const options = ingredients.map((item) => ({
+      value: String(item.id),
+      label: `${item.name} (${unitLabel(item.unit)})`,
+    }));
+    if (
+      purchase?.ingredient &&
+      !ingredients.some((item) => item.id === purchase.ingredient_id)
+    ) {
+      options.unshift({
+        value: String(purchase.ingredient.id),
+        label: `${purchase.ingredient.name} (${unitLabel(purchase.ingredient.unit)})`,
+      });
+    }
+    return options;
+  }, [ingredients, purchase]);
+
+  const parsedQty = parseFloat(quantity);
   const parsedPrice = parseFloat(unitPrice);
   const newTotal =
-    Number.isFinite(parsedPrice) && parsedPrice > 0
-      ? Math.round(quantity * parsedPrice * 100) / 100
+    Number.isFinite(parsedQty) &&
+    parsedQty > 0 &&
+    Number.isFinite(parsedPrice) &&
+    parsedPrice > 0
+      ? Math.round(parsedQty * parsedPrice * 100) / 100
       : null;
+
+  function handleIngredientChange(nextId: string) {
+    setIngredientId(nextId);
+    const next =
+      ingredients.find((item) => String(item.id) === nextId) ??
+      (purchase?.ingredient && String(purchase.ingredient.id) === nextId
+        ? purchase.ingredient
+        : undefined);
+    if (!next?.has_size) {
+      setSize("");
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -46,12 +101,35 @@ export default function EditPurchaseUnitPriceModal({
     await run(async () => {
       try {
         setError("");
+
+        if (!ingredientId) {
+          setError(t("editPurchase.ingredientRequired"));
+          return;
+        }
+
+        const qty = parseFloat(quantity);
+        if (!Number.isFinite(qty) || qty <= 0) {
+          setError(t("editPurchase.invalidQuantity"));
+          return;
+        }
+
         const price = parseFloat(unitPrice);
         if (!Number.isFinite(price) || price <= 0) {
           setError(t("editPurchase.invalidUnitPrice"));
           return;
         }
-        await api.put(`/purchases/${purchase.id}`, { unit_price: price });
+
+        if (requiresSize && size !== "small" && size !== "large") {
+          setError(t("editPurchase.sizeRequired"));
+          return;
+        }
+
+        await api.put(`/purchases/${purchase.id}`, {
+          ingredient_id: Number(ingredientId),
+          quantity: qty,
+          unit_price: price,
+          size: requiresSize ? size : null,
+        });
         onSaved();
         onClose();
       } catch (err: unknown) {
@@ -67,31 +145,50 @@ export default function EditPurchaseUnitPriceModal({
           {t("editPurchase.title", { id: purchase?.id })}
         </h3>
 
-        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-          <p>
-            <span className="font-medium text-gray-800 dark:text-white/90">
-              {tCommon("fields.ingredient")}:
-            </span>{" "}
-            {purchase?.ingredient?.name ?? tCommon("emDash")}
-          </p>
-          <p>
-            <span className="font-medium text-gray-800 dark:text-white/90">
-              {tCommon("fields.qty")}:
-            </span>{" "}
-            {formatNumber(quantity)} {purchase?.ingredient?.unit ?? ""}
-          </p>
-          <p>
-            <span className="font-medium text-gray-800 dark:text-white/90">
-              {t("editPurchase.currentUnitPrice")}:
-            </span>{" "}
-            {purchase
-              ? formatCurrency(parseFloat(String(purchase.unit_price)))
-              : tCommon("emDash")}
-          </p>
+        <div>
+          <Label>{tCommon("fields.ingredient")}</Label>
+          <Select
+            value={ingredientId}
+            onChange={handleIngredientChange}
+            placeholder={tCommon("fields.selectIngredient")}
+            options={ingredientOptions}
+          />
+        </div>
+
+        {requiresSize && (
+          <div>
+            <Label>{tCommon("fields.size")}</Label>
+            <Select
+              value={size}
+              onChange={setSize}
+              placeholder={tCommon("fields.size")}
+              options={[
+                { value: "small", label: tCommon("purchaseSizes.small") },
+                { value: "large", label: tCommon("purchaseSizes.large") },
+              ]}
+            />
+          </div>
+        )}
+
+        <div>
+          <Label htmlFor="edit-quantity">
+            {tCommon("fields.quantity")}
+            {selectedIngredient
+              ? ` (${unitLabel(selectedIngredient.unit)})`
+              : ""}
+          </Label>
+          <Input
+            id="edit-quantity"
+            type="number"
+            step={0.001}
+            min="0.001"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
         </div>
 
         <div>
-          <Label htmlFor="edit-unit-price">{t("editPurchase.newUnitPrice")}</Label>
+          <Label htmlFor="edit-unit-price">{tCommon("fields.unitPrice")}</Label>
           <Input
             id="edit-unit-price"
             type="number"

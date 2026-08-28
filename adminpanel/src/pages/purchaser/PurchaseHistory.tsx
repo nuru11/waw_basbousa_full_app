@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import EditPurchaseUnitPriceModal from "../../components/purchases/EditPurchaseUnitPriceModal";
 import PurchaseScreenshot from "../../components/purchases/PurchaseScreenshot";
 import {
   DataTable,
@@ -22,16 +23,23 @@ function getPurchaseDate(p: Purchase) {
 }
 
 export default function PurchaseHistoryPage() {
-  const { t } = useTranslation(["purchaser", "common", "nav"]);
+  const { t } = useTranslation(["purchaser", "common", "nav", "admin"]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
 
-  useEffect(() => {
-    api
+  const load = useCallback(() => {
+    setError("");
+    return api
       .get<Purchase[]>("/purchases")
       .then(setPurchases)
       .catch((e) => setError(translateApiError(e)));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const columns: DataTableColumn<Purchase>[] = useMemo(
     () => [
@@ -94,6 +102,22 @@ export default function PurchaseHistoryPage() {
           />
         ),
       },
+      {
+        key: "actions",
+        header: t("common:fields.actions"),
+        render: (p) =>
+          p.status === "in_inventory" ? (
+            <button
+              type="button"
+              onClick={() => setEditingPurchase(p)}
+              className="text-brand-500 hover:underline"
+            >
+              {t("common:actions.edit")}
+            </button>
+          ) : (
+            t("common:emDash")
+          ),
+      },
     ],
     [t]
   );
@@ -106,6 +130,7 @@ export default function PurchaseHistoryPage() {
       />
       <PageBreadcrumb pageTitle={t("nav:purchaseHistory")} />
       {error && <p className="mb-4 text-sm text-error-500">{error}</p>}
+      {success && <p className="mb-4 text-sm text-success-500">{success}</p>}
       <SectionCard title={t("purchaseHistory.allPurchases")}>
         <DataTable
           columns={columns}
@@ -115,6 +140,14 @@ export default function PurchaseHistoryPage() {
           hoverRows
         />
       </SectionCard>
+      <EditPurchaseUnitPriceModal
+        purchase={editingPurchase}
+        onClose={() => setEditingPurchase(null)}
+        onSaved={() => {
+          setSuccess(t("admin:editPurchase.success"));
+          load();
+        }}
+      />
     </div>
   );
 }
