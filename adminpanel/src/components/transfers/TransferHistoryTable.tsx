@@ -112,7 +112,8 @@ export default function TransferHistoryTable({
         key: "actions",
         header: t("fields.actions"),
         render: (tfr) => {
-          if (tfr.status !== "pending") return t("emDash");
+          const canDelete = !!onDelete && tfr.status === "pending";
+          if (!onEdit && !canDelete) return t("emDash");
           return (
             <div className="flex flex-wrap gap-3">
               {onEdit && (
@@ -124,7 +125,7 @@ export default function TransferHistoryTable({
                   {t("actions.edit")}
                 </button>
               )}
-              {onDelete && (
+              {canDelete && onDelete && (
                 <button
                   type="button"
                   onClick={() => onDelete(tfr)}

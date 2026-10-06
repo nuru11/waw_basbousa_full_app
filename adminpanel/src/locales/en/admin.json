@@ -171,6 +171,7 @@
     "save": "Save amount",
     "success": "Transfer amount updated",
     "invalidAmount": "Amount must be a positive number",
+    "acceptedNote": "This transfer is already accepted. Saving recalculates this purchaser's remaining balance from their purchases.",
     "deleteConfirm": "Delete this pending transfer? This cannot be undone.",
     "deleteSuccess": "Transfer deleted"
   },

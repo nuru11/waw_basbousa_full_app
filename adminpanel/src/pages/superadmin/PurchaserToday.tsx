@@ -132,6 +132,7 @@ export default function PurchaserTodayPage() {
               showPurchaser
               showCreator={false}
               emptyMessage={t("purchaserToday.noTransfersAccepted")}
+              onEdit={setEditingTransfer}
             />
           </SectionCard>
 

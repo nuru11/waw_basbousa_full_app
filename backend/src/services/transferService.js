@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Transfer, Admin, Purchase } = require('../models');
+const { sequelize, Transfer, Admin, Purchase } = require('../models');
 const AppError = require('../utils/AppError');
 const ERROR_CODES = require('../constants/errorCodes');
 const {
@@ -102,7 +102,7 @@ async function updateTransfer(transferId, data) {
   if (!transfer) {
     throw new AppError('TRANSFER_NOT_FOUND', ERROR_CODES.TRANSFER_NOT_FOUND, 404);
   }
-  if (transfer.status !== 'pending') {
+  if (transfer.status !== 'pending' && transfer.status !== 'accepted') {
     throw new AppError('TRANSFER_NOT_PENDING', ERROR_CODES.TRANSFER_NOT_PENDING, 400);
   }
 
@@ -111,7 +111,19 @@ async function updateTransfer(transferId, data) {
     throw new AppError('AMOUNT_MUST_BE_POSITIVE', ERROR_CODES.AMOUNT_MUST_BE_POSITIVE, 400);
   }
 
-  await transfer.update({ amount });
+  if (transfer.status === 'pending') {
+    await transfer.update({ amount });
+  } else {
+    const transaction = await sequelize.transaction();
+    try {
+      await transfer.update({ amount }, { transaction });
+      await rebuildTransferBalances(transfer.purchaser_id, transaction);
+      await transaction.commit();
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  }
 
   return Transfer.findByPk(transfer.id, {
     include: [

@@ -74,6 +74,20 @@ export default function EditTransferAmountModal({
               ? formatCurrency(parseFloat(String(transfer.amount)))
               : tCommon("emDash")}
           </p>
+          {transfer?.status === "accepted" && (
+            <>
+              <p>
+                <span className="font-medium text-gray-800 dark:text-white/90">
+                  {tCommon("fields.spent")}:
+                </span>{" "}
+                {formatCurrency(
+                  parseFloat(String(transfer.amount)) -
+                    parseFloat(String(transfer.amount_remaining))
+                )}
+              </p>
+              <p>{t("editTransfer.acceptedNote")}</p>
+            </>
+          )}
         </div>
 
         <div>
